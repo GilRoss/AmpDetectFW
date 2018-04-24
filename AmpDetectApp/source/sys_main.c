@@ -52,6 +52,7 @@
 /* USER CODE BEGIN (1) */
 #include "FreeRTOS.h"
 #include "os_task.h"
+#include "gio.h"
 /* USER CODE END */
 
 /** @fn void main(void)
@@ -71,6 +72,9 @@ void StartHostCommTask();
 int main(void)
 {
 /* USER CODE BEGIN (3) */
+
+    gioInit();
+
     //Create the PCR task.
 //    xTaskCreate(StartCurrentPidTask, "CurrentPidTask", 1 * 1024, NULL, 5, NULL );
 
