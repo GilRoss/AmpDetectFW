@@ -51,6 +51,7 @@
 #include "esm.h"
 #include "sys_selftest.h"
 #include "gio.h"
+#include "mibspi.h"
 #include "sys_dma.h"
 
 /* USER CODE BEGIN (0) */
@@ -104,6 +105,25 @@ void gioNotification(gioPORT_t *port, uint32 bit)
 }
 
 /* USER CODE BEGIN (20) */
+/* USER CODE END */
+#pragma WEAK(mibspiNotification)
+void mibspiNotification(mibspiBASE_t *mibspi, uint32 flags)
+{
+/*  enter user code between the USER CODE BEGIN and USER CODE END. */
+/* USER CODE BEGIN (25) */
+/* USER CODE END */
+}
+
+/* USER CODE BEGIN (26) */
+/* USER CODE END */
+#pragma WEAK(mibspiGroupNotification)
+void mibspiGroupNotification(mibspiBASE_t *mibspi, uint32 group)
+{
+/*  enter user code between the USER CODE BEGIN and USER CODE END. */
+/* USER CODE BEGIN (27) */
+/* USER CODE END */
+}
+/* USER CODE BEGIN (28) */
 /* USER CODE END */
 
 

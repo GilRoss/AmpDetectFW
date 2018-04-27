@@ -53,6 +53,7 @@
 #include "FreeRTOS.h"
 #include "os_task.h"
 #include "gio.h"
+#include "mibspi.h"
 /* USER CODE END */
 
 /** @fn void main(void)
@@ -74,9 +75,10 @@ int main(void)
 /* USER CODE BEGIN (3) */
 
     gioInit();
+    mibspiInit();
 
     //Create the PCR task.
-//    xTaskCreate(StartCurrentPidTask, "CurrentPidTask", 1 * 1024, NULL, 5, NULL );
+    xTaskCreate(StartCurrentPidTask, "CurrentPidTask", 1 * 1024, NULL, 5, NULL );
 
     //Create the PCR task.
     xTaskCreate(StartPcrTask, "PcrTask", 1 * 1024, NULL, 3, NULL );
