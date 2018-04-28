@@ -22,7 +22,7 @@ extern "C" void StartHostCommTask(void * pvParameters);
 void StartHostCommTask(void * pvParameters)
 {
     //Wait for PCR task object to be created.
-    if (PcrTask::GetInstancePtr() == nullptr)
+    while (PcrTask::GetInstancePtr() == nullptr)
         vTaskDelay (100 / portTICK_PERIOD_MS);
 
     HostCommTask* pHostCommTask = HostCommTask::GetInstance();
@@ -45,11 +45,11 @@ void HostCommTask::ExecuteThread(PcrTask* pPcrTask)
     
     for (;;)
     {
-        //Wait for message from host, then de-serialize it.
+        //Wait for message from host, then create its associated command object.
         pHostCommDrv->RxMessage(pRequestBuf.get(), HostMsg::kMaxRequestSize);
         HostCommand* pHostCmd = HostCmdFactory::GetHostCmd(pRequestBuf.get(), pHostCommDrv, pPcrTask);
 
-        //If this is a valid command, process the command.
+        //If this is a valid command, execute the command.
         if (pHostCmd != NULL)
         {
             pHostCmd->Execute();

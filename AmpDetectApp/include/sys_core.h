@@ -63,7 +63,7 @@ extern "C" {
 *
 *	@note: Use this macro for USER Mode Stack length (in bytes)
 */
-#define USER_STACK_LENGTH   0x00002000U
+#define USER_STACK_LENGTH   0x00001000U
 
 /** @def SVC_STACK_LENGTH
 *   @brief SVC Mode Stack length (in bytes)
@@ -72,7 +72,7 @@ extern "C" {
 *
 *	@note: Use this macro for SVC Mode Stack length (in bytes)
 */
-#define SVC_STACK_LENGTH    0x00000400U
+#define SVC_STACK_LENGTH    0x00000100U
 
 /** @def FIQ_STACK_LENGTH
 *   @brief FIQ Mode Stack length (in bytes)
@@ -81,7 +81,7 @@ extern "C" {
 *
 *	@note: Use this macro for FIQ Mode Stack length (in bytes)
 */
-#define FIQ_STACK_LENGTH    0x00000400U
+#define FIQ_STACK_LENGTH    0x00000100U
 
 /** @def IRQ_STACK_LENGTH
 *   @brief IRQ Mode Stack length (in bytes)
@@ -90,7 +90,7 @@ extern "C" {
 *
 *	@note: Use this macro for IRQ Mode Stack length (in bytes)
 */
-#define IRQ_STACK_LENGTH    0x00000400U
+#define IRQ_STACK_LENGTH    0x00000100U
 
 /** @def ABORT_STACK_LENGTH
 *   @brief ABORT Mode Stack length (in bytes)
@@ -99,7 +99,7 @@ extern "C" {
 *
 *	@note: Use this macro for ABORT Mode Stack length (in bytes)
 */
-#define ABORT_STACK_LENGTH  0x00000400U
+#define ABORT_STACK_LENGTH  0x00000100U
 
 /** @def UNDEF_STACK_LENGTH
 *   @brief UNDEF Mode Stack length (in bytes)
@@ -108,7 +108,7 @@ extern "C" {
 *
 *	@note: Use this macro for UNDEF Mode Stack length (in bytes)
 */
-#define UNDEF_STACK_LENGTH  0x00000400U
+#define UNDEF_STACK_LENGTH  0x00000100U
 
 /* System Core Interface Functions */
 

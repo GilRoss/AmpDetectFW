@@ -3,6 +3,7 @@
 #include "os_task.h"
 #include "CurrentPidTask.h"
 #include "gio.h"
+#include "mibspi.h"
 //#include "comp_spi.h"
 //#include "spi.h"
 //#include "mibspi.h"
@@ -25,10 +26,6 @@ CurrentPidTask* CurrentPidTask::GetInstance()
 extern "C" void StartCurrentPidTask(void * pvParameters);
 void StartCurrentPidTask(void * pvParameters)
 {
-    //Wait for CurrentPidTask object to be created.
-    if (CurrentPidTask::GetInstancePtr() == nullptr)
-        vTaskDelay (100 / portTICK_PERIOD_MS);
-
     CurrentPidTask* pCurrentPidTask = CurrentPidTask::GetInstance();
     pCurrentPidTask->ExecuteThread();
 }
@@ -42,6 +39,9 @@ CurrentPidTask::CurrentPidTask()
     ,_nDerivativeGain(0)
 {
     gioSetDirection(gioPORTB, 0x01);
+
+    //Use MibSPI1 to read/write current A/D and D/A, respectively.
+    mibspiSetFunctional(mibspiPORT1, 0x00);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

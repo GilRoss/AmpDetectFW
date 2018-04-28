@@ -2,7 +2,7 @@
 <SETTINGS>
   <DEVICE>
     <family>TMS570LS12x</family>
-    <device>TMS570LS1224PGE_FREERTOS</device>
+    <device>TMS570LS1227PGE</device>
     <dilfile>AmpDetectApp.dil</dilfile>
     <tools>ti</tools>
   </DEVICE>
@@ -182,78 +182,6 @@
       <HDRTEST>
         <NAME>HL_Test.h</NAME>
       </HDRTEST>
-      <HDRPROJDEFS>
-        <NAME>os_projdefs.h</NAME>
-      </HDRPROJDEFS>
-      <HDRCONFIG>
-        <NAME>FreeRTOSConfig.h</NAME>
-      </HDRCONFIG>
-      <HDRPORT>
-        <NAME>os_portmacro.h</NAME>
-      </HDRPORT>
-      <HDRMPUWRAPPER>
-        <NAME>os_mpu_wrappers.h</NAME>
-      </HDRMPUWRAPPER>
-      <HDRPORTABLE>
-        <NAME>os_portable.h</NAME>
-      </HDRPORTABLE>
-      <HDRMAIN>
-        <NAME>FreeRTOS.h</NAME>
-      </HDRMAIN>
-      <HDRLIST>
-        <NAME>os_list.h</NAME>
-      </HDRLIST>
-      <HDRQUEUE>
-        <NAME>os_queue.h</NAME>
-      </HDRQUEUE>
-      <HDRSEMPHR>
-        <NAME>os_semphr.h</NAME>
-      </HDRSEMPHR>
-      <HDRCOROUTINE>
-        <NAME>os_croutine.h</NAME>
-      </HDRCOROUTINE>
-      <HDRSTACK>
-        <NAME>os_StackMacros.h</NAME>
-      </HDRSTACK>
-      <HDRTASK>
-        <NAME>os_task.h</NAME>
-      </HDRTASK>
-      <HDRTIMER>
-        <NAME>os_timer.h</NAME>
-      </HDRTIMER>
-      <SRCPORT>
-        <NAME>os_port.c</NAME>
-      </SRCPORT>
-      <SRCASMPORT>
-        <NAME>os_portasm.asm</NAME>
-      </SRCASMPORT>
-      <SRCTASK>
-        <NAME>os_tasks.c</NAME>
-      </SRCTASK>
-      <SRCQUEUE>
-        <NAME>os_queue.c</NAME>
-      </SRCQUEUE>
-      <SRCLIST>
-        <NAME>os_list.c</NAME>
-      </SRCLIST>
-      <SRCCOROUTINE>
-        <NAME>os_croutine.c</NAME>
-      </SRCCOROUTINE>
-      <SRCTIMER>
-        <NAME>os_timer.c</NAME>
-      </SRCTIMER>
-      <SRCMPUWRAPPER>
-        <NAME>os_mpu_wrappers.c</NAME>
-      </SRCMPUWRAPPER>
-      <SRCHEAP>
-        <NAME>os_heap.c</NAME>
-      </SRCHEAP>
-      <SRCEVNTGRP>
-        <NAME>os_event_groups.c</NAME>
-      </SRCEVNTGRP>
-      <HDREVNTGRP>
-        <NAME>os_event_groups.h</NAME>
-      </HDREVNTGRP>
       <HDRMUX_R>
         <NAME>reg_pinmux.h</NAME>
       </HDRMUX_R>
@@ -269,7 +197,8 @@
       <HDRRTI>
         <NAME>rti.h</NAME>
       </HDRRTI>
-      <SRCRTI/>
+      <SRCRTI>
+</SRCRTI>
       <HDRGIO_R>
         <NAME>reg_gio.h</NAME>
       </HDRGIO_R>
@@ -285,14 +214,16 @@
       <HDRSCI>
         <NAME>sci.h</NAME>
       </HDRSCI>
-      <SRCSCI/>
+      <SRCSCI>
+</SRCSCI>
       <HDRLIN_R>
         <NAME>reg_lin.h</NAME>
       </HDRLIN_R>
       <HDRLIN>
         <NAME>lin.h</NAME>
       </HDRLIN>
-      <SRCLIN/>
+      <SRCLIN>
+</SRCLIN>
       <HDRMIBSPI_R>
         <NAME>reg_mibspi.h</NAME>
       </HDRMIBSPI_R>
@@ -308,21 +239,24 @@
       <HDRSPI>
         <NAME>spi.h</NAME>
       </HDRSPI>
-      <SRCSPI/>
+      <SRCSPI>
+</SRCSPI>
       <HDRCAN_R>
         <NAME>reg_can.h</NAME>
       </HDRCAN_R>
       <HDRCAN>
         <NAME>can.h</NAME>
       </HDRCAN>
-      <SRCCAN/>
+      <SRCCAN>
+</SRCCAN>
       <HDRADC_R>
         <NAME>reg_adc.h</NAME>
       </HDRADC_R>
       <HDRADC>
         <NAME>adc.h</NAME>
       </HDRADC>
-      <SRCADC/>
+      <SRCADC>
+</SRCADC>
       <HET1ASMHDR>
         <NAME/>
       </HET1ASMHDR>
@@ -338,13 +272,14 @@
       <HDRHET>
         <NAME>het.h</NAME>
       </HDRHET>
+      <SRCHET>
+</SRCHET>
       <HDRHTU_R>
         <NAME>reg_htu.h</NAME>
       </HDRHTU_R>
       <HDRHTU>
         <NAME>htu.h</NAME>
       </HDRHTU>
-      <SRCHET/>
       <HET2ASMHDR>
         <NAME/>
       </HET2ASMHDR>
@@ -366,42 +301,75 @@
       <HDRI2C>
         <NAME>i2c.h</NAME>
       </HDRI2C>
-      <SRCI2C/>
+      <SRCI2C>
+</SRCI2C>
+      <HDR1EMAC>
+        <NAME>emac.h</NAME>
+      </HDR1EMAC>
+      <HDR2EMAC>
+        <NAME>hw_emac.h</NAME>
+      </HDR2EMAC>
+      <HDR3EMAC>
+        <NAME>hw_emac_ctrl.h</NAME>
+      </HDR3EMAC>
+      <HDR4EMAC>
+        <NAME>hw_mdio.h</NAME>
+      </HDR4EMAC>
+      <HDR5EMAC>
+        <NAME>hw_reg_access.h</NAME>
+      </HDR5EMAC>
+      <HDR6EMAC>
+        <NAME>mdio.h</NAME>
+      </HDR6EMAC>
+      <SRC1EMAC>
+</SRC1EMAC>
+      <SRC2EMAC>
+</SRC2EMAC>
+      <SRCPHY>
+</SRCPHY>
+      <HDRPHY>
+        <NAME>phy_dp83640.h</NAME>
+      </HDRPHY>
       <HDRDCC_R>
         <NAME>reg_dcc.h</NAME>
       </HDRDCC_R>
       <HDRDCC>
         <NAME>dcc.h</NAME>
       </HDRDCC>
-      <SRCDCC/>
+      <SRCDCC>
+</SRCDCC>
       <HDRCRC_R>
         <NAME>reg_crc.h</NAME>
       </HDRCRC_R>
       <HDRCRC>
         <NAME>crc.h</NAME>
       </HDRCRC>
-      <SRCCRC/>
+      <SRCCRC>
+</SRCCRC>
       <HDRETPWM_R>
         <NAME>reg_etpwm.h</NAME>
       </HDRETPWM_R>
       <HDRETPWM>
         <NAME>etpwm.h</NAME>
       </HDRETPWM>
-      <SRCETPWM/>
+      <SRCETPWM>
+</SRCETPWM>
       <HDRECAP_R>
         <NAME>reg_ecap.h</NAME>
       </HDRECAP_R>
       <HDRECAP>
         <NAME>ecap.h</NAME>
       </HDRECAP>
-      <SRCECAP/>
+      <SRCECAP>
+</SRCECAP>
       <HDREQEP_R>
         <NAME>reg_eqep.h</NAME>
       </HDREQEP_R>
       <HDREQEP>
         <NAME>eqep.h</NAME>
       </HDREQEP>
-      <SRCEQEP/>
+      <SRCEQEP>
+</SRCEQEP>
       <HDR1FEE>
         <NAME>Device_TMS570LS12.h</NAME>
       </HDR1FEE>
@@ -444,82 +412,6 @@
       <SRC16FEE/>
     </FILENAMES>
   </SYSTEM>
-  <OS>
-    <FILENAMES>
-      <HDRPROJDEFS>
-        <PATH>include\os_projdefs.h</PATH>
-      </HDRPROJDEFS>
-      <HDRCONFIG>
-        <PATH>include\FreeRTOSConfig.h</PATH>
-      </HDRCONFIG>
-      <HDRPORT>
-        <PATH>include\os_portmacro.h</PATH>
-      </HDRPORT>
-      <HDRMPUWRAPPER>
-        <PATH>include\os_mpu_wrappers.h</PATH>
-      </HDRMPUWRAPPER>
-      <HDRPORTABLE>
-        <PATH>include\os_portable.h</PATH>
-      </HDRPORTABLE>
-      <HDRMAIN>
-        <PATH>include\FreeRTOS.h</PATH>
-      </HDRMAIN>
-      <HDRLIST>
-        <PATH>include\os_list.h</PATH>
-      </HDRLIST>
-      <HDRQUEUE>
-        <PATH>include\os_queue.h</PATH>
-      </HDRQUEUE>
-      <HDRSEMPHR>
-        <PATH>include\os_semphr.h</PATH>
-      </HDRSEMPHR>
-      <HDRCOROUTINE>
-        <PATH>include\os_croutine.h</PATH>
-      </HDRCOROUTINE>
-      <HDRSTACK>
-        <PATH>include\os_StackMacros.h</PATH>
-      </HDRSTACK>
-      <HDRTASK>
-        <PATH>include\os_task.h</PATH>
-      </HDRTASK>
-      <HDRTIMER>
-        <PATH>include\os_timer.h</PATH>
-      </HDRTIMER>
-      <SRCPORT>
-        <PATH>source\os_port.c</PATH>
-      </SRCPORT>
-      <SRCASMPORT>
-        <PATH>source\os_portasm.asm</PATH>
-      </SRCASMPORT>
-      <SRCTASK>
-        <PATH>source\os_tasks.c</PATH>
-      </SRCTASK>
-      <SRCQUEUE>
-        <PATH>source\os_queue.c</PATH>
-      </SRCQUEUE>
-      <SRCLIST>
-        <PATH>source\os_list.c</PATH>
-      </SRCLIST>
-      <SRCCOROUTINE>
-        <PATH>source\os_croutine.c</PATH>
-      </SRCCOROUTINE>
-      <SRCTIMER>
-        <PATH>source\os_timer.c</PATH>
-      </SRCTIMER>
-      <SRCMPUWRAPPER>
-        <PATH>source\os_mpu_wrappers.c</PATH>
-      </SRCMPUWRAPPER>
-      <SRCHEAP>
-        <PATH>source\os_heap.c</PATH>
-      </SRCHEAP>
-      <SRCEVNTGRP>
-        <PATH>source\os_event_groups.c</PATH>
-      </SRCEVNTGRP>
-      <HDREVNTGRP>
-        <PATH>include\os_event_groups.h</PATH>
-      </HDREVNTGRP>
-    </FILENAMES>
-  </OS>
   <PINMUX>
     <FILENAMES>
       <HDRMUX_R>
@@ -542,7 +434,7 @@
         <PATH>include\rti.h</PATH>
       </HDRRTI>
       <SRCRTI>
-        <PATH/>
+        <PATH></PATH>
       </SRCRTI>
     </FILENAMES>
   </RTI>
@@ -568,7 +460,7 @@
         <PATH>include\sci.h</PATH>
       </HDRSCI>
       <SRCSCI>
-        <PATH/>
+        <PATH></PATH>
       </SRCSCI>
     </FILENAMES>
   </SCI>
@@ -581,7 +473,7 @@
         <PATH>include\lin.h</PATH>
       </HDRLIN>
       <SRCLIN>
-        <PATH/>
+        <PATH></PATH>
       </SRCLIN>
     </FILENAMES>
   </LIN>
@@ -607,7 +499,7 @@
         <PATH>include\spi.h</PATH>
       </HDRSPI>
       <SRCSPI>
-        <PATH/>
+        <PATH></PATH>
       </SRCSPI>
     </FILENAMES>
   </SPI>
@@ -620,7 +512,7 @@
         <PATH>include\can.h</PATH>
       </HDRCAN>
       <SRCCAN>
-        <PATH/>
+        <PATH></PATH>
       </SRCCAN>
     </FILENAMES>
   </CAN>
@@ -633,7 +525,7 @@
         <PATH>include\adc.h</PATH>
       </HDRADC>
       <SRCADC>
-        <PATH/>
+        <PATH></PATH>
       </SRCADC>
     </FILENAMES>
   </ADC>
@@ -648,15 +540,15 @@
       <HDRHET>
         <PATH>include\het.h</PATH>
       </HDRHET>
+      <SRCHET>
+        <PATH></PATH>
+      </SRCHET>
       <HDRHTU_R>
         <PATH>include\reg_htu.h</PATH>
       </HDRHTU_R>
       <HDRHTU>
         <PATH>include\htu.h</PATH>
       </HDRHTU>
-      <SRCHET>
-        <PATH/>
-      </SRCHET>
     </FILENAMES>
   </HET>
   <ESM>
@@ -681,10 +573,44 @@
         <PATH>include\i2c.h</PATH>
       </HDRI2C>
       <SRCI2C>
-        <PATH/>
+        <PATH></PATH>
       </SRCI2C>
     </FILENAMES>
   </I2C>
+  <EMAC>
+    <FILENAMES>
+      <HDR1EMAC>
+        <PATH>include\emac.h</PATH>
+      </HDR1EMAC>
+      <HDR2EMAC>
+        <PATH>include\hw_emac.h</PATH>
+      </HDR2EMAC>
+      <HDR3EMAC>
+        <PATH>include\hw_emac_ctrl.h</PATH>
+      </HDR3EMAC>
+      <HDR4EMAC>
+        <PATH>include\hw_mdio.h</PATH>
+      </HDR4EMAC>
+      <HDR5EMAC>
+        <PATH>include\hw_reg_access.h</PATH>
+      </HDR5EMAC>
+      <HDR6EMAC>
+        <PATH>include\mdio.h</PATH>
+      </HDR6EMAC>
+      <SRC1EMAC>
+        <PATH></PATH>
+      </SRC1EMAC>
+      <SRC2EMAC>
+        <PATH></PATH>
+      </SRC2EMAC>
+      <SRCPHY>
+        <PATH></PATH>
+      </SRCPHY>
+      <HDRPHY>
+        <PATH>include\phy_dp83640.h</PATH>
+      </HDRPHY>
+    </FILENAMES>
+  </EMAC>
   <DCC>
     <FILENAMES>
       <HDRDCC_R>
@@ -694,7 +620,7 @@
         <PATH>include\dcc.h</PATH>
       </HDRDCC>
       <SRCDCC>
-        <PATH/>
+        <PATH></PATH>
       </SRCDCC>
     </FILENAMES>
   </DCC>
@@ -707,7 +633,7 @@
         <PATH>include\crc.h</PATH>
       </HDRCRC>
       <SRCCRC>
-        <PATH/>
+        <PATH></PATH>
       </SRCCRC>
     </FILENAMES>
   </CRC>
@@ -720,7 +646,7 @@
         <PATH>include\etpwm.h</PATH>
       </HDRETPWM>
       <SRCETPWM>
-        <PATH/>
+        <PATH></PATH>
       </SRCETPWM>
     </FILENAMES>
   </ETPWM>
@@ -733,7 +659,7 @@
         <PATH>include\ecap.h</PATH>
       </HDRECAP>
       <SRCECAP>
-        <PATH/>
+        <PATH></PATH>
       </SRCECAP>
     </FILENAMES>
   </ECAP>
@@ -746,7 +672,7 @@
         <PATH>include\eqep.h</PATH>
       </HDREQEP>
       <SRCEQEP>
-        <PATH/>
+        <PATH></PATH>
       </SRCEQEP>
     </FILENAMES>
   </EQEP>

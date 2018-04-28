@@ -73,7 +73,6 @@ void StartHostCommTask();
 int main(void)
 {
 /* USER CODE BEGIN (3) */
-
     gioInit();
     mibspiInit();
 

@@ -406,7 +406,7 @@ void _c_int00(void)
              | (uint32)0x00002000U    /* HTU1 RAM */
              | (uint32)0x00080000U    /* HTU2 RAM */
              | (uint32)0x00000000U    /* RTP RAM */
-             | (uint32)0x00000000U    /* FRAY RAM */
+             | (uint32)0x00008000U    /* FRAY RAM */
              ,(uint32) PBIST_March13N_DP);
 
 /* USER CODE BEGIN (40) */
