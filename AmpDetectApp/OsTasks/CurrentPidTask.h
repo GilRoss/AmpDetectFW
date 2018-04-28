@@ -19,8 +19,8 @@ protected:
 private:
     CurrentPidTask();              //Singleton.
 
-    float                   GetISense();
-    void                    DriveControl(float nControlVar);
+    float                   GetProcessVar();
+    void                    SetControlVar(float nControlVar);
 
     static CurrentPidTask*  _pCurrentPidTask;
 

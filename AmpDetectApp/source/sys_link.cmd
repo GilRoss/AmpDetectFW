@@ -1,5 +1,5 @@
 /*----------------------------------------------------------------------------*/
-/* sys_link_freeRTOS.cmd                                                      */
+/* sys_link.cmd                                                               */
 /*                                                                            */
 /* 
 * Copyright (C) 2009-2016 Texas Instruments Incorporated - www.ti.com  
@@ -39,6 +39,8 @@
 /*----------------------------------------------------------------------------*/
 /* USER CODE BEGIN (0) */
 /* USER CODE END */
+
+
 /*----------------------------------------------------------------------------*/
 /* Linker Settings                                                            */
 
@@ -53,11 +55,9 @@
 MEMORY
 {
     VECTORS (X)  : origin=0x00000000 length=0x00000020
-    KERNEL  (RX) : origin=0x00000020 length=0x00008000
-    FLASH0  (RX) : origin=0x00008020 length=0x00137FE0
-    STACKS  (RW) : origin=0x08000000 length=0x00003400
-    KRAM    (RW) : origin=0x08003400 length=0x00000800
-    RAM     (RW) : origin=(0x08003400+0x00000800) length=(0x0002cc00 - 0x00000800)
+    FLASH0  (RX) : origin=0x00000020 length=0x0013FFE0
+    STACKS  (RW) : origin=0x08000000 length=0x00001500
+    RAM     (RW) : origin=0x08001500 length=0x0002EB00
 
 /* USER CODE BEGIN (2) */
 /* USER CODE END */
@@ -72,18 +72,14 @@ MEMORY
 SECTIONS
 {
     .intvecs : {} > VECTORS
-    /* FreeRTOS Kernel in protected region of Flash */
-    .kernelTEXT   : {} > KERNEL
-    .cinit        : {} > KERNEL
-    .pinit        : {} > KERNEL
-    /* Rest of code to user mode flash region */
-    .text         : {} > FLASH0
-    .const        : {} > FLASH0
-    /* FreeRTOS Kernel data in protected region of RAM */
-    .kernelBSS    : {} > KRAM
-    .kernelHEAP   : {} > RAM
-    .bss          : {} > RAM
-    .data         : {} > RAM
+    .text    : {} > FLASH0 
+    .const   : {} > FLASH0 
+    .cinit   : {} > FLASH0 
+    .pinit   : {} > FLASH0 
+    .bss     : {} > RAM
+    .data    : {} > RAM
+    .sysmem  : {} > RAM
+    
 
 /* USER CODE BEGIN (4) */
     .sysmem       : {} > RAM
@@ -93,10 +89,10 @@ SECTIONS
 /* USER CODE BEGIN (5) */
 /* USER CODE END */
 
+
 /*----------------------------------------------------------------------------*/
 /* Misc                                                                       */
 
 /* USER CODE BEGIN (6) */
 /* USER CODE END */
-
 /*----------------------------------------------------------------------------*/

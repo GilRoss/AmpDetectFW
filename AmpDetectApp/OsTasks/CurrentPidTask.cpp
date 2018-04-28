@@ -4,9 +4,6 @@
 #include "CurrentPidTask.h"
 #include "gio.h"
 #include "mibspi.h"
-//#include "comp_spi.h"
-//#include "spi.h"
-//#include "mibspi.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -41,7 +38,7 @@ CurrentPidTask::CurrentPidTask()
     gioSetDirection(gioPORTB, 0x01);
 
     //Use MibSPI1 to read/write current A/D and D/A, respectively.
-    mibspiSetFunctional(mibspiPORT1, 0x00);
+//    mibspiSetFunctional(mibspiPORT1, 0x00);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -62,7 +59,7 @@ void    CurrentPidTask::ExecuteThread()
         vTaskDelayUntil (&nPrevWakeTime, 1 / portTICK_PERIOD_MS);
         gioSetBit(gioPORTB, 0, 1);
         
-        float nPidError = _nCurrentSetpoint - GetISense();
+        float nPidError = _nCurrentSetpoint - GetProcessVar();
 
         float nControlVar =  nPidError * _nProportionalGain
                       +  _nAccError * _nIntegralGain
@@ -70,7 +67,7 @@ void    CurrentPidTask::ExecuteThread()
         nControlVar *= 2.5 / 15;
 
         if (_bEnabled)
-            DriveControl(nControlVar);
+            SetControlVar(nControlVar);
 
         _nPrevPidError  = nPidError;
         _nAccError  += nPidError;
@@ -80,19 +77,39 @@ void    CurrentPidTask::ExecuteThread()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-float    CurrentPidTask::GetISense()
+float    CurrentPidTask::GetProcessVar()
 {
-    float value = 0;
-//    GetAdc(ISENSE, value);
-    float iSense = (value * 9.05 / 6.04 - 2.5) / (20.0 * 0.008);
-    return iSense;
+    uint16_t    arTxBuf[2];
+    uint16_t    arRxBuf[2];
+
+    //Use MibSpi1 to read the current value.
+    mibspiSetData(mibspiREG1, 0, arTxBuf);
+    mibspiTransfer(mibspiREG1, 0);
+    while (! mibspiIsTransferComplete(mibspiREG1, 0));
+
+    mibspiGetData(mibspiREG1, 0, arRxBuf);
+
+    float nCurrentVal = 0;
+    float nProcessVar = (nCurrentVal * 9.05 / 6.04 - 2.5) / (20.0 * 0.008);
+
+    return nProcessVar;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void    CurrentPidTask::DriveControl(float nControlVar)
+void    CurrentPidTask::SetControlVar(float nControlVar)
 {
-    float ref = nControlVar + 2.5;
-    ref = ref > 5 ? 5 : ref < 0 ? 0 : ref; // limit to [0,5]
-//    SetDac(ref);
+    uint16_t    arTxBuf[2];
+
+    //Limit control variable to 0-5.
+    float nCurrentVal = nControlVar + 2.5;
+    if (nCurrentVal > 5)
+        nCurrentVal = 5;
+    else if (nCurrentVal < 0)
+        nCurrentVal = 0;
+
+    //Use MibSpi1 to write the current value.
+    mibspiSetData(mibspiREG1, 0, arTxBuf);
+    mibspiTransfer(mibspiREG1, 0);
+    while (! mibspiIsTransferComplete(mibspiREG1, 0));
 }
