@@ -95,7 +95,7 @@ uint32 i ;
                      | (uint32)((uint32)0U << 17U)  /* clock polarity */
                      | (uint32)((uint32)0U << 16U)  /* clock phase */
                      | (uint32)((uint32)79U << 8U)  /* baudrate prescale */
-                     | (uint32)((uint32)16U << 0U); /* data word length */
+                     | (uint32)((uint32)8U << 0U); /* data word length */
 
     /** - Data Format 1 */
     mibspiREG1->FMT1 = (uint32)((uint32)0U << 24U)  /* wdelay */
@@ -106,7 +106,7 @@ uint32 i ;
                      | (uint32)((uint32)0U << 17U)  /* clock polarity */
                      | (uint32)((uint32)0U << 16U)  /* clock phase */
                      | (uint32)((uint32)79U << 8U)  /* baudrate prescale */
-                     | (uint32)((uint32)8U << 0U); /* data word length */
+                     | (uint32)((uint32)16U << 0U); /* data word length */
 
     /** - Data Format 2 */
     mibspiREG1->FMT2 = (uint32)((uint32)0U << 24U)  /* wdelay */
@@ -213,7 +213,7 @@ uint32 i ;
                                           | (uint16)((uint16)0U << 11U)  /* lock transmission */
                                           | (uint16)((uint16)0U << 8U)  /* data format */
 										  /*SAFETYMCUSW 334 S MR:10.5 <APPROVED> "LDRA Tool issue" */
-                                          | ((uint16)(~((uint16)0xFFU ^ (uint16)CS_0)) & (uint16)0x00FFU);  /* chip select */
+                                          | ((uint16)(~((uint16)0xFFU ^ (uint16)CS_NONE)) & (uint16)0x00FFU);  /* chip select */
                 i++;
             }
 #endif
@@ -222,7 +222,7 @@ uint32 i ;
                                       | (uint16)((uint16)0U << 10U)  /* enable WDELAY */
                                       | (uint16)((uint16)0U << 8U)  /* data format */
 										  /*SAFETYMCUSW 334 S MR:10.5 <APPROVED> "LDRA Tool issue" */
-                                      | ((uint16)(~((uint16)0xFFU ^ (uint16)CS_0)) & (uint16)0x00FFU);  /* chip select */
+                                      | ((uint16)(~((uint16)0xFFU ^ (uint16)CS_NONE)) & (uint16)0x00FFU);  /* chip select */
 
 
             i++;
