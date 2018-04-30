@@ -66,7 +66,7 @@ void    CurrentPidTask::ExecuteThread()
                       + (nPidError - _nPrevPidError) * _nDerivativeGain;
         nControlVar *= 2.5 / 15;
 
-        if (_bEnabled)
+//        if (_bEnabled)
             SetControlVar(nControlVar);
 
         _nPrevPidError  = nPidError;
@@ -79,15 +79,15 @@ void    CurrentPidTask::ExecuteThread()
 ///////////////////////////////////////////////////////////////////////////////
 float    CurrentPidTask::GetProcessVar()
 {
-    uint8_t    arTxBuf[4] = {0x00};
-    uint8_t    arRxBuf[4] = {0x00};
+    uint16_t    arTxBuf[2] = {0x00};
+    uint16_t    arRxBuf[2] = {0x00};
 
     //Use MibSpi1 to read the current value.
-    mibspiSetData(mibspiREG1, 0, (uint16_t*)arTxBuf);
+    mibspiSetData(mibspiREG1, 0, arTxBuf);
     mibspiTransfer(mibspiREG1, 0);
     while (! mibspiIsTransferComplete(mibspiREG1, 0));
 
-    mibspiGetData(mibspiREG1, 0, (uint16_t*)arRxBuf);
+    mibspiGetData(mibspiREG1, 0, arRxBuf);
 
     float nCurrentVal = 0;
     float nProcessVar = (nCurrentVal * 9.05 / 6.04 - 2.5) / (20.0 * 0.008);
@@ -99,7 +99,7 @@ float    CurrentPidTask::GetProcessVar()
 ///////////////////////////////////////////////////////////////////////////////
 void    CurrentPidTask::SetControlVar(float nControlVar)
 {
-    uint8_t    arTxBuf[4] = {0x00};
+    uint16_t    arTxBuf[2] = {0x00};
 
     //Limit control variable to 0-5.
     float nCurrentVal = nControlVar + 2.5;
@@ -109,9 +109,9 @@ void    CurrentPidTask::SetControlVar(float nControlVar)
         nCurrentVal = 0;
 
     //Use MibSpi1 to write the current value.
-    arTxBuf[1] = (uint8_t)(((uint16_t)(nCurrentVal * (0xFFFF / 5))) >> 8);
-    arTxBuf[2] = (uint8_t)(nCurrentVal * (0xFFFF / 5));
-    mibspiSetData(mibspiREG1, 0, (uint16_t*)arTxBuf);
+    arTxBuf[0] = (uint16_t)(nCurrentVal * (0xFFFF / 5));
+    arTxBuf[1] = (uint16_t)(nCurrentVal * (0xFFFF / 5));
+    mibspiSetData(mibspiREG1, 0, arTxBuf);
     mibspiTransfer(mibspiREG1, 0);
     while (! mibspiIsTransferComplete(mibspiREG1, 0));
 }
