@@ -120,3 +120,24 @@ void    CurrentPidTask::SetControlVar(int32_t nISetpoint_mA)
     mibspiTransfer(mibspiREG1, 0);
     while (! mibspiIsTransferComplete(mibspiREG1, 0));
 }
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+void    CurrentPidTask::SetDac(int16_t nCmd, int16_t nAdr, )
+{
+    uint16_t    arTxBuf[3] = {0x00};
+
+    //Translate control variable to 0-5V.
+//    int32_t nCurrentVal = nControlVar_mV + 2.5;
+//    if (nCurrentVal > 5)
+//        nCurrentVal = 5;
+//    else if (nCurrentVal < 0)
+//        nCurrentVal = 0;
+
+    //Use MibSpi1 to write the current control voltage.
+//    arTxBuf[0] = (uint16_t)(nCurrentVal * (0xFFFF / 5));
+//    arTxBuf[1] = (uint16_t)(nCurrentVal * (0xFFFF / 5));
+    mibspiSetData(mibspiREG1, 0, arTxBuf);
+    mibspiTransfer(mibspiREG1, 0);
+    while (! mibspiIsTransferComplete(mibspiREG1, 0));
+}
