@@ -31,9 +31,10 @@ void StartCurrentPidTask(void * pvParameters)
 ///////////////////////////////////////////////////////////////////////////////
 CurrentPidTask::CurrentPidTask()
     :_bEnabled(false)
-    ,_nProportionalGain(0)
+    ,_nProportionalGain(2)
     ,_nIntegralGain(0)
     ,_nDerivativeGain(0)
+    ,_nSetpoint_mA(5000)
 {
     //Set direction (output) and initial state of D/A control pins.
     gioSetBit(gioPORTA, kClearBit, 1);
@@ -47,6 +48,8 @@ CurrentPidTask::CurrentPidTask()
     SendDacMsg(CMD_ENABLE_INT_REF, 0, DISABLE_INT_REF_AND_RESET_DAC_GAINS_TO_1);
     SendDacMsg(CMD_SET_LDAC_PIN, 0, SET_LDAC_PIN_INACTIVE_DAC_B_INACTIVE_DAC_A);
     SendDacMsg(CMD_POWER_DAC, 0, POWER_DOWN_DAC_B_HI_Z);
+
+    SetSetpoint(0);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -66,19 +69,21 @@ void    CurrentPidTask::ExecuteThread()
         //Wait for PID delta time.
         vTaskDelayUntil (&nPrevWakeTime, 1 / portTICK_PERIOD_MS);
         
-        if (true) //(_bEnabled)
+        if (_bEnabled)
         {
-            int32_t nPidError_mA = _nISetpoint_mA - GetDac(0);
+            //Convert A/D counts to mV.
+            int32_t nPidError_A2DCounts = (int32_t)_nSetpoint_A2DCounts - (int32_t)GetDac(0);
 
-            int32_t nControlVar_mV =    (_nProportionalGain * nPidError_mA) +
-                                        (_nIntegralGain * _nAccError_mA) +
-                                        (_nDerivativeGain * (nPidError_mA - _nPrevPidError_mA));
-            nControlVar_mV *= 2.5 / 15;
+            int32_t nSignedControlVar_A2DCounts =
+                    (_nProportionalGain * nPidError_A2DCounts) +
+                    (_nIntegralGain * _nAccError_A2DCounts) +
+                    (_nDerivativeGain * (nPidError_A2DCounts - _nPrevPidError_A2DCounts));
 
-            SetControlVar(nControlVar_mV);
+            uint32_t nControlVar_A2DCounts = (uint32_t)(nSignedControlVar_A2DCounts + (0xFFFF / 2));
+            SetControlVar(nControlVar_A2DCounts);
 
-            _nPrevPidError_mA = nPidError_mA;
-            _nAccError_mA += nPidError_mA;
+            _nPrevPidError_A2DCounts = nPidError_A2DCounts;
+            _nAccError_A2DCounts += nPidError_A2DCounts;
         }
         else //not enabled.
         {
@@ -91,6 +96,33 @@ void    CurrentPidTask::ExecuteThread()
             gioSetBit(gioPORTA, kClearBit, 1);
         }
     }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+void CurrentPidTask::SetEnabledFlg(bool b)
+{
+    _bEnabled = b;
+    _nPrevPidError_A2DCounts = 0;
+    _nAccError_A2DCounts = 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+void CurrentPidTask::SetSetpoint(uint32_t nSetpoint_mA)
+{
+    _nSetpoint_mA = nSetpoint_mA;
+
+    //Convert mA to mV.
+    //For this A/D: 0 - 15000mA = 70 - 3270mV.
+    //so: mV = (.213 * mA) + 70
+    uint32_t nSetpoint_mV = ((nSetpoint_mA * 1000) / 4697) + 70;
+
+    //Convert mV A/D counts.
+    //For this A/D: 0 - 5000mV = 0 0xFFFF counts.
+    _nSetpoint_A2DCounts = (nSetpoint_mV * 0xFFFF) / 5000;
+
+    SetEnabledFlg(true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -118,14 +150,10 @@ int32_t    CurrentPidTask::GetProcessVar()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void    CurrentPidTask::SetControlVar(uint32_t nControlVar_mV)
+void    CurrentPidTask::SetControlVar(uint32_t nControlVar_D2ACounts)
 {
-    //Make sure target voltage is between 0-5 V.
-    uint32_t nCtrlVar = nControlVar_mV > 5000 ? 0 : nControlVar_mV;
-
-    nCtrlVar = (nCtrlVar * 0xFFFF) / 5000;
     SendDacMsg(CMD_WR_ONE_REG_AND_UPDATE_ONE_DAC, ADDR_DAC_A,
-               (uint8_t)(nCtrlVar >> 8), (uint8_t)nCtrlVar);
+               (uint8_t)(nControlVar_D2ACounts >> 8), (uint8_t)nControlVar_D2ACounts);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -192,6 +220,6 @@ uint32_t CurrentPidTask::GetDac(int channel)
     ReadDacMsg(cfg, &data); // conv DATA(n), clock out CFG(n+1), clock in DATA(n-1)
     ReadDacMsg(cfg, &data); // conv DATA(n+1), clock out CFG(n+2), clock in DATA(n)
 
-    return (data * 5000) / 0xFFFF;
+    return data;
 }
 

@@ -121,10 +121,10 @@ public:
     static CurrentPidTask*  GetInstancePtr()    {return _pCurrentPidTask;}   //No instantiation.
     void                    ExecuteThread();
 
-    void        SetEnabledFlg(bool b)   {_bEnabled = b;}
-    bool        GetEnabledFlg()         {return _bEnabled;}
-    void        SetSetpoint(float sp)   {_nISetpoint_mA = sp;}
-    int32_t     GetSetPoint()           {return _nISetpoint_mA;}
+    void        SetEnabledFlg(bool b);
+    bool        GetEnabledFlg()             {return _bEnabled;}
+    void        SetSetpoint(uint32_t nSetpoint_mA);
+    int32_t     GetSetPoint()               {return _nSetpoint_mA;}
     void        SendDacMsg(uint8_t nCmd, uint8_t nAdr, uint8_t nHiByte = 0, uint8_t nLoByte = 0);
     void        ReadDacMsg(uint16_t cfg, uint16_t* pData);
     uint32_t    GetDac(int channel);
@@ -140,13 +140,14 @@ private:
     static CurrentPidTask*  _pCurrentPidTask;
 
     bool                    _bEnabled;
-    int32_t                 _nISetpoint_mA;
+    uint32_t                _nSetpoint_mA;
+    uint32_t                _nSetpoint_A2DCounts;
     int32_t                 _nProportionalGain;
     int32_t                 _nIntegralGain;
     int32_t                 _nDerivativeGain;
 
-    int32_t                 _nPrevPidError_mA;
-    int32_t                 _nAccError_mA;
+    int32_t                 _nPrevPidError_A2DCounts;
+    int32_t                 _nAccError_A2DCounts;
 };
 
 #endif // __CurrentPidTask_H

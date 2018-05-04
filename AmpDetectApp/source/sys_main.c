@@ -54,6 +54,8 @@
 #include "os_task.h"
 #include "gio.h"
 #include "mibspi.h"
+#include "sci.h"
+#include "sys_dma.h"
 /* USER CODE END */
 
 /** @fn void main(void)
