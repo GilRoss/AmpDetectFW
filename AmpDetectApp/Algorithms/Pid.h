@@ -14,11 +14,11 @@ public:
         , _nKi(nKi)
         , _nKd(nKd)
         , _nShift(nShift)
-        , _nMaxPwr_uA(nMaxPwr_uA)
-        , _nMinPwr_uA(nMinPwr_uA)
+        , _nMaxPwr(nMaxPwr_uA)
+        , _nMinPwr(nMinPwr_uA)
         , _nIntegrationAcc(0)
         , _bIsStable(false)
-        , _nStableBand_mC(250)
+        , _nStableBand(250)
         , _nStablePeriod_ms(500)
         , _nStableTimer_ms(0)
     {
@@ -34,8 +34,8 @@ public:
     uint32_t    GetKd() const               {return _nKd;}    
     void        SetStableFlg(bool b)        {_bIsStable = b;}
     bool        GetStableFlg() const        {return _bIsStable;}    
-    void        SetStableBand(int32_t n)    {_nStableBand_mC = n;}
-    int32_t     GetStableBand() const       {return _nStableBand_mC;}    
+    void        SetStableBand(int32_t n)    {_nStableBand = n;}
+    int32_t     GetStableBand() const       {return _nStableBand;}
     void        SetStablePeriod(int32_t n)  {_nStablePeriod_ms = n;}
     int32_t     GetStablePeriod() const     {return _nStablePeriod_ms;}    
     void        ResetStableFlg();
@@ -47,12 +47,12 @@ private:
     int32_t     _nKi;               //Integral gain
     int32_t     _nKd;               //Derivative gain
     uint32_t    _nShift;            //Right shift to divide
-    int32_t     _nMaxPwr_uA;        //Maximum value
-    int32_t     _nMinPwr_uA;        //Minimum value
+    int32_t     _nMaxPwr;           //Maximum value
+    int32_t     _nMinPwr;           //Minimum value
     int32_t     _nIntegrationAcc;   //Integration accumulator
     
     bool        _bIsStable;
-    int32_t     _nStableBand_mC;    //Stability band (+/-).
+    int32_t     _nStableBand;       //Stability band (+/-).
     uint32_t    _nStablePeriod_ms;  //Period temp must be within stability band.
     uint32_t    _nStableTimer_ms;   //Timer.
 };

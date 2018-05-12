@@ -4,6 +4,7 @@
 #include "CurrentPidTask.h"
 #include "gio.h"
 #include "mibspi.h"
+#include "Pid.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -31,10 +32,10 @@ void StartCurrentPidTask(void * pvParameters)
 ///////////////////////////////////////////////////////////////////////////////
 CurrentPidTask::CurrentPidTask()
     :_bEnabled(false)
-    ,_nProportionalGain(2)
+    ,_nProportionalGain(5)
     ,_nIntegralGain(0)
     ,_nDerivativeGain(0)
-    ,_nSetpoint_mA(5000)
+    ,_nSetpoint_mA(0)
 {
     //Set direction (output) and initial state of D/A control pins.
     gioSetBit(gioPORTA, kClearBit, 1);
@@ -49,7 +50,7 @@ CurrentPidTask::CurrentPidTask()
     SendDacMsg(CMD_SET_LDAC_PIN, 0, SET_LDAC_PIN_INACTIVE_DAC_B_INACTIVE_DAC_A);
     SendDacMsg(CMD_POWER_DAC, 0, POWER_DOWN_DAC_B_HI_Z);
 
-    SetSetpoint(0);
+    SetSetpoint(1000);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -62,7 +63,9 @@ CurrentPidTask::~CurrentPidTask()
 ///////////////////////////////////////////////////////////////////////////////
 void    CurrentPidTask::ExecuteThread()
 {
-    TickType_t    nPrevWakeTime = xTaskGetTickCount();
+    TickType_t  nPrevWakeTime = xTaskGetTickCount();
+    Pid         pid(1, 0, 0, -2 * 2796, 2 * 2796);
+    int32_t     nControlVar = 0;
     
     while (true)
     {
@@ -71,29 +74,22 @@ void    CurrentPidTask::ExecuteThread()
         
         if (_bEnabled)
         {
-            //Convert A/D counts to mV.
-            int32_t nPidError_A2DCounts = (int32_t)_nSetpoint_A2DCounts - (int32_t)GetDac(0);
+            //Get current A/D counts.
+            int32_t nA2DCounts = (int32_t)GetA2D(1) - 21870;
+            pid.Service(1, _nSetpoint_A2DCounts, nA2DCounts, _nSetpoint_A2DCounts - nA2DCounts, &nControlVar);
 
-            int32_t nSignedControlVar_A2DCounts =
-                    (_nProportionalGain * nPidError_A2DCounts) +
-                    (_nIntegralGain * _nAccError_A2DCounts) +
-                    (_nDerivativeGain * (nPidError_A2DCounts - _nPrevPidError_A2DCounts));
+//            static int32_t nOffset = 0;
+//            static int32_t nCounter = 0;
+//            nCounter++;
+//            nControlVar = (nCounter / 10) & 0x01 ? 5000 : -5000;
+            SetControlVar((0xFFFF / 2) + nControlVar);
+//            nOffset = (nOffset >= 10000) ? 0 : nOffset + 100;
 
-            uint32_t nControlVar_A2DCounts = (uint32_t)(nSignedControlVar_A2DCounts + (0xFFFF / 2));
-            SetControlVar(nControlVar_A2DCounts);
-
-            _nPrevPidError_A2DCounts = nPidError_A2DCounts;
-            _nAccError_A2DCounts += nPidError_A2DCounts;
+            gioSetBit(mibspiPORT5, PIN_SIMO, 1);    //Enable TEC.
         }
         else //not enabled.
         {
-            //Must stay low for 80 ns.
-            gioSetBit(gioPORTA, kClearBit, 1);
-            gioSetBit(gioPORTA, kClearBit, 0);
-            gioSetBit(gioPORTA, kClearBit, 0);
-            gioSetBit(gioPORTA, kClearBit, 0);
-            gioSetBit(gioPORTA, kClearBit, 0);
-            gioSetBit(gioPORTA, kClearBit, 1);
+            gioSetBit(mibspiPORT5, PIN_SIMO, 0);    //Disable TEC.
         }
     }
 }
@@ -109,18 +105,12 @@ void CurrentPidTask::SetEnabledFlg(bool b)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void CurrentPidTask::SetSetpoint(uint32_t nSetpoint_mA)
+void CurrentPidTask::SetSetpoint(int32_t nSetpoint_mA)
 {
     _nSetpoint_mA = nSetpoint_mA;
 
-    //Convert mA to mV.
-    //For this A/D: 0 - 15000mA = 70 - 3270mV.
-    //so: mV = (.213 * mA) + 70
-    uint32_t nSetpoint_mV = ((nSetpoint_mA * 1000) / 4697) + 70;
-
-    //Convert mV A/D counts.
-    //For this A/D: 0 - 5000mV = 0 0xFFFF counts.
-    _nSetpoint_A2DCounts = (nSetpoint_mV * 0xFFFF) / 5000;
+    //Convert mA to A/D counts. 2796 counts per 1A.
+    _nSetpoint_A2DCounts = (_nSetpoint_mA * 2796) / 1000;
 
     SetEnabledFlg(true);
 }
@@ -184,15 +174,14 @@ void CurrentPidTask::ReadDacMsg(uint16 cfg, uint16_t* pData)
     arTxBuf[0] = cfg >> 8;
     arTxBuf[1] = cfg & 0x00FF;
 
-    gioSetBit(mibspiPORT5, PIN_SOMI, 1);          //Conversion pin
     gioSetBit(mibspiPORT5, PIN_SOMI, 0);          //Conversion pin
     mibspiSetData(mibspiREG1, 1, arTxBuf);
     mibspiTransfer(mibspiREG1, 1);
     while (! mibspiIsTransferComplete(mibspiREG1, 1));
     gioSetBit(mibspiPORT5, PIN_SOMI, 1);          //Conversion pin
     mibspiGetData(mibspiREG1, 1, arRxBuf);
-    gioSetBit(mibspiPORT5, PIN_SOMI, 0);          //Wait 4 us.
-    gioSetBit(mibspiPORT5, PIN_SOMI, 0);          //Wait 4 us.
+    gioSetBit(mibspiPORT5, PIN_SOMI, 1);          //Wait 4 us.
+    gioSetBit(mibspiPORT5, PIN_SOMI, 1);          //Wait 4 us.
     gioSetBit(mibspiPORT5, PIN_SOMI, 1);          //Conversion pin
 
     *pData = (arRxBuf[0] << 8) + arRxBuf[1];
@@ -200,7 +189,7 @@ void CurrentPidTask::ReadDacMsg(uint16 cfg, uint16_t* pData)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-uint32_t CurrentPidTask::GetDac(int channel)
+uint32_t CurrentPidTask::GetA2D(int channel)
 {
     uint16 data;
     uint16 cfg = 0;
@@ -217,8 +206,8 @@ uint32_t CurrentPidTask::GetDac(int channel)
     gioSetBit(mibspiPORT3, PIN_ENA, Spi1SomiSrc::kTecAdc);
 
     ReadDacMsg(cfg, &data); // conv DATA(n-1), clock out CFG(n), clock in DATA(n-2)
-    ReadDacMsg(cfg, &data); // conv DATA(n), clock out CFG(n+1), clock in DATA(n-1)
-    ReadDacMsg(cfg, &data); // conv DATA(n+1), clock out CFG(n+2), clock in DATA(n)
+    ReadDacMsg(0x00, &data); // conv DATA(n), clock out CFG(n+1), clock in DATA(n-1)
+    ReadDacMsg(0x00, &data); // conv DATA(n+1), clock out CFG(n+2), clock in DATA(n)
 
     return data;
 }

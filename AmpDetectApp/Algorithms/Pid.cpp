@@ -4,7 +4,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-bool Pid::Service (uint32_t nPeriod_ms, int32_t nSetpoint_mC, int32_t nProcessVar, int32_t nProcessErr, int32_t* pControlVar)
+bool Pid::Service (uint32_t nPeriod_ms, int32_t nSetpoint, int32_t nProcessVar, int32_t nProcessErr, int32_t* pControlVar)
 {
     int32_t nNewAccInt;         //Proposed new integrator value
     
@@ -12,8 +12,8 @@ bool Pid::Service (uint32_t nPeriod_ms, int32_t nSetpoint_mC, int32_t nProcessVa
     if (_bIsStable == false)
     {
         //Determine if the temperature is stable.
-        if ((nProcessVar < (nSetpoint_mC + _nStableBand_mC)) &&
-            (nProcessVar > (nSetpoint_mC - _nStableBand_mC)))
+        if ((nProcessVar < (nSetpoint + _nStableBand)) &&
+            (nProcessVar > (nSetpoint - _nStableBand)))
         {
             _nStableTimer_ms += nPeriod_ms;
             if (_nStableTimer_ms >= _nStablePeriod_ms)
@@ -23,26 +23,27 @@ bool Pid::Service (uint32_t nPeriod_ms, int32_t nSetpoint_mC, int32_t nProcessVa
 
     //Compute new integrator and the final control output.
     nNewAccInt = _nIntegrationAcc + nProcessErr;
-    *pControlVar = (((_nKp * nProcessErr) / 1000) + ((_nKi * nNewAccInt) / 1000)) >> _nShift;
+    *pControlVar = ((_nKp * nProcessErr) + (_nKi * nNewAccInt)) >> _nShift;
 
     //Check for saturation.  In the event of saturation in any one direction,
     //inhibit saving the integrator if doing so would deepen the saturation.
     bool bIntegratorOK = true;
 
     //Positive saturation?
-    if (*pControlVar > _nMaxPwr_uA)
+    if (*pControlVar > _nMaxPwr)
     {
         //Clamp the output
-        *pControlVar =_nMaxPwr_uA;
+        *pControlVar =_nMaxPwr;
 
         //Error is the same sign? Inhibit integration.
         if (nProcessErr > 0)
             bIntegratorOK = false;
     }
-    else if (*pControlVar < _nMinPwr_uA)    //Negative saturation.
+    else if (*pControlVar < _nMinPwr)    //Negative saturation.
     {
-        *pControlVar = _nMinPwr_uA;
+        *pControlVar = _nMinPwr;
 
+        //Error is the same sign? Inhibit integration.
         if (nProcessErr < 0)
             bIntegratorOK = false;
     }

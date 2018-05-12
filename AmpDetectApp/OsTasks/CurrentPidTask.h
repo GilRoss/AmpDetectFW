@@ -123,11 +123,11 @@ public:
 
     void        SetEnabledFlg(bool b);
     bool        GetEnabledFlg()             {return _bEnabled;}
-    void        SetSetpoint(uint32_t nSetpoint_mA);
+    void        SetSetpoint(int32_t nSetpoint_mA);
     int32_t     GetSetPoint()               {return _nSetpoint_mA;}
     void        SendDacMsg(uint8_t nCmd, uint8_t nAdr, uint8_t nHiByte = 0, uint8_t nLoByte = 0);
     void        ReadDacMsg(uint16_t cfg, uint16_t* pData);
-    uint32_t    GetDac(int channel);
+    uint32_t    GetA2D(int channel);
 
 protected:
   
@@ -140,11 +140,11 @@ private:
     static CurrentPidTask*  _pCurrentPidTask;
 
     bool                    _bEnabled;
-    uint32_t                _nSetpoint_mA;
-    uint32_t                _nSetpoint_A2DCounts;
-    int32_t                 _nProportionalGain;
-    int32_t                 _nIntegralGain;
-    int32_t                 _nDerivativeGain;
+    int32_t                 _nSetpoint_mA;
+    int32_t                 _nSetpoint_A2DCounts;
+    uint32_t                _nProportionalGain;
+    uint32_t                _nIntegralGain;
+    uint32_t                _nDerivativeGain;
 
     int32_t                 _nPrevPidError_A2DCounts;
     int32_t                 _nAccError_A2DCounts;
