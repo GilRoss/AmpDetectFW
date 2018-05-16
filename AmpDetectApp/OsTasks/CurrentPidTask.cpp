@@ -21,11 +21,10 @@ CurrentPidTask* CurrentPidTask::GetInstance()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-extern "C" void StartCurrentPidTask(void * pvParameters);
-void StartCurrentPidTask(void * pvParameters)
+extern "C" void CurrentPid();
+void PidForCurrent()
 {
-    CurrentPidTask* pCurrentPidTask = CurrentPidTask::GetInstance();
-    pCurrentPidTask->ExecuteThread();
+    gioSetBit(mibspiPORT5, PIN_SIMO, 1);    //Enable TEC.
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -49,8 +48,6 @@ CurrentPidTask::CurrentPidTask()
     SendDacMsg(CMD_ENABLE_INT_REF, 0, DISABLE_INT_REF_AND_RESET_DAC_GAINS_TO_1);
     SendDacMsg(CMD_SET_LDAC_PIN, 0, SET_LDAC_PIN_INACTIVE_DAC_B_INACTIVE_DAC_A);
     SendDacMsg(CMD_POWER_DAC, 0, POWER_DOWN_DAC_B_HI_Z);
-
-    SetSetpoint(1000);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -64,7 +61,7 @@ CurrentPidTask::~CurrentPidTask()
 void    CurrentPidTask::ExecuteThread()
 {
     TickType_t  nPrevWakeTime = xTaskGetTickCount();
-    Pid         pid(1, 0, 0, -2 * 2796, 2 * 2796);
+    Pid         pid(10, 15, 0, -4000, 3500, 3);
     int32_t     nControlVar = 0;
     
     while (true)
@@ -75,17 +72,12 @@ void    CurrentPidTask::ExecuteThread()
         if (_bEnabled)
         {
             //Get current A/D counts.
-            int32_t nA2DCounts = (int32_t)GetA2D(1) - 21870;
-            pid.Service(1, _nSetpoint_A2DCounts, nA2DCounts, _nSetpoint_A2DCounts - nA2DCounts, &nControlVar);
+            int32_t nA2DCounts = (int32_t)GetA2D(1) - 21955;
+            int32_t nErrCounts = _nSetpoint_A2DCounts - nA2DCounts;
+            pid.Service(1, _nSetpoint_A2DCounts, nA2DCounts, nErrCounts, &nControlVar);
+            SetControlVar((0xFFFF / 2) + 305 + nControlVar);
 
-//            static int32_t nOffset = 0;
-//            static int32_t nCounter = 0;
-//            nCounter++;
-//            nControlVar = (nCounter / 10) & 0x01 ? 5000 : -5000;
-            SetControlVar((0xFFFF / 2) + nControlVar);
-//            nOffset = (nOffset >= 10000) ? 0 : nOffset + 100;
-
-            gioSetBit(mibspiPORT5, PIN_SIMO, 1);    //Enable TEC.
+            //gioSetBit(mibspiPORT5, PIN_SIMO, 1);    //Enable TEC.
         }
         else //not enabled.
         {
@@ -109,8 +101,9 @@ void CurrentPidTask::SetSetpoint(int32_t nSetpoint_mA)
 {
     _nSetpoint_mA = nSetpoint_mA;
 
-    //Convert mA to A/D counts. 2796 counts per 1A.
-    _nSetpoint_A2DCounts = (_nSetpoint_mA * 2796) / 1000;
+    //Convert mA to A/D counts. 3600 counts per 1A.
+//    _nSetpoint_A2DCounts = (_nSetpoint_mA * 3600) / 1000;
+    _nSetpoint_A2DCounts = (_nSetpoint_mA * 1000) / 1000;
 
     SetEnabledFlg(true);
 }
@@ -131,9 +124,6 @@ int32_t    CurrentPidTask::GetProcessVar()
 
     //Read the A/D.
     mibspiGetData(mibspiREG1, 0, arRxBuf);
-
-//    int32_t nCurrentVal = 0;
-//    int32_t nProcessVar_mA = (nCurrentVal * 9.05 / 6.04 - 2.5) / (20.0 * 0.008);
 
     return 0; //return nProcessVar_mA;
 }
