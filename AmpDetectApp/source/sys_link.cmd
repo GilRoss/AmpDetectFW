@@ -89,6 +89,7 @@ SECTIONS
     
 
 /* USER CODE BEGIN (4) */
+	.init_array   : {} > FLASH0
     .sysmem       : {} > RAM
 /* USER CODE END */
 }
