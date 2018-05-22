@@ -54,8 +54,7 @@
 #include "os_task.h"
 #include "gio.h"
 #include "mibspi.h"
-#include "sci.h"
-#include "sys_dma.h"
+#include "het.h"
 /* USER CODE END */
 
 /** @fn void main(void)
@@ -67,7 +66,6 @@
 */
 
 /* USER CODE BEGIN (2) */
-void StartCurrentPidTask();
 void StartPcrTask();
 void StartHostCommTask();
 /* USER CODE END */
@@ -77,9 +75,7 @@ int main(void)
 /* USER CODE BEGIN (3) */
     gioInit();
     mibspiInit();
-
-    //Create the PCR task.
-    xTaskCreate(StartCurrentPidTask, "CurrentPidTask", 1 * 1024, NULL, 5, NULL );
+    hetInit();
 
     //Create the PCR task.
     xTaskCreate(StartPcrTask, "PcrTask", 1 * 1024, NULL, 3, NULL );

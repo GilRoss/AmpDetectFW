@@ -15,7 +15,7 @@
 class Site
 {
 public:
-    enum    {kPidTick_ms = 100};
+    enum    {kPidTick_ms = 50};
     enum    {kThermalAcqPeriod_ms = 250};
     enum    {kMaxThermalRecs = 1};
     
@@ -51,6 +51,8 @@ private:
     bool                        _bMeerstetterPid;
     Pid                         _pid;
     SiteStatus                  _siteStatus;
+    int32_t                     _nTempStableTolerance_mC;
+    uint32_t                    _nTempStableTime_ms;
     std::vector<OpticsRec>      _arOpticsRecs;
     std::vector<ThermalRec>     _arThermalRecs;
     uint32_t                    _nThermalAcqTimer_ms;

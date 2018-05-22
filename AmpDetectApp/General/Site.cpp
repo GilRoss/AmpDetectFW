@@ -6,8 +6,10 @@ Site::Site(uint32_t nSiteIdx)
     :_nSiteIdx(nSiteIdx)
     ,_thermalDrv(nSiteIdx)
     ,_opticsDrv(nSiteIdx)
-    ,_bMeerstetterPid(true)
-    ,_pid(1400,12,0,-8000, 8000, 0)
+    ,_bMeerstetterPid(false)
+    ,_pid(0.050, 3000, -3000, 0.00005, 0.000005, 0)
+    ,_nTempStableTolerance_mC(1000) // + or -
+    ,_nTempStableTime_ms(1000)
     ,_nThermalAcqTimer_ms(0)
     ,_nThermalRecPutIdx(0)
     ,_nThermalRecGetIdx(0)
@@ -15,6 +17,16 @@ Site::Site(uint32_t nSiteIdx)
     ,_nManControlSetpoint_mC(0)
 {
     _arThermalRecs.resize(kMaxThermalRecs);
+
+    Segment seg; //debug
+    Step step; //debug
+    step.SetTargetTemp(80000, 10000); //debug
+    seg.PushStep(step); //debug
+//    step.SetTargetTemp(90000, 10000); //debug
+//    seg.PushStep(step); //debug
+    seg.SetNumCycles(5); //debug
+    _pcrProtocol.AddSegment(seg); //debug
+    _siteStatus.SetRunningFlg(true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -25,38 +37,53 @@ void Site::Execute()
     Segment seg = _pcrProtocol.GetSegment(_siteStatus.GetSegmentIdx());
     Step step = seg.GetStep(_siteStatus.GetStepIdx());
     
-    bool bIsStable = false;
-    _siteStatus.SetTemperature(_thermalDrv.GetBlockTemp());
+    int32_t nBlockTemp = _siteStatus.GetTemperature();
+    _siteStatus.SetTemperature(nBlockTemp);
     int32_t nControlVar = 0;
     if (_bMeerstetterPid == true)
     {
-        _thermalDrv.SetTargetTemp(step.GetTargetTemp());
-        bIsStable = _thermalDrv.TempIsStable();
+        //_thermalDrv.SetTargetTemp(step.GetTargetTemp());
+//        _bTempStable = _thermalDrv.TempIsStable();
     }
     else //Homegrown PID
     {
-        int32_t nBlockTemp = _siteStatus.GetTemperature();
-        int32_t nProcessErr = step.GetTargetTemp() - nBlockTemp;
-        bIsStable = _pid.Service(kPidTick_ms, step.GetTargetTemp(), nBlockTemp, nProcessErr, &nControlVar);
-        _thermalDrv.SetControlVar(nControlVar);
+        double nControlVar = _pid.calculate(step.GetTargetTemp(), nBlockTemp);
+//        _thermalDrv.SetControlVar((int32_t)(nControlVar * 1000));
+        _thermalDrv.SetControlVar(1000);
+        _thermalDrv.Enable();
+
+        //If we have not yet stabilized on the setpoint?
+/*        if (_siteStatus.GetTempStableFlg() == false)
+        {
+            //Is temperature within tolerance?
+            if ((nBlockTemp >= (step.GetTargetTemp() - _nTempStableTolerance_mC)) &&
+                (nBlockTemp <= (step.GetTargetTemp() + _nTempStableTolerance_mC)))
+            {
+                _siteStatus.SetStableTimer(_siteStatus.GetStableTimer() + kPidTick_ms);
+                if (_siteStatus.GetStableTimer() >= _nTempStableTime_ms)
+                    _siteStatus.SetTempStableFlg(true);
+            }
+            else
+                _siteStatus.SetStableTimer(0);
+        }*/
     }
 
     //Increment elapsed time. Includes ramp.
-    _siteStatus.AddStepTime(kPidTick_ms);
-    _siteStatus.AddRunTime(kPidTick_ms);
+    _siteStatus.AddStepTimer(kPidTick_ms);
+    _siteStatus.AddRunTimer(kPidTick_ms);
             
     //If target temp has been reached, increment hold time.
-    if (bIsStable)
-        _siteStatus.AddHoldTime(kPidTick_ms);
-                
+    if (_siteStatus.GetTempStableFlg())
+        _siteStatus.AddHoldTimer(kPidTick_ms);
+
     //If done with this step.
-    if (_siteStatus.GetHoldTime() >= step.GetHoldTime())
+    if (_siteStatus.GetHoldTimer() >= step.GetHoldTimer())
     {                            
         //If we want to read the fluorescence on this step.
         if (step.GetReadChanFlg(0) == true)
         {
             OpticsRec opticsRec;
-            opticsRec._nTimeTag_ms     = _siteStatus.GetRunTime();
+            opticsRec._nTimeTag_ms     = _siteStatus.GetRunTimer();
             opticsRec._nCycleIdx       = _siteStatus.GetCycle();
             opticsRec._nDarkRead       = _opticsDrv.GetDarkReading(_opticsDrv.kBlue1);
             opticsRec._nIlluminatedRead= _opticsDrv.GetIlluminatedReading(_opticsDrv.kBlue1);
@@ -77,15 +104,15 @@ void Site::Execute()
             if (_siteStatus.GetSegmentIdx() >= _pcrProtocol.GetNumSegs())
                 _siteStatus.SetRunningFlg(false);
         }
-        _pid.ResetStableFlg();
+//        _pid.ResetStableFlg();
     }
 
     //If time to record the thermals.
     _nThermalAcqTimer_ms += kPidTick_ms;
     if (_nThermalAcqTimer_ms >= kThermalAcqPeriod_ms)
     {
-        _arThermalRecs[_nThermalRecPutIdx]._nTimeTag_ms     = _siteStatus.GetRunTime();
-        _arThermalRecs[_nThermalRecPutIdx]._nBlockTemp_mC   = _thermalDrv.GetBlockTemp();
+        _arThermalRecs[_nThermalRecPutIdx]._nTimeTag_ms     = _siteStatus.GetRunTimer();
+        _arThermalRecs[_nThermalRecPutIdx]._nBlockTemp_mC   = _siteStatus.GetTemperature();
         _arThermalRecs[_nThermalRecPutIdx]._nSampleTemp_mC  = _thermalDrv.GetSampleTemp();
         _arThermalRecs[_nThermalRecPutIdx]._nCurrent_mA     = nControlVar;
         _nThermalRecPutIdx++;
@@ -102,14 +129,15 @@ void Site::ManualControl()
     //If the user is setting target temperatures.
     if (_nManControlState == kSetpointControl)
     {
-        int32_t nControlVar;
+        double nControlVar;
         int32_t nBlockTemp = _thermalDrv.GetBlockTemp();
-        int32_t nProcessErr = _nManControlSetpoint_mC - nBlockTemp;
-        _pid.Service(kPidTick_ms, _nManControlSetpoint_mC, nBlockTemp, nProcessErr, &nControlVar);
-        _thermalDrv.SetControlVar(nControlVar);
+        nControlVar = _pid.calculate( _nManControlSetpoint_mC / 1000, nBlockTemp / 1000);
+        _thermalDrv.SetControlVar((int32_t)(nControlVar * 1000));
+        _thermalDrv.Enable();
     }
     else    //Idle
     {
+        _thermalDrv.Disable();
     }
 }
 
@@ -172,9 +200,6 @@ ErrCode Site::SetPidParams(uint32_t nKp, uint32_t nKi, uint32_t nKd)
     //If there is not an active run on this site.
     if (_siteStatus.GetRunningFlg() == false)
     {
-        _pid.SetKp(nKp);
-        _pid.SetKi(nKi);
-        _pid.SetKd(nKd);
     }
     else
         nErrCode = ErrCode::kRunInProgressErr;

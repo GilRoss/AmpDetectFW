@@ -1,66 +1,93 @@
-#include <cstdint>
-#include "Pid.h"
+#ifndef _PID_SOURCE_
+#define _PID_SOURCE_
 
+#include <iostream>
+#include <cmath>
+#include "pid.h"
 
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-bool Pid::Service (uint32_t nPeriod_ms, int32_t nSetpoint, int32_t nProcessVar, int32_t nProcessErr, int32_t* pControlVar)
+using namespace std;
+
+class PIDImpl
 {
-    int32_t nNewAccInt;         //Proposed new integrator value
-    
-    //Once the temperature is stable, it stays stable.
-    if (_bIsStable == false)
-    {
-        //Determine if the temperature is stable.
-        if ((nProcessVar < (nSetpoint + _nStableBand)) &&
-            (nProcessVar > (nSetpoint - _nStableBand)))
-        {
-            _nStableTimer_ms += nPeriod_ms;
-            if (_nStableTimer_ms >= _nStablePeriod_ms)
-                _bIsStable = true;
-        }
-    }
+    public:
+        PIDImpl( double dt, double max, double min, double Kp, double Ki, double Kd );
+        ~PIDImpl();
+        double calculate( double setpoint, double pv );
 
-    //Compute new integrator and the final control output.
-    nNewAccInt = _nIntegrationAcc + nProcessErr;
-    *pControlVar = ((_nKp * nProcessErr) + (_nKi * nNewAccInt)) >> _nShift;
+    private:
+        double _dt;
+        double _max;
+        double _min;
+        double _Kp;
+        double _Kd;
+        double _Ki;
+        double _pre_error;
+        double _integral;
+};
 
-    //Check for saturation.  In the event of saturation in any one direction,
-    //inhibit saving the integrator if doing so would deepen the saturation.
-    bool bIntegratorOK = true;
 
-    //Positive saturation?
-    if (*pControlVar > _nMaxPwr)
-    {
-        //Clamp the output
-        *pControlVar =_nMaxPwr;
-
-        //Error is the same sign? Inhibit integration.
-        if (nProcessErr > 0)
-            bIntegratorOK = false;
-    }
-    else if (*pControlVar < _nMinPwr)    //Negative saturation.
-    {
-        *pControlVar = _nMinPwr;
-
-        //Error is the same sign? Inhibit integration.
-        if (nProcessErr < 0)
-            bIntegratorOK = false;
-    }
-
-    //Update the integrator if allowed.
-    if (bIntegratorOK)
-        _nIntegrationAcc = nNewAccInt;
-
-    return _bIsStable;
+Pid::Pid( double dt, double max, double min, double Kp, double Ki, double Kd )
+{
+    pimpl = new PIDImpl(dt,max,min,Kp,Ki,Kd);
+}
+double Pid::calculate( double setpoint, double pv )
+{
+    return pimpl->calculate(setpoint,pv);
+}
+Pid::~Pid()
+{
+    delete pimpl;
 }
 
 
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-void Pid::ResetStableFlg ()
+/**
+ * Implementation
+*/
+PIDImpl::PIDImpl( double dt, double max, double min, double Kp, double Ki, double Kd ) :
+    _dt(dt),
+    _max(max),
+    _min(min),
+    _Kp(Kp),
+    _Kd(Kd),
+    _Ki(Ki),
+    _pre_error(0),
+    _integral(0)
 {
-    _bIsStable = false;
-    _nStableTimer_ms = 0;
 }
 
+double PIDImpl::calculate( double setpoint, double pv )
+{
+    // Calculate error
+    double error = setpoint - pv;
+
+    // Proportional term
+    double Pout = _Kp * error;
+
+    // Integral term
+    _integral += error * _dt;
+    double Iout = _Ki * _integral;
+
+    // Derivative term
+    double derivative = (error - _pre_error) / _dt;
+    double Dout = _Kd * derivative;
+
+    // Calculate total output
+    double output = Pout + Iout + Dout;
+
+    // Restrict to max/min
+    if( output > _max )
+        output = _max;
+    else if( output < _min )
+        output = _min;
+
+    // Save error to previous error
+    _pre_error = error;
+
+    return output;
+}
+
+PIDImpl::~PIDImpl()
+{
+}
+
+#endif

@@ -2,7 +2,6 @@
 #include <cstdint>
 #include <vector>
 #include "PcrTask.h"
-#include "CurrentPidTask.h"
 #include "HostMessages.h"
 #include "Pid.h"
 #include "ThermalDriver.h"
@@ -27,10 +26,6 @@ PcrTask* PcrTask::GetInstance()
 extern "C" void StartPcrTask(void * pvParameters);
 void StartPcrTask(void * pvParameters)
 {
-    //Wait for CurrentPidTask task object to be created.
-    while (CurrentPidTask::GetInstancePtr() == nullptr)
-        vTaskDelay (100 / portTICK_PERIOD_MS);
-
     PcrTask* pPcrTask = PcrTask::GetInstance();
     pPcrTask->ExecuteThread();
 }

@@ -108,7 +108,7 @@ enum systemClockSource
 *
 *   Oscillator clock source exported from HALCoGen GUI
 */
-#define OSC_FREQ     16.0F
+#define OSC_FREQ     20.0F
 
 /** @def PLL1_FREQ
 *   @brief PLL 1 clock source exported from HALCoGen GUI
@@ -336,15 +336,15 @@ typedef struct system_config_reg
                                     | (uint32)0x20000000U \
                                     | (uint32)((uint32)0x1FU << 24U) \
                                     | (uint32)0x00000000U \
-                                    | (uint32)((uint32)(6U - 1U)<< 16U)\
-                                    | (uint32)(0x7700U))
+                                    | (uint32)((uint32)(4U - 1U)<< 16U)\
+                                    | (uint32)(0x7F00U))
                                     
 #define SYS_PLLCTL1_CONFIGVALUE_2   (((SYS_PLLCTL1_CONFIGVALUE_1) & 0xE0FFFFFFU) | (uint32)((uint32)(1U - 1U) << 24U))
                                     
 #define SYS_PLLCTL2_CONFIGVALUE     ( (uint32)0x00000000U\
                                     | (uint32)((uint32)255U << 22U)\
                                     | (uint32)((uint32)7U << 12U)\
-                                    | (uint32)((uint32)(2U - 1U)<< 9U)\
+                                    | (uint32)((uint32)(4U - 1U)<< 9U)\
                                     | (uint32)61U)
                                     
 #define SYS_UERFLAG_CONFIGVALUE     0U
@@ -377,10 +377,10 @@ typedef struct system_config_reg
 #define SYS_DEVCR1_CONFIGVALUE      0xAU
                                     
 #define SYS_SYSECR_CONFIGVALUE      0x00004000U
-#define SYS2_PLLCTL3_CONFIGVALUE_1  ( (uint32)((uint32)(2U - 1U) << 29U)\
+#define SYS2_PLLCTL3_CONFIGVALUE_1  ( (uint32)((uint32)(4U - 1U) << 29U)\
                                     | (uint32)((uint32)0x1FU << 24U) \
-                                    | (uint32)((uint32)(6U - 1U)<< 16U) \
-                                    | (uint32)(0x7700U))
+                                    | (uint32)((uint32)(4U - 1U)<< 16U) \
+                                    | (uint32)(0x7F00U))
                                     
 #define SYS2_PLLCTL3_CONFIGVALUE_2  (((SYS2_PLLCTL3_CONFIGVALUE_1) & 0xE0FFFFFFU) | (uint32)((uint32)(1U - 1U) << 24U))
 #define SYS2_STCCLKDIV_CONFIGVALUE  0U

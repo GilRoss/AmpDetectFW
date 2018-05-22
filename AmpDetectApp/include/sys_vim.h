@@ -92,6 +92,7 @@ extern void esmHighInterrupt(void);
 extern void phantomInterrupt(void);
 extern void vPortPreemptiveTick(void);
 extern void vPortYeildWithinAPI(void);
+extern void het2HighLevelInterrupt(void);
 
 /* USER CODE BEGIN (3) */
 /* USER CODE END */
@@ -320,7 +321,7 @@ typedef struct vim_config_reg
                                     | (uint32)((uint32)0U << 28U)\
                                     | (uint32)((uint32)0U << 29U)\
                                     | (uint32)((uint32)0U << 30U)\
-                                    | (uint32)((uint32)0U << 31U))
+                                    | (uint32)((uint32)1U << 31U))
 						
 #define VIM_REQMASKSET2_CONFIGVALUE	( (uint32)((uint32)0U << 0U)\
                                     | (uint32)((uint32)0U << 1U)\
