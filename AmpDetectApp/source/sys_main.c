@@ -55,6 +55,7 @@
 #include "gio.h"
 #include "mibspi.h"
 #include "het.h"
+#include "sci.h"
 /* USER CODE END */
 
 /** @fn void main(void)
@@ -76,6 +77,7 @@ int main(void)
     gioInit();
     mibspiInit();
     hetInit();
+    sciInit();
 
     //Create the PCR task.
     xTaskCreate(StartPcrTask, "PcrTask", 1 * 1024, NULL, 3, NULL );

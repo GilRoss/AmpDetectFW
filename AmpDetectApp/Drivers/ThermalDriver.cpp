@@ -59,10 +59,10 @@ void ThermalDriver::CurrentPidISR()
 //            SetCurrentControlVar((0xFFFF / 2) + 220 + (int32_t)_nControlVar);
             static uint32_t nCount = 0;
             if (nCount++ & 0x200)
-                SetCurrentControlVar((0xFFFF / 2) + 220 + (int32_t)0);
+                SetCurrentControlVar((0xFFFF / 2) + 220 + (int32_t)1000);
             else
-                SetCurrentControlVar((0xFFFF / 2) + 220 - (int32_t)0);
-            gioSetBit(mibspiPORT5, PIN_SIMO, 0);
+                SetCurrentControlVar((0xFFFF / 2) + 220 - (int32_t)1000);
+            gioSetBit(mibspiPORT5, PIN_SIMO, 1);
         }
     }
     else
