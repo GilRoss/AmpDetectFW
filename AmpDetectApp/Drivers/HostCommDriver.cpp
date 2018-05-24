@@ -3,7 +3,7 @@
 #include "os_task.h"
 #include "sci.h"
 
-//UART_HandleTypeDef      _huart2;
+static bool bRequestComplete = false;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -16,7 +16,8 @@ HostCommDriver::HostCommDriver()
 ///////////////////////////////////////////////////////////////////////////////
 bool HostCommDriver::TxMessage(uint8_t* pMsgBuf, uint32_t nMsgSize)
 {
-    sciSend(sciBASE_t *sci, uint32 length, uint8 * data);
+    uint8_t arTxBuf[25];
+    sciSend(scilinREG, sizeof(arTxBuf), arTxBuf);
     return true;
 }
 
@@ -24,22 +25,24 @@ bool HostCommDriver::TxMessage(uint8_t* pMsgBuf, uint32_t nMsgSize)
 ///////////////////////////////////////////////////////////////////////////////
 uint32_t HostCommDriver::RxMessage(uint8_t* pDst, uint32_t nDstSize)
 {
-/*    HAL_UART_Receive_IT(&_huart2, pDst, nDstSize);
-    
     //First, get the header of the incoming message.
     HostMsg msgHdr;
-    while ((nDstSize - _huart2.RxXferCount) < msgHdr.GetStreamSize())
-        osDelay(5);  
+    bRequestComplete = false;
+    sciReceive(scilinREG, msgHdr.GetStreamSize(), pDst);
+    while (! bRequestComplete)
+        vTaskDelay (10 / portTICK_PERIOD_MS);
     msgHdr << pDst;
     
-    //Get the remainder of the message.
-    while ((nDstSize - _huart2.RxXferCount) < msgHdr.GetMsgSize())
-        osDelay(5);  
+    //If there is more than just the header, get the remainder of the message.
+    if (msgHdr.GetStreamSize() <= msgHdr.GetMsgSize())
+    {
+        bRequestComplete = false;
+        sciReceive(scilinREG, msgHdr.GetMsgSize() - msgHdr.GetStreamSize(), &pDst[msgHdr.GetStreamSize()]);
+        while (! bRequestComplete)
+            vTaskDelay (10 / portTICK_PERIOD_MS);
+    }
     
-    HAL_UART_Abort(&_huart2);
-    return nDstSize - _huart2.RxXferCount;*/
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    return 0;
+    return msgHdr.GetMsgSize();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -47,5 +50,6 @@ uint32_t HostCommDriver::RxMessage(uint8_t* pDst, uint32_t nDstSize)
 extern "C" void HostCommRxISR();
 void HostCommRxISR()
 {
+    bRequestComplete = true;
 }
 
