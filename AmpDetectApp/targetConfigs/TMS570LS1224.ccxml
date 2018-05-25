@@ -7,7 +7,7 @@
             <instance XML_version="1.2" href="drivers/tixds510cs_dap.xml" id="drivers" xml="tixds510cs_dap.xml" xmlpath="drivers"/>
             <instance XML_version="1.2" href="drivers/tixds510cortexR.xml" id="drivers" xml="tixds510cortexR.xml" xmlpath="drivers"/>
             <platform XML_version="1.2" id="platform_0">
-                <instance XML_version="1.2" desc="TMS570LS1224_0" href="devices/tms570ls1224.xml" id="TMS570LS1224_0" xml="tms570ls1224.xml" xmlpath="devices"/>
+                <instance XML_version="1.2" desc="TMS570LS1227_0" href="devices/tms570ls1227.xml" id="TMS570LS1227_0" xml="tms570ls1227.xml" xmlpath="devices"/>
             </platform>
         </connection>
     </configuration>

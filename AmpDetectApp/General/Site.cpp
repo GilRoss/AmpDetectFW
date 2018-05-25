@@ -111,10 +111,12 @@ void Site::Execute()
     _nThermalAcqTimer_ms += kPidTick_ms;
     if (_nThermalAcqTimer_ms >= kThermalAcqPeriod_ms)
     {
-        _arThermalRecs[_nThermalRecPutIdx]._nTimeTag_ms     = _siteStatus.GetRunTimer();
-        _arThermalRecs[_nThermalRecPutIdx]._nBlockTemp_mC   = _siteStatus.GetTemperature();
-        _arThermalRecs[_nThermalRecPutIdx]._nSampleTemp_mC  = _thermalDrv.GetSampleTemp();
-        _arThermalRecs[_nThermalRecPutIdx]._nCurrent_mA     = nControlVar;
+        _arThermalRecs[_nThermalRecPutIdx]._nTimeTag_ms = _siteStatus.GetRunTimer();
+        _arThermalRecs[_nThermalRecPutIdx]._nChan1_mC   = _siteStatus.GetTemperature();
+        _arThermalRecs[_nThermalRecPutIdx]._nChan2_mC   = _thermalDrv.GetSampleTemp();
+        _arThermalRecs[_nThermalRecPutIdx]._nChan3_mC   = 0;
+        _arThermalRecs[_nThermalRecPutIdx]._nChan4_mC   = 0;
+        _arThermalRecs[_nThermalRecPutIdx]._nCurrent_mA = nControlVar;
         _nThermalRecPutIdx++;
         if (_nThermalRecPutIdx >= kMaxThermalRecs)  //Check for wrap.
             _nThermalRecPutIdx = 0;

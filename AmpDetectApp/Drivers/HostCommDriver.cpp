@@ -16,8 +16,7 @@ HostCommDriver::HostCommDriver()
 ///////////////////////////////////////////////////////////////////////////////
 bool HostCommDriver::TxMessage(uint8_t* pMsgBuf, uint32_t nMsgSize)
 {
-    uint8_t arTxBuf[25];
-    sciSend(scilinREG, sizeof(arTxBuf), arTxBuf);
+    sciSend(scilinREG, nMsgSize, pMsgBuf);
     return true;
 }
 
@@ -34,7 +33,7 @@ uint32_t HostCommDriver::RxMessage(uint8_t* pDst, uint32_t nDstSize)
     msgHdr << pDst;
     
     //If there is more than just the header, get the remainder of the message.
-    if (msgHdr.GetStreamSize() <= msgHdr.GetMsgSize())
+    if (msgHdr.GetStreamSize() < msgHdr.GetMsgSize())
     {
         bRequestComplete = false;
         sciReceive(scilinREG, msgHdr.GetMsgSize() - msgHdr.GetStreamSize(), &pDst[msgHdr.GetStreamSize()]);
