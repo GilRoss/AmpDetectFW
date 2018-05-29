@@ -17,16 +17,6 @@ Site::Site(uint32_t nSiteIdx)
     ,_nManControlSetpoint_mC(0)
 {
     _arThermalRecs.resize(kMaxThermalRecs);
-
-    Segment seg; //debug
-    Step step; //debug
-    step.SetTargetTemp(80000, 10000); //debug
-    seg.PushStep(step); //debug
-//    step.SetTargetTemp(90000, 10000); //debug
-//    seg.PushStep(step); //debug
-    seg.SetNumCycles(5); //debug
-    _pcrProtocol.AddSegment(seg); //debug
-    _siteStatus.SetRunningFlg(true);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -34,8 +24,8 @@ Site::Site(uint32_t nSiteIdx)
 void Site::Execute()
 {
     //Set setpoint according to the active segment and step.
-    Segment seg = _pcrProtocol.GetSegment(_siteStatus.GetSegmentIdx());
-    Step step = seg.GetStep(_siteStatus.GetStepIdx());
+    const Segment& seg = _pcrProtocol.GetSegment(_siteStatus.GetSegmentIdx());
+    const Step& step = seg.GetStep(_siteStatus.GetStepIdx());
     
     int32_t nBlockTemp = _siteStatus.GetTemperature();
     _siteStatus.SetTemperature(nBlockTemp);
@@ -48,12 +38,11 @@ void Site::Execute()
     else //Homegrown PID
     {
         double nControlVar = _pid.calculate(step.GetTargetTemp(), nBlockTemp);
-//        _thermalDrv.SetControlVar((int32_t)(nControlVar * 1000));
-        _thermalDrv.SetControlVar(1000);
+        _thermalDrv.SetControlVar((int32_t)(nControlVar * 1000));
         _thermalDrv.Enable();
 
         //If we have not yet stabilized on the setpoint?
-/*        if (_siteStatus.GetTempStableFlg() == false)
+        if (_siteStatus.GetTempStableFlg() == false)
         {
             //Is temperature within tolerance?
             if ((nBlockTemp >= (step.GetTargetTemp() - _nTempStableTolerance_mC)) &&
@@ -65,7 +54,7 @@ void Site::Execute()
             }
             else
                 _siteStatus.SetStableTimer(0);
-        }*/
+        }
     }
 
     //Increment elapsed time. Includes ramp.

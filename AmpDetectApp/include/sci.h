@@ -194,6 +194,7 @@ void scilinGetConfigValue(sci_config_reg_t *config_reg, config_value_type_t type
 void sciNotification(sciBASE_t *sci, uint32 flags);
 
 /* USER CODE BEGIN (1) */
+uint32 sciGetRxCount();
 /* USER CODE END */
 /**@}*/
 #ifdef __cplusplus

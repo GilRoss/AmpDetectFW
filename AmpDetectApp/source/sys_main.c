@@ -80,10 +80,10 @@ int main(void)
     sciInit();
 
     //Create the PCR task.
-    xTaskCreate(StartPcrTask, "PcrTask", 1 * 1024, NULL, 3, NULL );
+    xTaskCreate(StartPcrTask, "PcrTask", 4 * 1024, NULL, 3, NULL );
 
     //Create the host communications task.
-    xTaskCreate(StartHostCommTask, "HostCommTask", 1 * 1024, NULL, 3, NULL );
+    xTaskCreate(StartHostCommTask, "HostCommTask", 4 * 1024, NULL, 3, NULL );
 
     //Start the RTOS.
     vTaskStartScheduler();

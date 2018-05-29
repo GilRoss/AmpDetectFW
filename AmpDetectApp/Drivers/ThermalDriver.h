@@ -37,7 +37,6 @@ private:
     static void         SetControlVar(uint32_t nISetpoint_mA);
     static void         ReadDacMsg(uint16_t cfg, uint16_t* pData);
     static uint32_t     GetA2D(int channel);
-    static void         DisableTec();
 
     static bool         _bCurrentPidEnabled;
     static bool         _bCurrentPidOverride;

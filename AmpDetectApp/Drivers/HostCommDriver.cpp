@@ -26,19 +26,16 @@ uint32_t HostCommDriver::RxMessage(uint8_t* pDst, uint32_t nDstSize)
 {
     //First, get the header of the incoming message.
     HostMsg msgHdr;
-    bRequestComplete = false;
-    sciReceive(scilinREG, msgHdr.GetStreamSize(), pDst);
-    while (! bRequestComplete)
-        vTaskDelay (10 / portTICK_PERIOD_MS);
+    sciReceive(scilinREG, nDstSize, pDst);
+    while (sciGetRxCount() < msgHdr.GetStreamSize())
+        vTaskDelay (1 / portTICK_PERIOD_MS);
     msgHdr << pDst;
     
     //If there is more than just the header, get the remainder of the message.
     if (msgHdr.GetStreamSize() < msgHdr.GetMsgSize())
     {
-        bRequestComplete = false;
-        sciReceive(scilinREG, msgHdr.GetMsgSize() - msgHdr.GetStreamSize(), &pDst[msgHdr.GetStreamSize()]);
-        while (! bRequestComplete)
-            vTaskDelay (10 / portTICK_PERIOD_MS);
+        while (sciGetRxCount() < msgHdr.GetMsgSize())
+            vTaskDelay (1 / portTICK_PERIOD_MS);
     }
     
     return msgHdr.GetMsgSize();
