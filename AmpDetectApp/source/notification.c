@@ -146,8 +146,19 @@ void pwmNotification(hetBASE_t * hetREG,uint32 pwm, uint32 notification)
 {
 /*  enter user code between the USER CODE BEGIN and USER CODE END. */
 /* USER CODE BEGIN (35) */
-    void CurrentPidISR();
-    CurrentPidISR();
+    if(hetREG == hetREG1)
+    {
+        if ((pwm == pwm0) && (notification == pwmEND_OF_PERIOD))
+        {
+            void OpticsIntegrationDoneISR();
+            OpticsIntegrationDoneISR();
+        }
+    }
+    else if (hetREG == hetREG2)
+    {
+        void CurrentPidISR();
+        CurrentPidISR();
+    }
 /* USER CODE END */
 }
 

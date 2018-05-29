@@ -5,6 +5,10 @@
 #include "FreeRTOS.h"
 #include "os_task.h"
 #include "os_semphr.h"
+#include "gio.h"
+#include "mibspi.h"
+#include "het.h"
+#include "rti.h"
 
 /*#include    "stm32l4xx_hal.h"
 #include    "stm32l4xx_hal_spi.h"
@@ -42,6 +46,9 @@
 #define     kLed_Ldac_Port      GPIOC
 #define     kLed_Ldac_Pin       GPIO_PIN_5*/
 
+#define     kledDacGroup        (0)
+#define     kpdAdcGroup         (1)
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -49,199 +56,87 @@ class OpticsDriver
 {
 public:
     enum    {kBlue1 = 0, kGreen, kRed1, kBrown, kRed2, kBlue2, kNumOptChans};
+    enum    {kwrInputRegN = 0, kupdateDACRegN, kwrInputupdateAll, kwrInputupdateN, kpwrDownN, kpwrDownChip, kselectIntRef, kselectExtRef, kNoOp};
+    enum AdcCfgBit {KEEP_CFG, OVERWRITE_CFG};
+    enum AdcBwSelectBit {QUARTER_BW, FULL_BW};
+    enum AdcReadBackBit {READ_BACK_EN, READ_BACK_DISABLE};
+    enum AdcRefSelectionBits {
+            INT_REF2_5_AND_TEMP_SENS,   // REF = 2.5 V buffered output.
+            INT_REF4_096_AND_TEMP_SENS, // REF = 4.096 V buffered output.
+            EXT_REF_AND_TEMP_SENS,      // Internal buffer disabled
+            EXT_REF_AND_TEMP_SENS_BUFF, // Internal buffer and temperature sensor enabled.
+            EXT_REF = 6,                // Int ref, int buffer, and temp sensor disabled.
+            EXT_REF_BUFF                // Int buffer enabled. Int ref and temp sensor disabled.
+        };
+    enum AdcChSeqBits {
+            DISABLE_SEQ,
+            UPDATE_CFG,
+            SCAN_IN_CH_AND_TEMP,
+            SCAN_IN_CH
+        };
+    enum AdcInChCfgBits {
+            BIPOLAR_DIFF_PAIRS  = 0, // INx referenced to VREF/2 ± 0.1 V.
+            BIPOLAR             = 2, // INx referenced to COM = VREF/2 ± 0.1 V.
+            TEMP_SENSOR         = 3, // Temperature sensor
+            UNIPOLAR_DIFF_PAIRS = 4, // INx referenced to GND ± 0.1 V.
+            UNIPOLAR_REF_TO_COM = 6, // INx referenced to COM = GND ± 0.1 V.
+            UNIPOLAR_REF_TO_GND = 7 // INx referenced to GND
+         };
+    enum PDAdcChannels {
+            PDINPUTA1 = 0,
+            PDINPUTA2 = 1,
+            PDINPUTA3 = 2,
+            PDINPUTB1 = 3,
+            PDINPUTB2 = 4,
+            PDINPUTB3 = 5
+        };
+    enum AdcCtrlRegisterShifts {
+            READ_BACK_SHIFT   =  0,
+            SEQ_EN_SHIFT      =  1,
+            REF_SEL_SHIFT     =  3,
+            FULL_BW_SEL_SHIFT =  6,
+            IN_CH_SEL_SHIFT   =  7,
+            IN_CH_CFG_SHIFT   = 10,
+            CFG_SHIFT         = 13
+        };
+    enum pdIntegratorState {
+        RESET_STATE = 0,
+        HOLD_STATE = 1,
+        INTEGRATE_STATE = 2
+    };
+    enum pdIntegratorSwitch {
+        RESET_SW = 0,
+        HOLD_SW = 1
+    };
+    enum pdShiftRegisterPins {
+        DATA_PIN = PIN_HET_24,
+        CLK_PIN = PIN_HET_26,
+        LATCH_PIN = PIN_HET_28
+    };
 
-    OpticsDriver(uint32_t nSiteIdx = 0)
-        :_nLedStateMsk(0)
-    {
-        //Configure SClk, Miso, Mosi and ADC/LED chip select pins.
-/*        __HAL_RCC_GPIOA_CLK_ENABLE();
-        __HAL_RCC_GPIOB_CLK_ENABLE();
-        __HAL_RCC_GPIOC_CLK_ENABLE();
-        GPIO_InitTypeDef  GPIO_InitStruct;
-        GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
-        GPIO_InitStruct.Pull  = GPIO_PULLUP;
-        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
-        
-        //Outputs
-        GPIO_InitStruct.Pin = kAdcCS_Pin;
-        HAL_GPIO_Init(kAdcCS_Port, &GPIO_InitStruct);
-        GPIO_InitStruct.Pin = kSClk_Pin;
-        HAL_GPIO_Init(kSClk_Port, &GPIO_InitStruct);
-        GPIO_InitStruct.Pin = kMosi_Pin;
-        HAL_GPIO_Init(kMosi_Port, &GPIO_InitStruct);
-        GPIO_InitStruct.Pin = kLedSDI_Pin;
-        HAL_GPIO_Init(kLedSDI_Port, &GPIO_InitStruct);
-        GPIO_InitStruct.Pin = kLedCLK_Pin;
-        HAL_GPIO_Init(kLedCLK_Port, &GPIO_InitStruct);
-        GPIO_InitStruct.Pin = kLedLE_Pin;
-        HAL_GPIO_Init(kLedLE_Port, &GPIO_InitStruct);
-        GPIO_InitStruct.Pin = kLedOE_Pin;
-        HAL_GPIO_Init(kLedOE_Port, &GPIO_InitStruct);
-        
-        GPIO_InitStruct.Pin = kLed_CS_Pin;
-        HAL_GPIO_Init(kLed_CS_Port, &GPIO_InitStruct);
-        GPIO_InitStruct.Pin = kLed_SClk_Pin;
-        HAL_GPIO_Init(kLed_SClk_Port, &GPIO_InitStruct);
-        GPIO_InitStruct.Pin = kLed_Mosi_Pin;
-        HAL_GPIO_Init(kLed_Mosi_Port, &GPIO_InitStruct);
-        GPIO_InitStruct.Pin = kLed_Ldac_Pin;
-        HAL_GPIO_Init(kLed_Ldac_Port, &GPIO_InitStruct);
-        GPIO_InitStruct.Pin = GPIO_PIN_10;
-        HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+    //bool _integrationEnd;
+
+
+    OpticsDriver(uint32_t nSiteIdx = 0);
        
-        //Inputs
-        GPIO_InitStruct.Mode  = GPIO_MODE_INPUT;
-        GPIO_InitStruct.Pin = kMiso_Pin;
-        HAL_GPIO_Init(kMiso_Port, &GPIO_InitStruct);
-        GPIO_InitStruct.Pin = kLed_Miso_Pin;
-        HAL_GPIO_Init(kLed_Miso_Port, &GPIO_InitStruct);
-        
-        //Initial state for chip selects.
-        HAL_GPIO_WritePin(kAdcCS_Port, kAdcCS_Pin, GPIO_PIN_SET);
-        HAL_GPIO_WritePin(kLed_CS_Port, kLed_CS_Pin, GPIO_PIN_SET);
-        HAL_GPIO_WritePin(kLed_Ldac_Port, kLed_Ldac_Pin, GPIO_PIN_SET);
-*/
-        SetLedsOff();
-    }
-       
-    uint32_t GetDarkReading(uint32_t nChanIdx)
-    {
-        SetLedsOff();
-
-        //Get average of multiple readings.
-        uint32_t nAve = 0;
-        for (int i = 0; i < 10; i++)
-            nAve += GetAdc(nChanIdx);
-
-        return (nAve / 10);
-    }
-       
-    uint32_t GetIlluminatedReading(uint32_t nChanIdx)
-    {
-        //LED = on, wait for exposure time.
-        SetLedState(nChanIdx, true);
-        vTaskDelay(2);
-        
-        //Get average of multiple readings.
-        uint32_t nAve = 0;
-        for (int i = 0; i < 10; i++)
-            nAve += GetAdc(nChanIdx);
-
-        SetLedsOff();
-        return (nAve / 10);
-    }
-    
-    void SetLedState(uint32_t nChanIdx, bool bStateOn = true)
-    {
-/*        SetLedsOff();
-        for (int i = 0; i < 8; i++)
-        {
-            GPIO_PinState nState = GPIO_PIN_RESET;
-            if (bStateOn && ((7 - i) ==  nChanIdx))
-                nState = GPIO_PIN_SET;
-          
-            HAL_GPIO_WritePin(kLedSDI_Port, kLedSDI_Pin, nState);
-            HAL_GPIO_WritePin(kLedSDI_Port, kLedSDI_Pin, nState);
-            HAL_GPIO_WritePin(kLedCLK_Port, kLedCLK_Pin, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(kLedCLK_Port, kLedCLK_Pin, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(kLedCLK_Port, kLedCLK_Pin, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(kLedCLK_Port, kLedCLK_Pin, GPIO_PIN_RESET);
-        }
-        
-        //Pulse latch enable and enable outputs.
-        HAL_GPIO_WritePin(kLedSDI_Port, kLedSDI_Pin, GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(kLedLE_Port, kLedLE_Pin, GPIO_PIN_SET);
-        HAL_GPIO_WritePin(kLedLE_Port, kLedLE_Pin, GPIO_PIN_SET);
-        HAL_GPIO_WritePin(kLedLE_Port, kLedLE_Pin, GPIO_PIN_SET);
-        HAL_GPIO_WritePin(kLedLE_Port, kLedLE_Pin, GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(kLedLE_Port, kLedLE_Pin, GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(kLedLE_Port, kLedLE_Pin, GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(kLedOE_Port, kLedOE_Pin, GPIO_PIN_RESET);*/
-   }
-    
-    void SetLedState2(uint32_t nChanIdx, uint32_t nIntensity, uint32_t nDuration_us)
-    {
-        SetLedIntensity(nChanIdx, nIntensity);
-        
-        //If the user wants to energize LED for a specified amount of time.
-        if (nDuration_us > 0)
-        {
-            for (int i = 0; i < (int)nDuration_us; i++);
-            SetLedIntensity(nChanIdx, 0);
-        }
-   }
-    
-    void SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
-    {
-        //Assume user wants to turn LED off.
-/*        uint32_t nBitPattern = ((uint32_t)0x03 << 4) + nChanIdx;
-        if (nLedIntensity != 0)
-            nBitPattern = ((uint32_t)0x03 << 4) + nChanIdx;
-        nBitPattern = ((nBitPattern << 16) + nLedIntensity) << 8;
-        
-        HAL_GPIO_WritePin(kLed_CS_Port, kLed_CS_Pin, GPIO_PIN_RESET);
-        for (int i = 0; i < 24; i++)
-        {
-            GPIO_PinState nState = GPIO_PIN_RESET;
-            if (nBitPattern & 0x80000000)
-                nState = GPIO_PIN_SET;
-            nBitPattern <<= 1;
-          
-            HAL_GPIO_WritePin(kLed_Mosi_Port, kLed_Mosi_Pin, nState);
-            HAL_GPIO_WritePin(kLed_SClk_Port, kLed_SClk_Pin, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(kLed_SClk_Port, kLed_SClk_Pin, GPIO_PIN_RESET);
-        }
-        
-        //Set CS high, then pulse latch enable.
-        HAL_GPIO_WritePin(kLed_CS_Port, kLed_CS_Pin, GPIO_PIN_SET);
-        for (int i = 0; i < 400; i++);
-        HAL_GPIO_WritePin(kLed_Ldac_Port, kLed_Ldac_Pin, GPIO_PIN_RESET);
-        for (int i = 0; i < 20; i++);
-        HAL_GPIO_WritePin(kLed_Ldac_Port, kLed_Ldac_Pin, GPIO_PIN_SET);*/
-    }
-    
-    void SetLedsOff()
-    {
-/*        HAL_GPIO_WritePin(kLedOE_Port, kLedOE_Pin, GPIO_PIN_SET);
-        HAL_GPIO_WritePin(kLedCLK_Port, kLedCLK_Pin, GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(kLedSDI_Port, kLedSDI_Pin, GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(kLedLE_Port, kLedLE_Pin, GPIO_PIN_RESET);*/
-    }
-    
-    uint32_t GetAdc(uint32_t nChanIdx)
-    {
-//        uint8_t     arChanIdxToAdcIdx[8] = {0x05, 0x06, 0x04, 0x02, 0x01, 0x00, 0x03, 0x07};
-        uint32_t    nAdcVal = 0;
-/*        uint32_t    nTxValue = 0x87000000 | (arChanIdxToAdcIdx[nChanIdx] << 28);
-        
-        HAL_GPIO_WritePin(kSClk_Port, kSClk_Pin, GPIO_PIN_RESET);
-        HAL_GPIO_WritePin(kAdcCS_Port, kAdcCS_Pin, GPIO_PIN_RESET);//Assert chip select
-        for (int i = 0; i < 32; i++)
-        {
-            nAdcVal <<= 1;
-            if (nTxValue & 0x80000000)
-                HAL_GPIO_WritePin(kMosi_Port, kMosi_Pin, GPIO_PIN_SET);
-            else
-                HAL_GPIO_WritePin(kMosi_Port, kMosi_Pin, GPIO_PIN_RESET);
-            nTxValue <<= 1;
-            HAL_GPIO_WritePin(kSClk_Port, kSClk_Pin, GPIO_PIN_SET);
-            GPIO_PinState nState = HAL_GPIO_ReadPin(kMiso_Port, kMiso_Pin);
-            nState = HAL_GPIO_ReadPin(kMiso_Port, kMiso_Pin);
-            HAL_GPIO_WritePin(kSClk_Port, kSClk_Pin, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(kSClk_Port, kSClk_Pin, GPIO_PIN_RESET);
-            if (nState)
-                nAdcVal |= 0x01;
-        }            
-        HAL_GPIO_WritePin(kAdcCS_Port, kAdcCS_Pin, GPIO_PIN_SET);  //deassert chip select
-*/
-        return (nAdcVal >> 7) & 0xFFFF;
-    }
-
+    uint32_t GetDarkReading(uint32_t nChanIdx);
+    uint32_t GetIlluminatedReading(uint32_t nChanIdx);
+    void SetLedState(uint32_t nChanIdx, bool bStateOn = true);
+    void SetLedState2(uint32_t nChanIdx, uint32_t nIntensity, uint32_t nDuration_us);
+    void SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity);
+    void SetLedsOff(uint32_t nChanIdx);
+    void GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChanIdx, uint32_t nDuration_us, uint32_t nLedIntensity, uint16_t *data);
+    void OpticsDriverInit();
+    void AdcConfig();
+    void SetIntegratorState(pdIntegratorState state, uint32_t npdChanIdx);
+    static void OpticsIntegrationDoneISR();
+    uint16_t GetAdc(uint32_t nChanIdx);
     
 protected:
   
 private:
     uint32_t            _nLedStateMsk;
+    static bool         _integrationEnd;
 //    SPI_HandleTypeDef   _hSpi;
 };
 
