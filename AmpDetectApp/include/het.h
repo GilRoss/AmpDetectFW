@@ -519,7 +519,7 @@ typedef struct het_config_reg
 
 
 #define HET1_PRY_CONFIGVALUE     ((uint32)0x00000000U \
-								| (uint32)0x00000000U \
+								| (uint32)0x00000004U \
 								| (uint32)0x00000000U \
 								| (uint32)0x00000000U \
 								| (uint32)0x00000000U \

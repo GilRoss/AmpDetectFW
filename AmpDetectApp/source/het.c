@@ -2076,7 +2076,6 @@ static const hetINSTRUCTION_t het2PROGRAM[58U] =
 };
 
 
-
 /** @fn void hetInit(void)
 *   @brief Initializes the het Driver
 *
@@ -2087,8 +2086,7 @@ static const hetINSTRUCTION_t het2PROGRAM[58U] =
 /* Requirements : HL_SR363 */
 void hetInit(void)
 {
-
- /** @b initialize @b HET */
+    /** @b initialize @b HET */
 
     /** - Set HET pins default output value */
     hetREG1->DOUT = (uint32)((uint32)0U << 31U)
@@ -2748,8 +2746,7 @@ void hetInit(void)
     /**   @note This function has to be called before the driver can be used.\n
     *           This function has to be executed in privileged mode.\n
     */
-    /* Initially Disable PWM Notification */
-    pwmDisableNotification(hetREG1, pwm0, pwmEND_OF_BOTH);
+
 
 }
 /** @fn void pwmStart( hetRAMBASE_t * hetRAM, uint32 pwm)
@@ -2895,7 +2892,7 @@ void pwmSetSignal(hetRAMBASE_t * hetRAM, uint32 pwm, hetSIGNAL_t signal)
     }
     else
     {
-        pwmPeriod = (signal.period * 1000.0F) / 1600.000F;
+        pwmPeriod = (signal.period * 1000.0F) / 800.000F;
         pwmPolarity = s_het2pwmPolarity[pwm];
     }
     if (signal.duty == 0U)
@@ -2954,7 +2951,7 @@ void pwmGetSignal(hetRAMBASE_t * hetRAM, uint32 pwm, hetSIGNAL_t* signal)
     }
     else
     {
-        signal->period = ((float64)pwmPeriod * 1600.000F) / 1000.0F;
+        signal->period = ((float64)pwmPeriod * 800.000F) / 1000.0F;
     }
 }
 
@@ -3152,7 +3149,7 @@ void capGetSignal(hetRAMBASE_t * hetRAM, uint32 cap, hetSIGNAL_t *signal)
     }
     else
     {
-        signal->period = ((float64)pwmPeriod * 1600.000F) / 1000.0F;
+        signal->period = ((float64)pwmPeriod * 800.000F) / 1000.0F;
     }
 }
 
@@ -3189,6 +3186,7 @@ uint32 hetGetTimestamp(hetRAMBASE_t * hetRAM)
 
 /* USER CODE BEGIN (4) */
 /* USER CODE END */
+
 
 /** @fn void het1GetConfigValue(het_config_reg_t *config_reg, config_value_type_t type)
 *   @brief Get the initial or current values of the HET1 configuration registers
@@ -3300,8 +3298,7 @@ void het2GetConfigValue(het_config_reg_t *config_reg, config_value_type_t type)
     }
 }
 
-
-/* USER CODE BEGIN (7) */
+/* USER CODE BEGIN (5) */
 /* USER CODE END */
 
 /** @fn void het1HighLevelInterrupt(void)
@@ -3309,12 +3306,6 @@ void het2GetConfigValue(het_config_reg_t *config_reg, config_value_type_t type)
 */
 #pragma CODE_STATE(het1HighLevelInterrupt, 32)
 #pragma INTERRUPT(het1HighLevelInterrupt, IRQ)
-
-/** @fn void het2HighLevelInterrupt(void)
-*   @brief Level 0 Interrupt for HET2
-*/
-#pragma CODE_STATE(het2HighLevelInterrupt, 32)
-#pragma INTERRUPT(het2HighLevelInterrupt, IRQ)
 
 /* SourceId : HET_SourceId_018 */
 /* DesignId : HET_DesignId_017 */
@@ -3339,6 +3330,16 @@ void het1HighLevelInterrupt(void)
         edgeNotification(hetREG1,vec - 18U);
     }
 }
+
+
+/* USER CODE BEGIN (7) */
+/* USER CODE END */
+
+/** @fn void het2HighLevelInterrupt(void)
+*   @brief Level 0 Interrupt for HET2
+*/
+#pragma CODE_STATE(het2HighLevelInterrupt, 32)
+#pragma INTERRUPT(het2HighLevelInterrupt, IRQ)
 
 /* SourceId : HET_SourceId_020 */
 /* DesignId : HET_DesignId_017 */
