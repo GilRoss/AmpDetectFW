@@ -25,7 +25,7 @@ public:
         if ((_request.GetSiteIdx() < _pPcrTask->GetNumSites()) && (_request.GetChanIdx() < OpticsDriver::kNumOptChans))
         {
             //Try to set the setpoint.
-            Site* pSite = _pPcrTask->GetSitePtr(_request.GetSiteIdx());
+            Site* pSite = _pPcrTask->GetSitePtr();
             nErrCode = pSite->SetOpticsLed(_request.GetChanIdx(),
                                            _request.GetIntensity(),
                                            _request.GetDuration());
