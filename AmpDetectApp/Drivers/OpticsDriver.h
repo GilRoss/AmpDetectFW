@@ -48,6 +48,7 @@
 
 #define     kledDacGroup        (0)
 #define     kpdAdcGroup         (1)
+#define     maxLedIntensity     (40000)
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -125,7 +126,7 @@ public:
     void SetLedState2(uint32_t nChanIdx, uint32_t nIntensity, uint32_t nDuration_us);
     void SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity);
     void SetLedsOff(uint32_t nChanIdx);
-    void GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChanIdx, uint32_t nDuration_us, uint32_t nLedIntensity, uint16_t *data);
+    uint32_t GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChanIdx, uint32_t nDuration_us, uint32_t nLedIntensity);
     void OpticsDriverInit();
     void AdcConfig();
     void SetIntegratorState(pdIntegratorState state, uint32_t npdChanIdx);

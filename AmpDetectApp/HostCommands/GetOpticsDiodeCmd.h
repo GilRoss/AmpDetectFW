@@ -1,5 +1,12 @@
-#ifndef __SetOpticsLedCmd_H
-#define __SetOpticsLedCmd_H
+/*
+ * GetOpticsDiodeCmd.h
+ *
+ *  Created on: May 30, 2018
+ *      Author: z003xk2p
+ */
+
+#ifndef _GETOPTICSDIODECMD_H_
+#define _GETOPTICSDIODECMD_H_
 
 #include <cstdint>
 #include "HostCommand.h"
@@ -8,10 +15,10 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-class SetOpticsLedCmd : public HostCommand
+class GetOpticsDiodeCmd : public HostCommand
 {
 public:
-    SetOpticsLedCmd(const uint8_t* pMsgBuf = NULL, HostCommDriver* pCommDrv = NULL, PcrTask* pPcrTask = NULL)
+    GetOpticsDiodeCmd(const uint8_t* pMsgBuf = NULL, HostCommDriver* pCommDrv = NULL, PcrTask* pPcrTask = NULL)
         :HostCommand(&_request, pMsgBuf, pCommDrv, pPcrTask)
     {
         _request << pMsgBuf;
@@ -19,31 +26,32 @@ public:
 
     virtual void Execute()
     {
-        ErrCode nErrCode = ErrCode::kInvalidCmdParams;
-        
+        ErrCode nErrCode = ErrCode::kNoError;
+        uint32_t diodeValue = 0;
+
         //If site and LED channel index are valid.
-        if ((_request.GetSiteIdx() < _pPcrTask->GetNumSites()) && (_request.GetChanIdx() < OpticsDriver::kNumOptChans))
+        if (_request.GetDiodeIdx() < OpticsDriver::kNumOptChans)
         {
             //Try to set the setpoint.
             Site* pSite = _pPcrTask->GetSitePtr();
-            nErrCode = pSite->SetOpticsLed(_request.GetChanIdx(),
-                                           _request.GetIntensity(),
-                                           _request.GetDuration());
+            diodeValue = pSite->GetOpticsDiode(_request.GetDiodeIdx());
         }
-        
+
         //Send response.
-        _response = (HostMsg)_request;
+        //_response = (HostMsg)_request;
         _response.SetError(nErrCode);
         _response.SetMsgSize(_response.GetStreamSize());
+        _response.SetDiodeValue(diodeValue);
         _response >> _arResponseBuf;
         _pHostCommDrv->TxMessage(_arResponseBuf, _response.GetStreamSize());
     }
 
 protected:
-  
+
 private:
-    SetOpticsLedReq     _request;
-    HostMsg             _response;
+    GetOpticsDiodeReq     _request;
+    GetOpticsDiodeRes     _response;
 };
 
-#endif // __SetOpticsLedCmd_H
+
+#endif /* _GETOPTICSDIODECMD_H_ */

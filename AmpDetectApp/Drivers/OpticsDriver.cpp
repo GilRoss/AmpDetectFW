@@ -21,7 +21,6 @@ OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
 {
     /* Initialize LED and PD Board Driver */
     OpticsDriverInit();
-
 }
 
 /**
@@ -71,30 +70,7 @@ uint32_t OpticsDriver::GetIlluminatedReading(uint32_t nChanIdx)
  */
 void OpticsDriver::SetLedState(uint32_t nChanIdx, bool bStateOn)
 {
-    /*        SetLedsOff();
-            for (int i = 0; i < 8; i++)
-            {
-                GPIO_PinState nState = GPIO_PIN_RESET;
-                if (bStateOn && ((7 - i) ==  nChanIdx))
-                    nState = GPIO_PIN_SET;
 
-                HAL_GPIO_WritePin(kLedSDI_Port, kLedSDI_Pin, nState);
-                HAL_GPIO_WritePin(kLedSDI_Port, kLedSDI_Pin, nState);
-                HAL_GPIO_WritePin(kLedCLK_Port, kLedCLK_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(kLedCLK_Port, kLedCLK_Pin, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(kLedCLK_Port, kLedCLK_Pin, GPIO_PIN_RESET);
-                HAL_GPIO_WritePin(kLedCLK_Port, kLedCLK_Pin, GPIO_PIN_RESET);
-            }
-
-            //Pulse latch enable and enable outputs.
-            HAL_GPIO_WritePin(kLedSDI_Port, kLedSDI_Pin, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(kLedLE_Port, kLedLE_Pin, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(kLedLE_Port, kLedLE_Pin, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(kLedLE_Port, kLedLE_Pin, GPIO_PIN_SET);
-            HAL_GPIO_WritePin(kLedLE_Port, kLedLE_Pin, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(kLedLE_Port, kLedLE_Pin, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(kLedLE_Port, kLedLE_Pin, GPIO_PIN_RESET);
-            HAL_GPIO_WritePin(kLedOE_Port, kLedOE_Pin, GPIO_PIN_RESET);*/
 }
 
 /**
@@ -105,6 +81,7 @@ void OpticsDriver::SetLedState(uint32_t nChanIdx, bool bStateOn)
  */
 void OpticsDriver::SetLedState2(uint32_t nChanIdx, uint32_t nIntensity, uint32_t nDuration_us)
 {
+
     SetLedIntensity(nChanIdx, nIntensity);
 
     //If the user wants to energize LED for a specified amount of time.
@@ -126,7 +103,11 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
     uint16_t nBitPattern[2] = {0xFF00, 0x0000};
 
     nBitPattern[0] = (uint16_t)(nBitPattern[0] | (((uint16_t)kwrInputupdateN << 4) | nChanIdx));
-    nBitPattern[1] = (uint16_t)nLedIntensity;
+    /* Checks if Led Intensity exceeds 2.5 V ~ 40000 counts and caps it */
+    if (nLedIntensity <= maxLedIntensity)
+        nBitPattern[1] = (uint16_t)nLedIntensity;
+    else
+        nBitPattern[1] = (uint16_t)maxLedIntensity;
     gioSetBit(hetPORT1, 13, 0);
     mibspiSetData(mibspiREG3, kledDacGroup, nBitPattern);
     mibspiTransfer(mibspiREG3, kledDacGroup);
@@ -151,7 +132,7 @@ void OpticsDriver::SetLedsOff(uint32_t nChanIdx)
  * Returns:
  * Description:
  */
-void OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChanIdx, uint32_t nDuration_us, uint32_t nLedIntensity, uint16_t *data)
+uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChanIdx, uint32_t nDuration_us, uint32_t nLedIntensity)
 {
     uint16_t adcValue = 0x0000;
     hetSIGNAL_t signal;
@@ -159,31 +140,31 @@ void OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChanIdx,
 
     signal.duty = 50;
     signal.period = nDuration_us;
-    _integrationEnd = FALSE;
+    _integrationEnd = false;
 
     switch(npdChanIdx)
     {
-    case 1:
+    case 0:
         npdChanIdx = 0x0001 << PDINPUTA1;
         adcChannel = 0;
         break;
-    case 2:
+    case 1:
         npdChanIdx = 0x0001 << PDINPUTB1;
         adcChannel = 3;
         break;
-    case 3:
+    case 2:
         npdChanIdx = 0x0001 << PDINPUTA2;
         adcChannel = 1;
         break;
-    case 4:
+    case 3:
         npdChanIdx = 0x0001 << PDINPUTB2;
         adcChannel = 4;
         break;
-    case 5:
+    case 4:
         npdChanIdx = 0x0001 << PDINPUTA3;
         adcChannel = 2;
         break;
-    case 6:
+    case 5:
         npdChanIdx = 0x0001 << PDINPUTB3;
         adcChannel = 5;
         break;
@@ -195,11 +176,11 @@ void OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChanIdx,
     /* Reset Integrator first */
     SetIntegratorState(RESET_STATE, npdChanIdx);
     gioSetBit(hetPORT1, LATCH_PIN, 1); //Enable Reset State
-    for(int i=0; i<delay_uS; i++); //10 ms delay
+    for(int i=0; i<delay_uS; i++); //1 ms delay
 
     /* Turn On LED */
     SetLedIntensity(nledChanIdx, nLedIntensity);
-    for(int i=0; i<delay_uS*10; i++); //Hold for 10 ms time before reading
+    for(int i=0; i<delay_uS*10; i++); //Hold for 10 ms time after turning on LED
 
     /* Set Duration for Integration */
     pwmSetSignal(hetRAM1, pwm0, signal);
@@ -208,7 +189,7 @@ void OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChanIdx,
     SetIntegratorState(INTEGRATE_STATE, npdChanIdx);
     /* Wait until interrupt occurs */
     while (!_integrationEnd);
-    _integrationEnd = FALSE;
+    _integrationEnd = false;
     gioSetBit(hetPORT1, LATCH_PIN, 1); //Enable Integration State (start integrating)
 
     SetIntegratorState(HOLD_STATE, npdChanIdx); //Configure Hold state
@@ -217,11 +198,11 @@ void OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChanIdx,
     while (!_integrationEnd);
     pwmDisableNotification(hetREG1, pwm0, pwmEND_OF_BOTH);
 
-    for(int i=0; i<delay_uS; i++);
+    for(int i=0; i<delay_uS; i++); //1 ms delay
     /* Turn Off LED */
     SetLedsOff(nledChanIdx);
 
-    for(int i=0; i<delay_uS; i++); //Hold for 10 ms time before reading
+    for(int i=0; i<delay_uS; i++); //Hold for 1 ms time before reading
 
     adcValue = GetAdc(adcChannel);
     for(int i=0; i<delay_uS; i++);
@@ -229,7 +210,7 @@ void OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChanIdx,
     SetIntegratorState(RESET_STATE, npdChanIdx);
     gioSetBit(hetPORT1, LATCH_PIN, 1); //Enable Reset State
 
-    *data = adcValue;
+    return (uint32_t)adcValue;
 }
 
 
@@ -271,6 +252,9 @@ void OpticsDriver::OpticsDriverInit(void)
 
     /* Configure ADC on Photo Diode board */
     AdcConfig();
+
+    /* Disable PWM notification */
+    pwmDisableNotification(hetREG1, pwm0, pwmEND_OF_BOTH);
 }
 
 void OpticsDriver::AdcConfig(void)
