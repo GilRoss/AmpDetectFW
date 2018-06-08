@@ -24,7 +24,7 @@ public:
     void            ExecuteThread();
   
     uint32_t        GetNumSites() const   {return _arSitePtrs.size();}
-    Site*           GetSitePtr(uint32_t nSiteIdx)   {return _arSitePtrs[nSiteIdx];}
+    Site*           GetSitePtr(uint32_t nSiteIdx = 0)   {return _arSitePtrs[nSiteIdx];}
     void            GetSysStatus(SysStatus* pSysStatus);
 
 protected:

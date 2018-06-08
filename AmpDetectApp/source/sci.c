@@ -49,7 +49,6 @@
 
 /* USER CODE BEGIN (1) */
 /* USER CODE END */
-
 /** @struct g_sciTransfer
 *   @brief Interrupt mode globals
 *
@@ -746,7 +745,6 @@ void linHighLevelInterrupt(void)
 /* USER CODE BEGIN (36) */
 /* USER CODE END */
 }
-
 /* USER CODE BEGIN (37) */
 uint32 sciGetRxCount()
 {

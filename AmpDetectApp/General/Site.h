@@ -40,6 +40,8 @@ public:
     ErrCode             SetManControlSetpoint(int32_t nSp_mC);
     ErrCode             SetPidParams(uint32_t nKp, uint32_t nKi, uint32_t nKd);
     ErrCode             SetOpticsLed(uint32_t nChanIdx, uint32_t nIntensity, uint32_t nDuration);
+    uint32_t            GetOpticsDiode(uint32_t nDiodeIdx);
+    uint32_t            ReadOptics(uint32_t nLedIdx, uint32_t nDiodeIdx, uint32_t nLedIntensity, uint32_t nIntegrationTime_us);
     
 protected:
   

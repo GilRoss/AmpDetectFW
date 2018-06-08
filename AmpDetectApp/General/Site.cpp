@@ -216,12 +216,40 @@ ErrCode Site::SetOpticsLed(uint32_t nChanIdx, uint32_t nIntensity, uint32_t nDur
     //If there is not an active run on this site.
     if (_siteStatus.GetRunningFlg() == false)
     {
-        _opticsDrv.SetLedState2(nChanIdx, nIntensity, nDuration);
+        _opticsDrv.SetLedIntensity(nChanIdx, nIntensity);
     }
     else
         nErrCode = ErrCode::kRunInProgressErr;
     
     return nErrCode;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+uint32_t Site::GetOpticsDiode(uint32_t nDiodeIdx)
+{
+    uint32_t diodeValue = 0;
+
+    //If there is not an active run on this site.
+    if (_siteStatus.GetRunningFlg() == false)
+    {
+        diodeValue = (uint32_t) _opticsDrv.GetAdc(nDiodeIdx);
+    }
+
+    return diodeValue;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+uint32_t Site::ReadOptics(uint32_t nLedIdx, uint32_t nDiodeIdx, uint32_t nLedIntensity, uint32_t nIntegrationTime_us)
+{
+    uint32_t diodeValue = 0;
+
+    //If there is not an active run on this site.
+    if (_siteStatus.GetRunningFlg() == false)
+    {
+        diodeValue = _opticsDrv.GetPhotoDiodeValue(nLedIdx, nDiodeIdx, nIntegrationTime_us, nLedIntensity);
+    }
+
+    return diodeValue;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
