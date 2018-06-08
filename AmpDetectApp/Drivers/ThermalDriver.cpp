@@ -6,7 +6,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 bool         ThermalDriver::_bCurrentPidEnabled = false;
 bool         ThermalDriver::_bCurrentPidOverride = false;
-Pid          ThermalDriver::_pid(0.000050, 25000, -25000, 6.0, 15.0, 0);
+//Pid          ThermalDriver::_pid(1, 10000, -10000, 0.6, 0.8, 0);    //Peltier.
+Pid          ThermalDriver::_pid(0.000050, 10000, -10000, 1.8, 30100, 0);    //Fixed 2ohm load.
 int32_t      ThermalDriver::_nSetpoint_mA;
 uint32_t     ThermalDriver::_nProportionalGain;
 uint32_t     ThermalDriver::_nIntegralGain;
@@ -54,14 +55,10 @@ void ThermalDriver::CurrentPidISR()
         if (! _bCurrentPidOverride)
         {
             //Get current A/D counts.
-            _nA2DCounts = (int32_t)GetA2D(1) - 21955;
+            _nA2DCounts = (int32_t)GetA2D(1) - 21950;
             _nControlVar = _pid.calculate((double)_nSetpoint_mA, (double)_nA2DCounts);
 //            SetCurrentControlVar((0xFFFF / 2) + 220 + (int32_t)_nControlVar);
-            static uint32_t nCount = 0;
-            if (nCount++ & 0x200)
-                SetCurrentControlVar((0xFFFF / 2) + 220 + (int32_t)1000);
-            else
-                SetCurrentControlVar((0xFFFF / 2) + 220 - (int32_t)1000);
+            SetCurrentControlVar((0xFFFF / 2) + (int32_t)_nControlVar);
             gioSetBit(mibspiPORT5, PIN_SIMO, 1);
         }
     }

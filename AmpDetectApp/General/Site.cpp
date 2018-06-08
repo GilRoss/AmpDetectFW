@@ -7,16 +7,16 @@ Site::Site(uint32_t nSiteIdx)
     ,_thermalDrv(nSiteIdx)
     ,_opticsDrv(nSiteIdx)
     ,_bMeerstetterPid(false)
-    ,_pid(0.050, 3000, -3000, 0.00005, 0.000005, 0)
+    ,_pid((double)kPidTick_ms / 1000, 1500, -1500, 0.00010, 0.00004, 0.0)
     ,_nTempStableTolerance_mC(1000) // + or -
     ,_nTempStableTime_ms(1000)
+    ,_arThermalRecs(kMaxThermalRecs)
     ,_nThermalAcqTimer_ms(0)
     ,_nThermalRecPutIdx(0)
     ,_nThermalRecGetIdx(0)
     ,_nManControlState(kIdle)
     ,_nManControlSetpoint_mC(0)
 {
-    _arThermalRecs.resize(kMaxThermalRecs);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -27,9 +27,9 @@ void Site::Execute()
     const Segment& seg = _pcrProtocol.GetSegment(_siteStatus.GetSegmentIdx());
     const Step& step = seg.GetStep(_siteStatus.GetStepIdx());
     
-    int32_t nBlockTemp = _siteStatus.GetTemperature();
+    int32_t nBlockTemp = _thermalDrv.GetBlockTemp();
     _siteStatus.SetTemperature(nBlockTemp);
-    int32_t nControlVar = 0;
+    double nControlVar = 0;
     if (_bMeerstetterPid == true)
     {
         //_thermalDrv.SetTargetTemp(step.GetTargetTemp());
@@ -37,7 +37,7 @@ void Site::Execute()
     }
     else //Homegrown PID
     {
-        double nControlVar = _pid.calculate(step.GetTargetTemp(), nBlockTemp);
+        nControlVar = _pid.calculate(step.GetTargetTemp(), nBlockTemp);
         _thermalDrv.SetControlVar((int32_t)(nControlVar * 1000));
         _thermalDrv.Enable();
 
@@ -93,7 +93,6 @@ void Site::Execute()
             if (_siteStatus.GetSegmentIdx() >= _pcrProtocol.GetNumSegs())
                 _siteStatus.SetRunningFlg(false);
         }
-//        _pid.ResetStableFlg();
     }
 
     //If time to record the thermals.
@@ -106,9 +105,10 @@ void Site::Execute()
         _arThermalRecs[_nThermalRecPutIdx]._nChan3_mC   = 0;
         _arThermalRecs[_nThermalRecPutIdx]._nChan4_mC   = 0;
         _arThermalRecs[_nThermalRecPutIdx]._nCurrent_mA = nControlVar;
-        _nThermalRecPutIdx++;
-        if (_nThermalRecPutIdx >= kMaxThermalRecs)  //Check for wrap.
-            _nThermalRecPutIdx = 0;
+
+        //Next record, and check for wrap.
+        _nThermalRecPutIdx = (_nThermalRecPutIdx >= (kMaxThermalRecs - 1)) ? 0 : _nThermalRecPutIdx + 1;
+
         _nThermalAcqTimer_ms = 0;
     }
 }
@@ -118,16 +118,26 @@ void Site::Execute()
 void Site::ManualControl()
 {
     //If the user is setting target temperatures.
+//    _nManControlState = kSetpointControl;
     if (_nManControlState == kSetpointControl)
     {
         double nControlVar;
         int32_t nBlockTemp = _thermalDrv.GetBlockTemp();
-        nControlVar = _pid.calculate( _nManControlSetpoint_mC / 1000, nBlockTemp / 1000);
+        nControlVar = _pid.calculate(_nManControlSetpoint_mC, nBlockTemp);
         _thermalDrv.SetControlVar((int32_t)(nControlVar * 1000));
         _thermalDrv.Enable();
     }
     else    //Idle
     {
+//        static uint32_t nCount = 0;
+//        if ((nCount % 3) == 0)
+//            _thermalDrv.SetControlVar((int32_t)1500);
+//        else if ((nCount % 3) == 1)
+//            _thermalDrv.SetControlVar((int32_t)0);
+//        else if ((nCount % 3) == 2)
+//            _thermalDrv.SetControlVar((int32_t)-1500);
+//        nCount++;
+//        _thermalDrv.Enable();
         _thermalDrv.Disable();
     }
 }

@@ -15,9 +15,9 @@
 class Site
 {
 public:
-    enum    {kPidTick_ms = 50};
-    enum    {kThermalAcqPeriod_ms = 250};
-    enum    {kMaxThermalRecs = 1};
+    enum    {kPidTick_ms = 25};
+    enum    {kThermalAcqPeriod_ms = 100};
+    enum    {kMaxThermalRecs = 2};
     
     enum    ManCtrlState : uint32_t
             {kIdle = 0, kSetpointControl, kOpticsLedControl};
