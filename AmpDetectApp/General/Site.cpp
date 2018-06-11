@@ -69,13 +69,13 @@ void Site::Execute()
     if (_siteStatus.GetHoldTimer() >= step.GetHoldTimer())
     {                            
         //If we want to read the fluorescence on this step.
-        if (step.GetReadChanFlg(0) == true)
+        if (step.GetOpticalAcqFlg() == true)
         {
             OpticsRec opticsRec;
             opticsRec._nTimeTag_ms     = _siteStatus.GetRunTimer();
             opticsRec._nCycleIdx       = _siteStatus.GetCycle();
-            opticsRec._nDarkRead       = _opticsDrv.GetDarkReading(_opticsDrv.kBlue1);
-            opticsRec._nIlluminatedRead= _opticsDrv.GetIlluminatedReading(_opticsDrv.kBlue1);
+            opticsRec._nDarkRead       = _opticsDrv.GetDarkReading(_pcrProtocol.GetLedIdx());
+            opticsRec._nIlluminatedRead= _opticsDrv.GetIlluminatedReading(_pcrProtocol.GetLedIdx());
             opticsRec._nShuttleTemp_mC = 0;
             _arOpticsRecs.push_back( opticsRec );
         }
