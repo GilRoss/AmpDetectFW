@@ -74,11 +74,11 @@ void Site::Execute()
             OpticsRec opticsRec;
             opticsRec._nTimeTag_ms     = _siteStatus.GetRunTimer();
             opticsRec._nCycleIdx       = _siteStatus.GetCycle();
-            opticsRec._nDarkRead       = _opticsDrv.GetDarkReading(_pcrProtocol.GetLedIdx());
-            opticsRec._nIlluminatedRead= _opticsDrv.GetIlluminatedReading(_pcrProtocol.GetLedIdx());
+//            opticsRec._nDarkRead       = _opticsDrv.GetDarkReading(_pcrProtocol.GetLedIdx());
+//            opticsRec._nIlluminatedRead= _opticsDrv.GetIlluminatedReading(_pcrProtocol.GetLedIdx());
             opticsRec._nShuttleTemp_mC = 0;
             _arOpticsRecs.push_back( opticsRec );
-        }*/
+        }
         
         //If done with all steps in this segment.
         _siteStatus.NextStep();
