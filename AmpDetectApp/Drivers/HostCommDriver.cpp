@@ -3,8 +3,6 @@
 #include "os_task.h"
 #include "sci.h"
 
-static bool bRequestComplete = false;
-
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -46,6 +44,5 @@ uint32_t HostCommDriver::RxMessage(uint8_t* pDst, uint32_t nDstSize)
 extern "C" void HostCommRxISR();
 void HostCommRxISR()
 {
-    bRequestComplete = true;
 }
 
