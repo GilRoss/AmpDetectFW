@@ -103,6 +103,7 @@ int32_t ThermalDriver::GetBlockTemp()
     uint32_t nA2DCounts = GetA2D(2);
     nA2DCounts = GetA2D(2);
     nA2DCounts = GetA2D(2);
+    GetA2D(1);
     float nVoltage_V = nA2DCounts * (5.0 / 65535);
     int32_t nBlockTemp_mC =  convertVoltageToTemp(nVoltage_V);
 
