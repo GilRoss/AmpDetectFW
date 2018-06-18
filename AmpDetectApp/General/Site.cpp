@@ -73,8 +73,9 @@ void Site::Execute()
         {
             OpticsRec opticsRec;
             //If Detector type is Camera
-            if (_pcrProtocol.GetDetectorIdx() == _pcrProtocol.kCamera)
+            if (_pcrProtocol.GetDetectorType() == _pcrProtocol.kCamera)
             {
+               /*
                 if(!_siteStatus.GetCaptureCameraImageFlg())
                 {
                     // Turn On LED
@@ -84,21 +85,22 @@ void Site::Execute()
                     _siteStatus.SetPausedFlg(true);
                     _siteStatus.SetCaptureCameraImageFlg(true);
                     _siteStatus.SetCameraIdx(_pcrProtocol.GetDetectorIdx());
-                }
+                }*/
             }
-            else if (_pcrProtocol.GetDetectorIdx() == _pcrProtocol.kPhotoDiode)
+            else if (_pcrProtocol.GetDetectorType() == _pcrProtocol.kPhotoDiode)
             {
+               OpticalRead optRead = _pcrProtocol.GetOpticalRead(0);
                opticsRec._nTimeTag_ms     = _siteStatus.GetRunTimer();
                opticsRec._nCycleIdx       = _siteStatus.GetCycle();
-               opticsRec._nDarkRead       = _opticsDrv.GetDarkReading(_pcrProtocol.GetLedIdx());
-               opticsRec._nIlluminatedRead= _opticsDrv.GetIlluminatedReading(_pcrProtocol.GetLedIdx());
+               opticsRec._nDarkRead       = _opticsDrv.GetDarkReading(optRead.GetLedIdx());
+               opticsRec._nIlluminatedRead= _opticsDrv.GetIlluminatedReading(optRead.GetLedIdx());
                opticsRec._nShuttleTemp_mC = 0;
                _arOpticsRecs.push_back( opticsRec );
+               // Turn Off all LED
+               _opticsDrv.SetLedsOff();
             }
         }
-        
-        // Turn Off LED
-        _opticsDrv.SetLedIntensity(_pcrProtocol.GetLedIdx(), 0);
+
         //If done with all steps in this segment.
         _siteStatus.NextStep();
         if (_siteStatus.GetStepIdx() >= seg.GetNumSteps())

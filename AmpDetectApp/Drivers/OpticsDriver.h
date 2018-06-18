@@ -125,7 +125,7 @@ public:
     void SetLedState(uint32_t nChanIdx, bool bStateOn = true);
     void SetLedState2(uint32_t nChanIdx, uint32_t nIntensity, uint32_t nDuration_us);
     void SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity);
-    void SetLedsOff(uint32_t nChanIdx);
+    void SetLedsOff();
     uint32_t GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChanIdx, uint32_t nDuration_us, uint32_t nLedIntensity);
     void OpticsDriverInit();
     void AdcConfig();
