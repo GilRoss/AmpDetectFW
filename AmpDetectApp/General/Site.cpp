@@ -7,7 +7,7 @@ Site::Site(uint32_t nSiteIdx)
     ,_thermalDrv(nSiteIdx)
     ,_opticsDrv(nSiteIdx)
     ,_bMeerstetterPid(false)
-    ,_pid((double)kPidTick_ms / 1000, 1500, -1500, 0.00010, 0.00004, 0.0)
+    ,_pid((double)kPidTick_ms / 1000, 1250, -1250, 0.00015, 0.000015, 0.0)
     ,_nTempStableTolerance_mC(1000) // + or -
     ,_nTempStableTime_ms(1000)
     ,_arThermalRecs(kMaxThermalRecs)
@@ -123,7 +123,7 @@ void Site::Execute()
         _arThermalRecs[_nThermalRecPutIdx]._nChan2_mC   = _thermalDrv.GetSampleTemp();
         _arThermalRecs[_nThermalRecPutIdx]._nChan3_mC   = 0;
         _arThermalRecs[_nThermalRecPutIdx]._nChan4_mC   = 0;
-        _arThermalRecs[_nThermalRecPutIdx]._nCurrent_mA = nControlVar;
+        _arThermalRecs[_nThermalRecPutIdx]._nCurrent_mA = nControlVar * 1000;
 
         //Next record, and check for wrap.
         _nThermalRecPutIdx = (_nThermalRecPutIdx >= (kMaxThermalRecs - 1)) ? 0 : _nThermalRecPutIdx + 1;
@@ -144,19 +144,16 @@ void Site::ManualControl()
         int32_t nBlockTemp = _thermalDrv.GetBlockTemp();
         nControlVar = _pid.calculate(_nManControlSetpoint_mC, nBlockTemp);
         _thermalDrv.SetControlVar((int32_t)(nControlVar * 1000));
+/*                    static uint32_t nCount = 0;
+                    if ((nCount & 0x01) == 0)
+                        _thermalDrv.SetControlVar((int32_t)(2 * 1000));
+                    else
+                        _thermalDrv.SetControlVar((int32_t)(-2 * 1000));
+                    nCount++;*/
         _thermalDrv.Enable();
     }
     else    //Idle
     {
-//        static uint32_t nCount = 0;
-//        if ((nCount % 3) == 0)
-//            _thermalDrv.SetControlVar((int32_t)1500);
-//        else if ((nCount % 3) == 1)
-//            _thermalDrv.SetControlVar((int32_t)0);
-//        else if ((nCount % 3) == 2)
-//            _thermalDrv.SetControlVar((int32_t)-1500);
-//        nCount++;
-//        _thermalDrv.Enable();
         _thermalDrv.Disable();
     }
 }

@@ -6,8 +6,8 @@
 ///////////////////////////////////////////////////////////////////////////////
 bool         ThermalDriver::_bCurrentPidEnabled = false;
 bool         ThermalDriver::_bCurrentPidOverride = false;
-//Pid          ThermalDriver::_pid(1, 10000, -10000, 0.6, 0.8, 0);    //Peltier.
-Pid          ThermalDriver::_pid(0.000050, 10000, -10000, 1.8, 30100, 0);    //Fixed 2ohm load.
+Pid          ThermalDriver::_pid(0.000050, 10000, -10000, 1.25, 17000, 0);    //Peltier.
+//Pid          ThermalDriver::_pid(0.000050, 10000, -10000, 1.8, 30800, 0);    //Fixed 2ohm load.
 int32_t      ThermalDriver::_nSetpoint_mA;
 uint32_t     ThermalDriver::_nProportionalGain;
 uint32_t     ThermalDriver::_nIntegralGain;
@@ -37,7 +37,7 @@ ThermalDriver::ThermalDriver(uint32_t nSiteIdx)
     SendDacMsg(CMD_ENABLE_INT_REF, 0, DISABLE_INT_REF_AND_RESET_DAC_GAINS_TO_1);
     SendDacMsg(CMD_SET_LDAC_PIN, 0, SET_LDAC_PIN_INACTIVE_DAC_B_INACTIVE_DAC_A);
     SendDacMsg(CMD_POWER_DAC, 0, POWER_DOWN_DAC_B_HI_Z);
-    SetCurrentControlVar((0xFFFF / 2) + 220);
+    SetCurrentControlVar((0xFFFF / 2) + 180);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -56,9 +56,9 @@ void ThermalDriver::CurrentPidISR()
         {
             //Get current A/D counts.
             _nA2DCounts = (int32_t)GetA2D(1) - 21950;
+            _nA2DCounts += (-25 *_nA2DCounts) / 1000;
             _nControlVar = _pid.calculate((double)_nSetpoint_mA, (double)_nA2DCounts);
-//            SetCurrentControlVar((0xFFFF / 2) + 220 + (int32_t)_nControlVar);
-            SetCurrentControlVar((0xFFFF / 2) + (int32_t)_nControlVar);
+            SetCurrentControlVar((0xFFFF / 2) + 180 + (int32_t)_nControlVar);
             gioSetBit(mibspiPORT5, PIN_SIMO, 1);
         }
     }
@@ -101,6 +101,8 @@ int32_t ThermalDriver::GetBlockTemp()
 {
     _bCurrentPidOverride = true;
     uint32_t nA2DCounts = GetA2D(2);
+    nA2DCounts = GetA2D(2);
+    nA2DCounts = GetA2D(2);
     float nVoltage_V = nA2DCounts * (5.0 / 65535);
     int32_t nBlockTemp_mC =  convertVoltageToTemp(nVoltage_V);
 
