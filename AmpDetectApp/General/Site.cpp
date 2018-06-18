@@ -7,7 +7,7 @@ Site::Site(uint32_t nSiteIdx)
     ,_thermalDrv(nSiteIdx)
     ,_opticsDrv(nSiteIdx)
     ,_bMeerstetterPid(false)
-    ,_pid((double)kPidTick_ms / 1000, 1250, -1250, 0.00015, 0.00002, 0.0)
+    ,_pid((double)kPidTick_ms / 1000, 1250, -1250, 0.00015, 0.000015, 0.0)
     ,_nTempStableTolerance_mC(1000) // + or -
     ,_nTempStableTime_ms(1000)
     ,_arThermalRecs(kMaxThermalRecs)
@@ -118,12 +118,19 @@ void Site::Execute()
 void Site::ManualControl()
 {
     //If the user is setting target temperatures.
+//    _nManControlState = kSetpointControl;
     if (_nManControlState == kSetpointControl)
     {
         double nControlVar;
         int32_t nBlockTemp = _thermalDrv.GetBlockTemp();
         nControlVar = _pid.calculate(_nManControlSetpoint_mC, nBlockTemp);
         _thermalDrv.SetControlVar((int32_t)(nControlVar * 1000));
+/*                    static uint32_t nCount = 0;
+                    if ((nCount & 0x01) == 0)
+                        _thermalDrv.SetControlVar((int32_t)(2 * 1000));
+                    else
+                        _thermalDrv.SetControlVar((int32_t)(-2 * 1000));
+                    nCount++;*/
         _thermalDrv.Enable();
     }
     else    //Idle
