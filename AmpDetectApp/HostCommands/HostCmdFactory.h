@@ -7,6 +7,7 @@
 #include        "GetSysStatusCmd.h"
 #include        "StartRunCmd.h"
 #include        "StopRunCmd.h"
+#include        "PauseRunCmd.h"
 #include        "ReadOpticalChanCmd.h"
 #include        "LoadPcrProtocolCmd.h"
 #include        "GetThermalRecsCmd.h"
@@ -37,6 +38,8 @@ public:
             pHostCmd = new StartRunCmd(pMsgBuf, pCommDrv, pPcrTask);
         else if (nMsgId == HostMsg::MakeObjId('S', 't', 'o', 'p'))
             pHostCmd = new StopRunCmd(pMsgBuf, pCommDrv, pPcrTask);
+        else if (nMsgId == HostMsg::MakeObjId('P', 'a', 'u', 's'))
+            pHostCmd = new PauseRunCmd(pMsgBuf, pCommDrv, pPcrTask);
         else if (nMsgId == HostMsg::MakeObjId('R', 'C', 'h', 'n'))
             pHostCmd = new ReadOpticalChanCmd(pMsgBuf, pCommDrv, pPcrTask);
         else if (nMsgId == HostMsg::MakeObjId('G', 'T', 'h', 'm'))

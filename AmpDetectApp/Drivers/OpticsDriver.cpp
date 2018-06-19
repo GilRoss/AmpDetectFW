@@ -31,7 +31,7 @@ OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
  */
 uint32_t OpticsDriver::GetDarkReading(uint32_t nChanIdx)
 {
-    SetLedsOff(nChanIdx);
+    SetLedsOff();
 
     //Get average of multiple readings.
     uint32_t nAve = 0;
@@ -58,7 +58,7 @@ uint32_t OpticsDriver::GetIlluminatedReading(uint32_t nChanIdx)
     for (int i = 0; i < 10; i++)
         nAve += GetAdc(nChanIdx);
 
-    SetLedsOff(nChanIdx);
+    SetLedsOff();
     return (nAve / 10);
 }
 
@@ -121,9 +121,12 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
  * Returns:
  * Description: Turns off LED by setting intensity to 0.
  */
-void OpticsDriver::SetLedsOff(uint32_t nChanIdx)
+void OpticsDriver::SetLedsOff()
 {
-    SetLedIntensity(nChanIdx, 0);
+    for (int nChanIdx=0; nChanIdx < 6; nChanIdx++)
+    {
+        SetLedIntensity(nChanIdx, 0);
+    }
 }
 
 /**
@@ -200,7 +203,7 @@ uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChan
 
     for(int i=0; i<delay_uS; i++); //1 ms delay
     /* Turn Off LED */
-    SetLedsOff(nledChanIdx);
+    SetLedsOff();
 
     for(int i=0; i<delay_uS; i++); //Hold for 1 ms time before reading
 

@@ -66,29 +66,50 @@ void Site::Execute()
         _siteStatus.AddHoldTimer(kPidTick_ms);
 
     //If done with this step.
-    if (_siteStatus.GetHoldTimer() >= step.GetHoldTimer())
+    if ((_siteStatus.GetHoldTimer() >= step.GetHoldTimer()) && (!_siteStatus.GetPausedFlg()))
     {                            
-        //If we want to read the fluorescence on this step.
-        if (step.GetOpticalAcqFlg() == true)
+        //If we want to read the fluorescence on this step
+        if ((step.GetOpticalAcqFlg() == true))
         {
             OpticsRec opticsRec;
-            opticsRec._nTimeTag_ms     = _siteStatus.GetRunTimer();
-            opticsRec._nCycleIdx       = _siteStatus.GetCycle();
-//            opticsRec._nDarkRead       = _opticsDrv.GetDarkReading(_pcrProtocol.GetLedIdx());
-//            opticsRec._nIlluminatedRead= _opticsDrv.GetIlluminatedReading(_pcrProtocol.GetLedIdx());
-            opticsRec._nShuttleTemp_mC = 0;
-            _arOpticsRecs.push_back( opticsRec );
+            //If Detector type is Camera
+            if (_pcrProtocol.GetDetectorType() == _pcrProtocol.kCamera)
+            {
+               /*
+                if(!_siteStatus.GetCaptureCameraImageFlg())
+                {
+                    // Turn On LED
+                    _opticsDrv.SetLedIntensity(_pcrProtocol.GetLedIdx(), _pcrProtocol.GetLedIntensity());
+                    // Set Pause flag
+                    //PauseRun(true);
+                    _siteStatus.SetPausedFlg(true);
+                    _siteStatus.SetCaptureCameraImageFlg(true);
+                    _siteStatus.SetCameraIdx(_pcrProtocol.GetDetectorIdx());
+                }*/
+            }
+            else if (_pcrProtocol.GetDetectorType() == _pcrProtocol.kPhotoDiode)
+            {
+               OpticalRead optRead = _pcrProtocol.GetOpticalRead(0);
+               opticsRec._nTimeTag_ms     = _siteStatus.GetRunTimer();
+               opticsRec._nCycleIdx       = _siteStatus.GetCycle();
+               opticsRec._nDarkRead       = _opticsDrv.GetDarkReading(optRead.GetLedIdx());
+               opticsRec._nIlluminatedRead= _opticsDrv.GetIlluminatedReading(optRead.GetLedIdx());
+               opticsRec._nShuttleTemp_mC = 0;
+               _arOpticsRecs.push_back( opticsRec );
+               // Turn Off all LED
+               _opticsDrv.SetLedsOff();
+            }
         }
-        
+
         //If done with all steps in this segment.
         _siteStatus.NextStep();
         if (_siteStatus.GetStepIdx() >= seg.GetNumSteps())
-        {                                                
+        {
             //If done with all cycles in this segment.
             _siteStatus.NextCycle();
             if (_siteStatus.GetCycle() >= seg.GetNumCycles())
                 _siteStatus.NextSegment();
-            
+
             //If done with entire protocol.
             if (_siteStatus.GetSegmentIdx() >= _pcrProtocol.GetNumSegs())
                 _siteStatus.SetRunningFlg(false);
@@ -164,6 +185,23 @@ ErrCode Site::StopRun()
     _siteStatus.SetRunningFlg(false);
     
     return ErrCode::kNoError;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+ErrCode Site::PauseRun(bool bPause)
+{
+    ErrCode     nErrCode = ErrCode::kNoError;
+
+    //If there is not an active run on this site.
+    if (_siteStatus.GetRunningFlg() == true)
+    {
+        _siteStatus.SetPausedFlg(bPause);
+    }
+    else
+        nErrCode = ErrCode::kRunInProgressErr;
+
+    return nErrCode;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

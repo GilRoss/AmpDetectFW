@@ -37,6 +37,7 @@ public:
     
     ErrCode             StartRun(bool bMeerstetterPid);
     ErrCode             StopRun();
+    ErrCode             PauseRun(bool bPause);
     ErrCode             SetManControlSetpoint(int32_t nSp_mC);
     ErrCode             SetPidParams(uint32_t nKp, uint32_t nKi, uint32_t nKd);
     ErrCode             SetOpticsLed(uint32_t nChanIdx, uint32_t nIntensity, uint32_t nDuration);
