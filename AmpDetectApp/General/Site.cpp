@@ -7,7 +7,7 @@ Site::Site(uint32_t nSiteIdx)
     ,_thermalDrv(nSiteIdx)
     ,_opticsDrv(nSiteIdx)
     ,_bMeerstetterPid(false)
-    ,_pid((double)kPidTick_ms / 1000, 3000, -3000, 0.00015, 0.000016, 0.0)
+    ,_pid((double)kPidTick_ms / 1000, 3000, -3000, 0.000145, 0.000012, 0.0)
     ,_nTempStableTolerance_mC(1000) // + or -
     ,_nTempStableTime_ms(1000)
     ,_arThermalRecs(kMaxThermalRecs)
@@ -27,7 +27,10 @@ void Site::Execute()
     const Segment& seg = _pcrProtocol.GetSegment(_siteStatus.GetSegmentIdx());
     const Step& step = seg.GetStep(_siteStatus.GetStepIdx());
     
+    _thermalDrv.SetCurrentPidOverrideFlg(true);
     int32_t nBlockTemp = _thermalDrv.GetBlockTemp();
+    _thermalDrv.SetCurrentPidOverrideFlg(false);
+
     _siteStatus.SetTemperature(nBlockTemp);
     double nControlVar = 0;
     if (_bMeerstetterPid == true)
@@ -92,8 +95,8 @@ void Site::Execute()
                OpticalRead optRead = _pcrProtocol.GetOpticalRead(0);
                opticsRec._nTimeTag_ms     = _siteStatus.GetRunTimer();
                opticsRec._nCycleIdx       = _siteStatus.GetCycle();
-               opticsRec._nDarkRead       = _opticsDrv.GetDarkReading(optRead.GetLedIdx());
-               opticsRec._nIlluminatedRead= _opticsDrv.GetIlluminatedReading(optRead.GetLedIdx());
+               opticsRec._nDarkRead       = _opticsDrv.GetDarkReading(optRead, _thermalDrv);
+               opticsRec._nIlluminatedRead= _opticsDrv.GetIlluminatedReading(optRead, _thermalDrv);
                opticsRec._nShuttleTemp_mC = 0;
                _arOpticsRecs.push_back( opticsRec );
                // Turn Off all LED
@@ -170,6 +173,7 @@ ErrCode Site::StartRun(bool bMeerstetterPid)
         _siteStatus.ResetForNewRun();
         _bMeerstetterPid = bMeerstetterPid;
         _siteStatus.SetRunningFlg(true);
+        _thermalDrv.Reset();
     }
     else
         nErrCode = ErrCode::kRunInProgressErr;
@@ -274,7 +278,7 @@ uint32_t Site::ReadOptics(uint32_t nLedIdx, uint32_t nDiodeIdx, uint32_t nLedInt
     //If there is not an active run on this site.
     if (_siteStatus.GetRunningFlg() == false)
     {
-        diodeValue = _opticsDrv.GetPhotoDiodeValue(nLedIdx, nDiodeIdx, nIntegrationTime_us, nLedIntensity);
+        diodeValue = _opticsDrv.GetPhotoDiodeValue(nLedIdx, nDiodeIdx, nIntegrationTime_us, nLedIntensity, _thermalDrv);
     }
 
     return diodeValue;

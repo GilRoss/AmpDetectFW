@@ -29,16 +29,13 @@ OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
  * Returns:
  * Description:
  */
-uint32_t OpticsDriver::GetDarkReading(uint32_t nChanIdx)
+uint32_t OpticsDriver::GetDarkReading(const OpticalRead& optRead, ThermalDriver& thermalDrv)
 {
     SetLedsOff();
-
-    //Get average of multiple readings.
-    uint32_t nAve = 0;
-    for (int i = 0; i < 10; i++)
-        nAve += GetAdc(nChanIdx);
-
-    return (nAve / 10);
+    uint32_t nValue = GetPhotoDiodeValue(   optRead.GetLedIdx(), optRead.GetDetectorIdx(),
+                                            optRead.GetDetectorIntegrationTime(),
+                                            0, thermalDrv);
+    return nValue;
 }
 
 /**
@@ -47,19 +44,13 @@ uint32_t OpticsDriver::GetDarkReading(uint32_t nChanIdx)
  * Returns:
  * Description:
  */
-uint32_t OpticsDriver::GetIlluminatedReading(uint32_t nChanIdx)
+uint32_t OpticsDriver::GetIlluminatedReading(const OpticalRead& optRead, ThermalDriver& thermalDrv)
 {
-    //LED = on, wait for exposure time.
-    SetLedState(nChanIdx, true);
-    vTaskDelay(2);
-
-    //Get average of multiple readings.
-    uint32_t nAve = 0;
-    for (int i = 0; i < 10; i++)
-        nAve += GetAdc(nChanIdx);
-
     SetLedsOff();
-    return (nAve / 10);
+    uint32_t nValue = GetPhotoDiodeValue(   optRead.GetLedIdx(), optRead.GetDetectorIdx(),
+                                            optRead.GetDetectorIntegrationTime(),
+                                            optRead.GetLedIntensity(), thermalDrv);
+    return nValue;
 }
 
 /**
@@ -135,7 +126,7 @@ void OpticsDriver::SetLedsOff()
  * Returns:
  * Description:
  */
-uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChanIdx, uint32_t nDuration_us, uint32_t nLedIntensity)
+uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChanIdx, uint32_t nDuration_us, uint32_t nLedIntensity, ThermalDriver& thermalDrv)
 {
     uint16_t adcValue = 0x0000;
     hetSIGNAL_t signal;
@@ -207,7 +198,9 @@ uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChan
 
     for(int i=0; i<delay_uS; i++); //Hold for 1 ms time before reading
 
+    thermalDrv.SetCurrentPidOverrideFlg(true);
     adcValue = GetAdc(adcChannel);
+    thermalDrv.SetCurrentPidOverrideFlg(false);
     for(int i=0; i<delay_uS; i++);
 
     SetIntegratorState(RESET_STATE, npdChanIdx);

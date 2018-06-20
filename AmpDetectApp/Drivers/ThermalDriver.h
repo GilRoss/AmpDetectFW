@@ -23,9 +23,11 @@ public:
     int32_t     GetSampleTemp();
     int32_t     GetSinkTemp();
     int32_t     GetBlockTemp();
+    void        Reset();
     void        Enable() {_bCurrentPidEnabled = true;}
     void        Disable() {_bCurrentPidEnabled = false;}
     int32_t     convertVoltageToTemp(float ain, int standard = 0 /*Celcius*/);
+    static void SetCurrentPidOverrideFlg(bool b)    {_bCurrentPidOverride = b;}
     
 protected:
   

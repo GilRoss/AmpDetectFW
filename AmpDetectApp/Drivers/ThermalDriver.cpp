@@ -68,6 +68,19 @@ void ThermalDriver::CurrentPidISR()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+void ThermalDriver::Reset()
+{
+    //Initialize DAC8563
+    SendDacMsg(CMD_RESET, 0, POWER_ON_RESET);
+    SendDacMsg(CMD_ENABLE_INT_REF, 0, DISABLE_INT_REF_AND_RESET_DAC_GAINS_TO_1);
+    SendDacMsg(CMD_SET_LDAC_PIN, 0, SET_LDAC_PIN_INACTIVE_DAC_B_INACTIVE_DAC_A);
+    SendDacMsg(CMD_POWER_DAC, 0, POWER_DOWN_DAC_B_HI_Z);
+    SetCurrentControlVar((0xFFFF / 2) + 180);
+    _bCurrentPidEnabled = true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 void ThermalDriver::SetControlVar(int32_t nControlVar)
 {
     SetCurrentSetpoint(nControlVar);
@@ -99,7 +112,6 @@ int32_t ThermalDriver::GetSinkTemp()
 ///////////////////////////////////////////////////////////////////////////////
 int32_t ThermalDriver::GetBlockTemp()
 {
-    _bCurrentPidOverride = true;
     uint32_t nA2DCounts = GetA2D(2);
     nA2DCounts = GetA2D(2);
     nA2DCounts = GetA2D(2);
@@ -107,7 +119,6 @@ int32_t ThermalDriver::GetBlockTemp()
     float nVoltage_V = nA2DCounts * (5.0 / 65535);
     int32_t nBlockTemp_mC =  convertVoltageToTemp(nVoltage_V);
 
-    _bCurrentPidOverride = false;
     return nBlockTemp_mC;
 }
 
