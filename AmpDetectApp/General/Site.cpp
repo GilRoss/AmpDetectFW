@@ -7,7 +7,7 @@ Site::Site(uint32_t nSiteIdx)
     ,_thermalDrv(nSiteIdx)
     ,_opticsDrv(nSiteIdx)
     ,_bMeerstetterPid(false)
-    ,_pid((double)kPidTick_ms / 1000, 3000, -3000, 0.000145, 0.000012, 0.0)
+    ,_pid((double)kPidTick_ms / 1000, 3000, -3000, 0.00014, 0.000014, 0.0)
     ,_nTempStableTolerance_mC(1000) // + or -
     ,_nTempStableTime_ms(1000)
     ,_arThermalRecs(kMaxThermalRecs)
@@ -125,7 +125,9 @@ void Site::Execute()
     {
         _arThermalRecs[_nThermalRecPutIdx]._nTimeTag_ms = _siteStatus.GetRunTimer();
         _arThermalRecs[_nThermalRecPutIdx]._nChan1_mC   = _siteStatus.GetTemperature();
+        _thermalDrv.SetCurrentPidOverrideFlg(true);
         _arThermalRecs[_nThermalRecPutIdx]._nChan2_mC   = _thermalDrv.GetSampleTemp();
+        _thermalDrv.SetCurrentPidOverrideFlg(false);
         _arThermalRecs[_nThermalRecPutIdx]._nChan3_mC   = 0;
         _arThermalRecs[_nThermalRecPutIdx]._nChan4_mC   = 0;
         _arThermalRecs[_nThermalRecPutIdx]._nCurrent_mA = nControlVar * 1000;

@@ -98,7 +98,14 @@ bool ThermalDriver::TempIsStable()
 ///////////////////////////////////////////////////////////////////////////////
 int32_t ThermalDriver::GetSampleTemp()
 {
-    return 0;
+    uint32_t nA2DCounts = GetA2D(3);
+    nA2DCounts = GetA2D(3);
+    nA2DCounts = GetA2D(3);
+    GetA2D(1);
+    float nVoltage_V = nA2DCounts * (5.0 / 65535);
+    int32_t nSampleTemp_mC =  convertVoltageToTemp(nVoltage_V);
+
+    return nSampleTemp_mC;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
