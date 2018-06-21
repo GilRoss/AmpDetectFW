@@ -92,15 +92,22 @@ void Site::Execute()
             }
             else if (_pcrProtocol.GetDetectorType() == _pcrProtocol.kPhotoDiode)
             {
-               OpticalRead optRead = _pcrProtocol.GetOpticalRead(0);
-               opticsRec._nTimeTag_ms     = _siteStatus.GetRunTimer();
-               opticsRec._nCycleIdx       = _siteStatus.GetCycle();
-               opticsRec._nDarkRead       = _opticsDrv.GetDarkReading(optRead, _thermalDrv);
-               opticsRec._nIlluminatedRead= _opticsDrv.GetIlluminatedReading(optRead, _thermalDrv);
-               opticsRec._nShuttleTemp_mC = 0;
-               _arOpticsRecs.push_back( opticsRec );
-               // Turn Off all LED
-               _opticsDrv.SetLedsOff();
+               OpticalRead optRead;
+               for (int i=0; i<_pcrProtocol.GetNumOpticalReads(); i++)
+               {
+                   optRead = _pcrProtocol.GetOpticalRead(i);
+                   opticsRec._nTimeTag_ms     = _siteStatus.GetRunTimer();
+                   opticsRec._nCycleIdx       = _siteStatus.GetCycle();
+                   opticsRec._nLedIdx         = optRead.GetLedIdx();
+                   opticsRec._nDetectorIdx    = optRead.GetDetectorIdx();
+                   opticsRec._nDarkRead       = _opticsDrv.GetDarkReading(optRead);
+                   opticsRec._nIlluminatedRead= _opticsDrv.GetIlluminatedReading(optRead);
+                   opticsRec._nReferenceRead  = _opticsDrv.GetAdc(optRead.GetReferenceIdx());
+                   opticsRec._nShuttleTemp_mC = 0;
+                   _arOpticsRecs.push_back( opticsRec );
+                   // Turn Off all LED
+                   _opticsDrv.SetLedsOff();
+               }
             }
         }
 
@@ -278,7 +285,7 @@ uint32_t Site::ReadOptics(uint32_t nLedIdx, uint32_t nDiodeIdx, uint32_t nLedInt
     //If there is not an active run on this site.
     if (_siteStatus.GetRunningFlg() == false)
     {
-        diodeValue = _opticsDrv.GetPhotoDiodeValue(nLedIdx, nDiodeIdx, nIntegrationTime_us, nLedIntensity, _thermalDrv);
+        diodeValue = _opticsDrv.GetPhotoDiodeValue(nLedIdx, nDiodeIdx, nIntegrationTime_us, nLedIntensity);
     }
 
     return diodeValue;
