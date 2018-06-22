@@ -21,13 +21,14 @@ public:
     void        SetControlVar(int32_t nControlVar);
     bool        TempIsStable();
     int32_t     GetSampleTemp();
-    int32_t     GetSinkTemp();
+    int32_t     GetSinkTemp()   {return 0;}
     int32_t     GetBlockTemp();
     void        Reset();
     void        Enable() {_bCurrentPidEnabled = true;}
     void        Disable() {_bCurrentPidEnabled = false;}
     int32_t     convertVoltageToTemp(float ain, int standard = 0 /*Celcius*/);
-    static void SetCurrentPidOverrideFlg(bool b)    {_bCurrentPidOverride = b;}
+    void        SetProportionalGain(double nGain) {_nProportionalGain = nGain;}
+    void        SetIntegralGain(double nGain) {_nIntegralGain = nGain;}
     
 protected:
   
@@ -40,9 +41,11 @@ private:
     static void         ReadDacMsg(uint16_t cfg, uint16_t* pData);
     static uint32_t     GetA2D(int channel);
 
-    static bool         _bCurrentPidEnabled;
-    static bool         _bCurrentPidOverride;
     static Pid          _pid;
+    static bool         _bCurrentPidEnabled;
+    static uint32_t     _nIsrCount;
+    static uint32_t     _nBlockTemp_cnts;
+    static uint32_t     _nSampleTemp_cnts;
     static int32_t      _nSetpoint_mA;
     static uint32_t     _nProportionalGain;
     static uint32_t     _nIntegralGain;

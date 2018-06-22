@@ -4,10 +4,13 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-bool         ThermalDriver::_bCurrentPidEnabled = false;
-bool         ThermalDriver::_bCurrentPidOverride = false;
-Pid          ThermalDriver::_pid(0.000050, 10000, -10000, 1.25, 17000, 0);    //Peltier.
+Pid          ThermalDriver::_pid(0.000050, 10000, -10000, 1, 0, 0);    //Peltier.
+//Pid          ThermalDriver::_pid(0.000050, 10000, -10000, 1.25, 17000, 0);    //Peltier.
 //Pid          ThermalDriver::_pid(0.000050, 10000, -10000, 1.8, 30800, 0);    //Fixed 2ohm load.
+bool         ThermalDriver::_bCurrentPidEnabled = false;
+uint32_t     ThermalDriver::_nIsrCount = 0;
+uint32_t     ThermalDriver::_nBlockTemp_cnts = 0;
+uint32_t     ThermalDriver::_nSampleTemp_cnts = 0;
 int32_t      ThermalDriver::_nSetpoint_mA;
 uint32_t     ThermalDriver::_nProportionalGain;
 uint32_t     ThermalDriver::_nIntegralGain;
@@ -52,15 +55,18 @@ void ThermalDriver::CurrentPidISR()
 {
     if (_bCurrentPidEnabled)
     {
-        if (! _bCurrentPidOverride)
-        {
-            //Get current A/D counts.
-            _nA2DCounts = (int32_t)GetA2D(1) - 21950;
-            _nA2DCounts += (-25 *_nA2DCounts) / 1000;
-            _nControlVar = _pid.calculate((double)_nSetpoint_mA, (double)_nA2DCounts);
-            SetCurrentControlVar((0xFFFF / 2) + 180 + (int32_t)_nControlVar);
-            gioSetBit(mibspiPORT5, PIN_SIMO, 1);
-        }
+        //Get current A/D counts.
+        _nA2DCounts = (int32_t)GetA2D(1) - 21950;
+        _nA2DCounts += (-25 *_nA2DCounts) / 1000;
+        _nControlVar = _pid.calculate((double)_nSetpoint_mA, (double)_nA2DCounts);
+        SetCurrentControlVar((0xFFFF / 2) + 180 + (int32_t)_nControlVar);
+        gioSetBit(mibspiPORT5, PIN_SIMO, 1);
+
+        if (_nIsrCount == 0)
+            _nBlockTemp_cnts = (int32_t)GetA2D(2);
+        if (_nIsrCount == 0xFF)
+            _nSampleTemp_cnts = (int32_t)GetA2D(3);
+        _nIsrCount = (_nIsrCount + 1) & 0x1FF;
     }
     else
         gioSetBit(mibspiPORT5, PIN_SIMO, 0);
@@ -98,11 +104,7 @@ bool ThermalDriver::TempIsStable()
 ///////////////////////////////////////////////////////////////////////////////
 int32_t ThermalDriver::GetSampleTemp()
 {
-    uint32_t nA2DCounts = GetA2D(3);
-    nA2DCounts = GetA2D(3);
-    nA2DCounts = GetA2D(3);
-    GetA2D(1);
-    float nVoltage_V = nA2DCounts * (5.0 / 65535);
+    float nVoltage_V = _nSampleTemp_cnts * (5.0 / 65535);
     int32_t nSampleTemp_mC =  convertVoltageToTemp(nVoltage_V);
 
     return nSampleTemp_mC;
@@ -110,20 +112,9 @@ int32_t ThermalDriver::GetSampleTemp()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-int32_t ThermalDriver::GetSinkTemp()
-{
-    return 0;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
 int32_t ThermalDriver::GetBlockTemp()
 {
-    uint32_t nA2DCounts = GetA2D(2);
-    nA2DCounts = GetA2D(2);
-    nA2DCounts = GetA2D(2);
-    GetA2D(1);
-    float nVoltage_V = nA2DCounts * (5.0 / 65535);
+    float nVoltage_V = _nBlockTemp_cnts * (5.0 / 65535);
     int32_t nBlockTemp_mC =  convertVoltageToTemp(nVoltage_V);
 
     return nBlockTemp_mC;

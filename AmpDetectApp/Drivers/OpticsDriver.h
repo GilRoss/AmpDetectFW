@@ -9,7 +9,6 @@
 #include "mibspi.h"
 #include "het.h"
 #include "rti.h"
-#include "ThermalDriver.h"
 #include "PcrProtocol.h"
 
 /*#include    "stm32l4xx_hal.h"
@@ -122,13 +121,13 @@ public:
 
     OpticsDriver(uint32_t nSiteIdx = 0);
        
-    uint32_t GetDarkReading(const OpticalRead& optRead, ThermalDriver& thermalDrv);
-    uint32_t GetIlluminatedReading(const OpticalRead& optRead, ThermalDriver& thermalDrv);
+    uint32_t GetDarkReading(const OpticalRead& optRead);
+    uint32_t GetIlluminatedReading(const OpticalRead& optRead);
     void SetLedState(uint32_t nChanIdx, bool bStateOn = true);
     void SetLedState2(uint32_t nChanIdx, uint32_t nIntensity, uint32_t nDuration_us);
     void SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity);
     void SetLedsOff();
-    uint32_t GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChanIdx, uint32_t nDuration_us, uint32_t nLedIntensity, ThermalDriver& thermalDrv);
+    uint32_t GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChanIdx, uint32_t nDuration_us, uint32_t nLedIntensity);
     void OpticsDriverInit();
     void AdcConfig();
     void SetIntegratorState(pdIntegratorState state, uint32_t npdChanIdx);

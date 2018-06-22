@@ -27,10 +27,7 @@ void Site::Execute()
     const Segment& seg = _pcrProtocol.GetSegment(_siteStatus.GetSegmentIdx());
     const Step& step = seg.GetStep(_siteStatus.GetStepIdx());
     
-    _thermalDrv.SetCurrentPidOverrideFlg(true);
     int32_t nBlockTemp = _thermalDrv.GetBlockTemp();
-    _thermalDrv.SetCurrentPidOverrideFlg(false);
-
     _siteStatus.SetTemperature(nBlockTemp);
     double nControlVar = 0;
     if (_bMeerstetterPid == true)
@@ -95,8 +92,8 @@ void Site::Execute()
                OpticalRead optRead = _pcrProtocol.GetOpticalRead(0);
                opticsRec._nTimeTag_ms     = _siteStatus.GetRunTimer();
                opticsRec._nCycleIdx       = _siteStatus.GetCycle();
-               opticsRec._nDarkRead       = _opticsDrv.GetDarkReading(optRead, _thermalDrv);
-               opticsRec._nIlluminatedRead= _opticsDrv.GetIlluminatedReading(optRead, _thermalDrv);
+               opticsRec._nDarkRead       = _opticsDrv.GetDarkReading(optRead);
+               opticsRec._nIlluminatedRead= _opticsDrv.GetIlluminatedReading(optRead);
                opticsRec._nShuttleTemp_mC = 0;
                _arOpticsRecs.push_back( opticsRec );
                // Turn Off all LED
@@ -125,9 +122,7 @@ void Site::Execute()
     {
         _arThermalRecs[_nThermalRecPutIdx]._nTimeTag_ms = _siteStatus.GetRunTimer();
         _arThermalRecs[_nThermalRecPutIdx]._nChan1_mC   = _siteStatus.GetTemperature();
-        _thermalDrv.SetCurrentPidOverrideFlg(true);
         _arThermalRecs[_nThermalRecPutIdx]._nChan2_mC   = _thermalDrv.GetSampleTemp();
-        _thermalDrv.SetCurrentPidOverrideFlg(false);
         _arThermalRecs[_nThermalRecPutIdx]._nChan3_mC   = 0;
         _arThermalRecs[_nThermalRecPutIdx]._nChan4_mC   = 0;
         _arThermalRecs[_nThermalRecPutIdx]._nCurrent_mA = nControlVar * 1000;
@@ -154,7 +149,18 @@ void Site::ManualControl()
     }
     else    //Idle
     {
-        _thermalDrv.Disable();
+        static double nPropGain = 0.5;
+        static double nIntegralGain = 0;
+        _thermalDrv.SetProportionalGain(nPropGain);
+        _thermalDrv.SetIntegralGain(nIntegralGain);
+        static uint32_t nCount = 0;
+        if (nCount & 0x01)
+            _thermalDrv.SetControlVar((int32_t)1000);
+        else
+            _thermalDrv.SetControlVar((int32_t)-1000);
+        nCount++;
+        _thermalDrv.Enable();
+//        _thermalDrv.Disable();
     }
 }
 
@@ -280,7 +286,7 @@ uint32_t Site::ReadOptics(uint32_t nLedIdx, uint32_t nDiodeIdx, uint32_t nLedInt
     //If there is not an active run on this site.
     if (_siteStatus.GetRunningFlg() == false)
     {
-        diodeValue = _opticsDrv.GetPhotoDiodeValue(nLedIdx, nDiodeIdx, nIntegrationTime_us, nLedIntensity, _thermalDrv);
+        diodeValue = _opticsDrv.GetPhotoDiodeValue(nLedIdx, nDiodeIdx, nIntegrationTime_us, nLedIntensity);
     }
 
     return diodeValue;
