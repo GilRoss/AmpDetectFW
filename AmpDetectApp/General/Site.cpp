@@ -147,7 +147,6 @@ void Site::Execute()
 void Site::ManualControl()
 {
     //If the user is setting target temperatures.
-//    _nManControlState = kSetpointControl;
     if (_nManControlState == kSetpointControl)
     {
         int32_t nBlockTemp = _thermalDrv.GetBlockTemp();
@@ -157,18 +156,7 @@ void Site::ManualControl()
     }
     else    //Idle
     {
-        static double nPropGain = 0;
-        static double nIntegralGain = 0;
-        _thermalDrv.SetProportionalGain(nPropGain);
-        _thermalDrv.SetIntegralGain(nIntegralGain);
-        static uint32_t nCount = 0;
-        if (nCount & 0x01)
-            _thermalDrv.SetControlVar((int32_t)1000);
-        else
-            _thermalDrv.SetControlVar((int32_t)-1000);
-        nCount++;
-        _thermalDrv.Enable();
-//        _thermalDrv.Disable();
+        _thermalDrv.Disable();
     }
 }
 
