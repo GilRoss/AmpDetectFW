@@ -157,7 +157,7 @@ void Site::ManualControl()
     }
     else    //Idle
     {
-        static double nPropGain = 0.5;
+        static double nPropGain = 0;
         static double nIntegralGain = 0;
         _thermalDrv.SetProportionalGain(nPropGain);
         _thermalDrv.SetIntegralGain(nIntegralGain);

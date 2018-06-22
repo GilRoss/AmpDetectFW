@@ -4,7 +4,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-Pid          ThermalDriver::_pid(0.000050, 10000, -10000, 1, 0, 0);    //Peltier.
+Pid          ThermalDriver::_pid(0.000050, 10000, -10000, 0.00001, 0, 0);    //Peltier.
 //Pid          ThermalDriver::_pid(0.000050, 10000, -10000, 1.25, 17000, 0);    //Peltier.
 //Pid          ThermalDriver::_pid(0.000050, 10000, -10000, 1.8, 30800, 0);    //Fixed 2ohm load.
 bool         ThermalDriver::_bCurrentPidEnabled = false;
@@ -62,11 +62,11 @@ void ThermalDriver::CurrentPidISR()
         SetCurrentControlVar((0xFFFF / 2) + 180 + (int32_t)_nControlVar);
         gioSetBit(mibspiPORT5, PIN_SIMO, 1);
 
-        if (_nIsrCount == 0)
+/*        if (_nIsrCount == 0)
             _nBlockTemp_cnts = (int32_t)GetA2D(2);
         if (_nIsrCount == 0xFF)
             _nSampleTemp_cnts = (int32_t)GetA2D(3);
-        _nIsrCount = (_nIsrCount + 1) & 0x1FF;
+        _nIsrCount = (_nIsrCount + 1) & 0x1FF;*/
     }
     else
         gioSetBit(mibspiPORT5, PIN_SIMO, 0);
