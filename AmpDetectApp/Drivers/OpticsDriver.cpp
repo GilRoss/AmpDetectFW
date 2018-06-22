@@ -170,7 +170,7 @@ uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChan
     /* Reset Integrator first */
     SetIntegratorState(RESET_STATE, npdChanIdx);
     gioSetBit(hetPORT1, LATCH_PIN, 1); //Enable Reset State
-    for(int i=0; i<delay_uS; i++); //1 ms delay
+    for(int i=0; i<delay_uS*5; i++); //Hold in reset state for 5 ms
 
     /* Turn On LED */
     SetLedIntensity(nledChanIdx, nLedIntensity);
@@ -199,10 +199,11 @@ uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChan
     for(int i=0; i<delay_uS; i++); //Hold for 1 ms time before reading
 
     adcValue = GetAdc(adcChannel);
-    for(int i=0; i<delay_uS; i++);
 
-    SetIntegratorState(RESET_STATE, npdChanIdx);
-    gioSetBit(hetPORT1, LATCH_PIN, 1); //Enable Reset State
+    //for(int i=0; i<delay_uS; i++);
+
+    //SetIntegratorState(RESET_STATE, npdChanIdx);
+    //gioSetBit(hetPORT1, LATCH_PIN, 1); //Enable Reset State
 
     return (uint32_t)adcValue;
 }
