@@ -7,8 +7,8 @@ Site::Site(uint32_t nSiteIdx)
     ,_thermalDrv(nSiteIdx)
     ,_opticsDrv(nSiteIdx)
     ,_bMeerstetterPid(false)
-    ,_pid((double)kPidTick_ms / 1000, 3000, -3000, 0.00014, 0.000014, 0.0)
-    ,_nTempStableTolerance_mC(1000) // + or -
+    ,_pid((double)kPidTick_ms / 1000, 5000, -5000, 0.00018, 0.000013, 0.0)
+    ,_nTempStableTolerance_mC(8000) // + or -
     ,_nTempStableTime_ms(1000)
     ,_arThermalRecs(kMaxThermalRecs)
     ,_nThermalAcqTimer_ms(0)

@@ -4,8 +4,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-Pid          ThermalDriver::_pid(0.000050, 3000, -3000, 1.5, 17000, 0);    //Peltier.
-//Pid          ThermalDriver::_pid(0.000050, 10000, -10000, 1.25, 17000, 0);    //Peltier.
+Pid          ThermalDriver::_pid(0.000050, 5000, -5000, 0.7, 7000, 0);    //Peltier.
 //Pid          ThermalDriver::_pid(0.000050, 10000, -10000, 1.8, 30800, 0);    //Fixed 2ohm load.
 bool         ThermalDriver::_bCurrentPidEnabled = false;
 uint32_t     ThermalDriver::_nIsrCount = 0;
@@ -64,12 +63,15 @@ void ThermalDriver::CurrentPidISR()
 
         if (_nIsrCount == 0)
             _nBlockTemp_cnts = (int32_t)GetA2D(2);
-        if (_nIsrCount == 0xFF)
+        if (_nIsrCount == (400/2))
             _nSampleTemp_cnts = (int32_t)GetA2D(3);
-        _nIsrCount = (_nIsrCount + 1) & 0x1FF;
+        _nIsrCount = (_nIsrCount == 20) ? 0 : _nIsrCount + 1;
     }
     else
+    {
         gioSetBit(mibspiPORT5, PIN_SIMO, 0);
+        SetCurrentControlVar((0xFFFF / 2) + 180);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -198,13 +200,13 @@ void ThermalDriver::ReadDacMsg(uint16 cfg, uint16_t* pData)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-uint32_t ThermalDriver::GetA2D(int channel)
+uint32_t ThermalDriver::GetA2D(int nChanIdx)
 {
     uint16 data;
     uint16 cfg = 0;
     cfg |= OVERWRITE_CFG << CFG_SHIFT;
     cfg |= UNIPOLAR_REF_TO_GND << IN_CH_CFG_SHIFT;
-    cfg |= channel << IN_CH_SEL_SHIFT;
+    cfg |= nChanIdx << IN_CH_SEL_SHIFT;
     cfg |= FULL_BW << FULL_BW_SEL_SHIFT;
     cfg |= EXT_REF << REF_SEL_SHIFT;
     cfg |= DISABLE_SEQ << SEQ_EN_SHIFT;

@@ -26,7 +26,7 @@ public:
             //Try to set the PID parameters.
             Site* pSite = _pPcrTask->GetSitePtr(i);
             if (nErrCode == ErrCode::kNoError)
-                nErrCode = pSite->SetPidParams(_request.GetKp(), _request.GetKi(), _request.GetKd());
+                nErrCode = pSite->SetPidParams(_request.GetPGain(), _request.GetIGain(), _request.GetDGain());
         }
         
         //Send response.
@@ -41,7 +41,7 @@ public:
 protected:
   
 private:
-    SetPidParamsReq     _request;
+    SetPidInfoReq     _request;
 };
 
 #endif // __SetPidParamsCmd_H
