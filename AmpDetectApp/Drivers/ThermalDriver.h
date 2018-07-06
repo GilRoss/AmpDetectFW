@@ -7,7 +7,7 @@
 
 struct conversion {
     float rt;
-    float temp[2];
+    float temp;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -56,7 +56,7 @@ private:
     static double       _nControlVar;
     static int32_t      _nA2DCounts;
     static int32_t      _nErrCounts;
-    static conversion   s_convTable[];
+    static const conversion   s_convTable[];
 
     //Control bits for D/A.
     enum    {kClearBit = 5, kSyncBit = 6, kLdacBit = 7};
