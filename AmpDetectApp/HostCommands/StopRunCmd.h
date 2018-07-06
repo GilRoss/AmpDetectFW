@@ -10,10 +10,10 @@
 class StopRunCmd : public HostCommand
 {
 public:
-    StopRunCmd(const uint8_t* pMsgBuf = NULL, HostCommDriver* pCommDrv = NULL, PcrTask* pPcrTask = NULL)
-        :HostCommand(&_request, pMsgBuf, pCommDrv, pPcrTask)
+    StopRunCmd(uint8_t* pMsgBuf, HostCommDriver& hostCommDrv, PcrTask& pcrTask)
+        :HostCommand(pMsgBuf, hostCommDrv, pcrTask)
     {
-        _request << pMsgBuf;
+        _request << _pMsgBuf;   //De-serialize request buffer into request object.
     }
 
     virtual void Execute()
@@ -21,26 +21,25 @@ public:
         ErrCode nErrCode = ErrCode::kInvalidCmdParams;
         
         //If site index is valid.
-        if (_request.GetSiteIdx() < _pPcrTask->GetNumSites())
+        if (_request.GetSiteIdx() < _pcrTask.GetNumSites())
         {
             //Try to start the run.
-            Site* pSite = _pPcrTask->GetSitePtr(_request.GetSiteIdx());
+            Site* pSite = _pcrTask.GetSitePtr(_request.GetSiteIdx());
             nErrCode = pSite->StopRun();
         }
         
         //Send response.
-        HostMsg response;
-        response = (HostMsg)_request;
-        response.SetError(nErrCode);
-        response.SetMsgSize(response.GetStreamSize());
-        response >> _arResponseBuf;
-        _pHostCommDrv->TxMessage(_arResponseBuf, response.GetStreamSize());
+        _response.SetResponseHeader(_request, nErrCode);
+        _response.SetMsgSize(_response.GetStreamSize());
+        _response >> _pMsgBuf;
+        _hostCommDrv.TxMessage(_pMsgBuf, _response.GetStreamSize());
     }
 
 protected:
   
 private:
-    StopRunReq     _request;
+    StopRunReq  _request;
+    HostMsg     _response;
 };
 
 #endif // __StopRunCmd_H

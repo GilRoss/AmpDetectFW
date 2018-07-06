@@ -10,10 +10,10 @@
 class GetSysStatusCmd : public HostCommand
 {
 public:
-    GetSysStatusCmd(const uint8_t* pMsgBuf = NULL, HostCommDriver* pCommDrv = NULL, PcrTask* pPcrTask = NULL)
-        :HostCommand(&_request, pMsgBuf, pCommDrv, pPcrTask)
+    GetSysStatusCmd(uint8_t* pMsgBuf, HostCommDriver& hostCommDrv, PcrTask& pcrTask)
+        :HostCommand(pMsgBuf, hostCommDrv, pcrTask)
     {
-        _request << pMsgBuf;
+        _request << _pMsgBuf;   //De-serialize request buffer into request object.
     }
 
     virtual ~GetSysStatusCmd()
@@ -22,10 +22,10 @@ public:
 
     virtual void Execute()
     {
-        _pPcrTask->GetSysStatus(_response.GetSysStatusPtr());
-        _response.SetMsgSize(_response.GetStreamSize());
-        _response >> _arResponseBuf;
-        _pHostCommDrv->TxMessage(_arResponseBuf, _response.GetStreamSize());
+        _pcrTask.GetSysStatus(_response.GetSysStatusPtr());
+        _response.SetResponseHeader(_request, ErrCode::kNoError);
+        _response >> _pMsgBuf;
+        _hostCommDrv.TxMessage(_pMsgBuf, _response.GetStreamSize());
     }
 
 protected:

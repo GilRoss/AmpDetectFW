@@ -12,10 +12,10 @@ class ReadOpticalChanCmd : public HostCommand
 public:
     enum    {kMaxAdcReadings = 200};
     
-    ReadOpticalChanCmd(const uint8_t* pMsgBuf = NULL, HostCommDriver* pCommDrv = NULL, PcrTask* pPcrTask = NULL)
-        :HostCommand(&_request, pMsgBuf, pCommDrv, pPcrTask)
+    ReadOpticalChanCmd(uint8_t* pMsgBuf, HostCommDriver& hostCommDrv, PcrTask& pcrTask)
+        :HostCommand(pMsgBuf, hostCommDrv, pcrTask)
     {
-        _request << pMsgBuf;
+        _request << _pMsgBuf;   //De-serialize request buffer into request object.
     }
 
     virtual void Execute()
@@ -40,13 +40,13 @@ public:
             for (int i = 0; i < (int)_nNumVals; i++)
             {
 //                sprintf(pBuf, "%d\r", _arAdcValsLedOff[i]);
-                _pHostCommDrv->TxMessage((uint8_t*)pBuf, strlen(pBuf));
+                _hostCommDrv.TxMessage((uint8_t*)pBuf, strlen(pBuf));
             }
             
             for (int i = 0; i < (int)_nNumVals; i++)
             {
 //                sprintf(pBuf, "%d\r", _arAdcValsLedOn[i]);
-                _pHostCommDrv->TxMessage((uint8_t*)pBuf, strlen(pBuf));
+                _hostCommDrv.TxMessage((uint8_t*)pBuf, strlen(pBuf));
             }
         }
     }
