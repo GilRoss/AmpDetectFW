@@ -75,7 +75,7 @@ void Site::Execute()
             //If Detector type is Camera
             if (_pcrProtocol.GetDetectorType() == _pcrProtocol.kCamera)
             {
-
+/*
                 if(!_siteStatus.GetCaptureCameraImageFlg())
                 {
                     // Turn On LED
@@ -85,7 +85,7 @@ void Site::Execute()
                     _siteStatus.SetPausedFlg(true);
                     _siteStatus.SetCaptureCameraImageFlg(true);
                     _siteStatus.SetCameraIdx(_pcrProtocol.GetDetectorIdx());
-                }
+                }*/
             }
             else if (_pcrProtocol.GetDetectorType() == _pcrProtocol.kPhotoDiode)
             {
