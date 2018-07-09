@@ -26,7 +26,7 @@ void StartHostCommTask(void * pvParameters)
         vTaskDelay (100 / portTICK_PERIOD_MS);
 
     HostCommTask* pHostCommTask = HostCommTask::GetInstance();
-    pHostCommTask->ExecuteThread(PcrTask::GetInstancePtr());
+    pHostCommTask->ExecuteThread(*PcrTask::GetInstancePtr());
 }
 
 
@@ -38,7 +38,7 @@ HostCommTask::HostCommTask()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void HostCommTask::ExecuteThread(PcrTask* pPcrTask)
+void HostCommTask::ExecuteThread(PcrTask& pcrTask)
 {
     HostCommDriver*     pHostCommDrv = new HostCommDriver;
     std::unique_ptr<uint8_t[]> pRequestBuf = std::make_unique<uint8_t[]>(HostMsg::kMaxRequestSize);
@@ -47,7 +47,7 @@ void HostCommTask::ExecuteThread(PcrTask* pPcrTask)
     {
         //Wait for message from host, then create its associated command object.
         pHostCommDrv->RxMessage(pRequestBuf.get(), HostMsg::kMaxRequestSize);
-        HostCommand* pHostCmd = HostCmdFactory::GetHostCmd(pRequestBuf.get(), pHostCommDrv, pPcrTask);
+        HostCommand* pHostCmd = HostCmdFactory::GetHostCmd(pRequestBuf.get(), *pHostCommDrv, pcrTask);
 
         //If this is a valid command, execute the command.
         if (pHostCmd != NULL)

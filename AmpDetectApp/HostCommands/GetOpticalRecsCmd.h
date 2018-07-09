@@ -10,10 +10,10 @@
 class GetOpticalRecsCmd : public HostCommand
 {
 public:
-    GetOpticalRecsCmd(const uint8_t* pMsgBuf = NULL, HostCommDriver* pCommDrv = NULL, PcrTask* pPcrTask = NULL)
-        :HostCommand(&_request, pMsgBuf, pCommDrv, pPcrTask)
+    GetOpticalRecsCmd(uint8_t* pMsgBuf, HostCommDriver& hostCommDrv, PcrTask& pcrTask)
+        :HostCommand(pMsgBuf, hostCommDrv, pcrTask)
     {
-        _request << pMsgBuf;
+        _request << _pMsgBuf;   //De-serialize request buffer into request object.
     }
 
     virtual ~GetOpticalRecsCmd()
@@ -25,9 +25,9 @@ public:
         ErrCode nErrCode = ErrCode::kInvalidCmdParams;
         _response.ClearAllOpticsRecs();
 
-        if (_request.GetSiteIdx() < _pPcrTask->GetNumSites())
+        if (_request.GetSiteIdx() < _pcrTask.GetNumSites())
         {
-            Site* pSite = _pPcrTask->GetSitePtr(_request.GetSiteIdx());
+            Site* pSite = _pcrTask.GetSitePtr(_request.GetSiteIdx());
             if ((_request.GetNumRecsToRead() <= 10) &&
                 ((_request.GetFirstRecToReadIdx() + _request.GetNumRecsToRead()) <= pSite->GetNumOpticsRecs()))
             {
@@ -37,10 +37,9 @@ public:
             }
         }
 
-        _response.SetMsgSize(_response.GetStreamSize());
-        _response.SetError(nErrCode);
-        _response >> _arResponseBuf;
-        _pHostCommDrv->TxMessage(_arResponseBuf, _response.GetStreamSize());
+        _response.SetResponseHeader(_request, nErrCode);
+        _response >> _pMsgBuf;
+        _hostCommDrv.TxMessage(_pMsgBuf, _response.GetStreamSize());
     }
 
 protected:

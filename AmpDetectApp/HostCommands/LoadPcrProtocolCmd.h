@@ -12,29 +12,29 @@
 class LoadPcrProtocolCmd : public HostCommand
 {
 public:
-    LoadPcrProtocolCmd(const uint8_t* pMsgBuf = NULL, HostCommDriver* pHostCommDrv = NULL, PcrTask* pPcrTask = NULL)
-        :HostCommand(&_request, pMsgBuf, pHostCommDrv, pPcrTask)
+    LoadPcrProtocolCmd(uint8_t* pMsgBuf, HostCommDriver& hostCommDrv, PcrTask& pcrTask)
+        :HostCommand(pMsgBuf, hostCommDrv, pcrTask)
     {
         _request << pMsgBuf;
     }
 
     virtual void Execute()
     {
-        _response = (HostMsg)_request;
-        _response.SetError(ErrCode::kNoError);
-        Site* pSite = _pPcrTask->GetSitePtr(_request.GetSiteIdx());
+        ErrCode nErrCode = ErrCode::kNoError;
+
+        Site* pSite = _pcrTask.GetSitePtr(_request.GetSiteIdx());
         if (pSite->GetRunningFlg() == true)
         {
-            _response.SetError(ErrCode::kRunInProgressErr);
+            nErrCode = ErrCode::kRunInProgressErr;
         }
         else
         {
             pSite->SetPcrProtocol(_request.GetPcrProtocol());
         }
         
-        _response.SetMsgSize(_response.GetStreamSize());
-        _response >> _arResponseBuf;
-        _pHostCommDrv->TxMessage(_arResponseBuf, _response.GetStreamSize());
+        _response.SetResponseHeader(_request, nErrCode);
+        _response >> _pMsgBuf;
+        _hostCommDrv.TxMessage(_pMsgBuf, _response.GetStreamSize());
     }
 
 protected:

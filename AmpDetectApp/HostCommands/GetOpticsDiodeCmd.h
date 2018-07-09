@@ -18,32 +18,31 @@
 class GetOpticsDiodeCmd : public HostCommand
 {
 public:
-    GetOpticsDiodeCmd(const uint8_t* pMsgBuf = NULL, HostCommDriver* pCommDrv = NULL, PcrTask* pPcrTask = NULL)
-        :HostCommand(&_request, pMsgBuf, pCommDrv, pPcrTask)
+    GetOpticsDiodeCmd(uint8_t* pMsgBuf, HostCommDriver& hostCommDrv, PcrTask& pcrTask)
+        :HostCommand(pMsgBuf, hostCommDrv, pcrTask)
     {
-        _request << pMsgBuf;
+        _request << _pMsgBuf;   //De-serialize request buffer into request object.
     }
 
     virtual void Execute()
     {
-        ErrCode nErrCode = ErrCode::kNoError;
+        ErrCode nErrCode = ErrCode::kInvalidCmdParams;
         uint32_t diodeValue = 0;
 
         //If site and LED channel index are valid.
         if (_request.GetDiodeIdx() < OpticsDriver::kNumOptChans)
         {
             //Try to set the setpoint.
-            Site* pSite = _pPcrTask->GetSitePtr();
+            Site* pSite = _pcrTask.GetSitePtr();
             diodeValue = pSite->GetOpticsDiode(_request.GetDiodeIdx());
+            nErrCode = ErrCode::kNoError;
         }
 
         //Send response.
-        //_response = (HostMsg)_request;
-        _response.SetError(nErrCode);
-        _response.SetMsgSize(_response.GetStreamSize());
+        _response.SetResponseHeader(_request, nErrCode);
         _response.SetDiodeValue(diodeValue);
-        _response >> _arResponseBuf;
-        _pHostCommDrv->TxMessage(_arResponseBuf, _response.GetStreamSize());
+        _response >> _pMsgBuf;
+        _hostCommDrv.TxMessage(_pMsgBuf, _response.GetStreamSize());
     }
 
 protected:

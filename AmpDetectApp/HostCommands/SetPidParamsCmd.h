@@ -10,10 +10,10 @@
 class SetPidParamsCmd : public HostCommand
 {
 public:
-    SetPidParamsCmd(const uint8_t* pMsgBuf = NULL, HostCommDriver* pCommDrv = NULL, PcrTask* pPcrTask = NULL)
-        :HostCommand(&_request, pMsgBuf, pCommDrv, pPcrTask)
+    SetPidParamsCmd(uint8_t* pMsgBuf, HostCommDriver& hostCommDrv, PcrTask& pcrTask)
+        :HostCommand(pMsgBuf, hostCommDrv, pcrTask)
     {
-        _request << pMsgBuf;
+        _request << _pMsgBuf;   //De-serialize request buffer into request object.
     }
 
     virtual void Execute()
@@ -21,27 +21,25 @@ public:
         ErrCode nErrCode = ErrCode::kNoError;
         
         //If site index is valid.
-        for (int i = 0; i < (int)_pPcrTask->GetNumSites(); i++)
+        for (int i = 0; i < (int)_pcrTask.GetNumSites(); i++)
         {
             //Try to set the PID parameters.
-            Site* pSite = _pPcrTask->GetSitePtr(i);
+            Site* pSite = _pcrTask.GetSitePtr(i);
             if (nErrCode == ErrCode::kNoError)
                 nErrCode = pSite->SetPidParams(_request.GetPGain(), _request.GetIGain(), _request.GetDGain());
         }
         
         //Send response.
-        HostMsg response;
-        response = (HostMsg)_request;
-        response.SetError(nErrCode);
-        response.SetMsgSize(response.GetStreamSize());
-        response >> _arResponseBuf;
-        _pHostCommDrv->TxMessage(_arResponseBuf, response.GetStreamSize());
+        _response.SetResponseHeader(_request, nErrCode);
+        _response >> _pMsgBuf;
+        _hostCommDrv.TxMessage(_pMsgBuf, _response.GetStreamSize());
     }
 
 protected:
   
 private:
-    SetPidInfoReq     _request;
+    SetPidParamsReq _request;
+    HostMsg         _response;
 };
 
 #endif // __SetPidParamsCmd_H

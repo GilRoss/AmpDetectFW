@@ -11,8 +11,8 @@
 class SetOpticsLedCmd : public HostCommand
 {
 public:
-    SetOpticsLedCmd(const uint8_t* pMsgBuf = NULL, HostCommDriver* pCommDrv = NULL, PcrTask* pPcrTask = NULL)
-        :HostCommand(&_request, pMsgBuf, pCommDrv, pPcrTask)
+    SetOpticsLedCmd(uint8_t* pMsgBuf, HostCommDriver& hostCommDrv, PcrTask& pcrTask)
+        :HostCommand(pMsgBuf, hostCommDrv, pcrTask)
     {
         _request << pMsgBuf;
     }
@@ -22,21 +22,19 @@ public:
         ErrCode nErrCode = ErrCode::kInvalidCmdParams;
         
         //If site and LED channel index are valid.
-        if ((_request.GetSiteIdx() < _pPcrTask->GetNumSites()) && (_request.GetChanIdx() < OpticsDriver::kNumOptChans))
+        if ((_request.GetSiteIdx() < _pcrTask.GetNumSites()) && (_request.GetChanIdx() < OpticsDriver::kNumOptChans))
         {
             //Try to set the setpoint.
-            Site* pSite = _pPcrTask->GetSitePtr();
+            Site* pSite = _pcrTask.GetSitePtr();
             nErrCode = pSite->SetOpticsLed(_request.GetChanIdx(),
                                            _request.GetIntensity(),
                                            _request.GetDuration());
         }
         
         //Send response.
-        _response = (HostMsg)_request;
-        _response.SetError(nErrCode);
-        _response.SetMsgSize(_response.GetStreamSize());
-        _response >> _arResponseBuf;
-        _pHostCommDrv->TxMessage(_arResponseBuf, _response.GetStreamSize());
+        _response.SetResponseHeader(_request, nErrCode);
+        _response >> _pMsgBuf;
+        _hostCommDrv.TxMessage(_pMsgBuf, _response.GetStreamSize());
     }
 
 protected:

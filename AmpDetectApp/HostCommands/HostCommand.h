@@ -2,19 +2,19 @@
 #define __HostCommand_H
 
 #include <cstdint>
-#include "HostMessages.h"
 #include "PcrTask.h"
 #include "HostCommDriver.h"
-
+#include "HostMessages.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 class HostCommand
 {
 public:
-    HostCommand(HostMsg* pReqMsg, const uint8_t* pMsgBuf, HostCommDriver* pHostCommDrv, PcrTask* pPcrTask)
-        :_pHostCommDrv(pHostCommDrv)
-        ,_pPcrTask(pPcrTask)
+    HostCommand(uint8_t* pMsgBuf, HostCommDriver& hostCommDrv, PcrTask& pcrTask)
+        :_hostCommDrv(hostCommDrv)
+        ,_pcrTask(pcrTask)
+        ,_pMsgBuf(pMsgBuf)
     {
     }
     
@@ -23,12 +23,12 @@ public:
     }
     
     virtual void    Execute() = 0;
-        
+
 protected:
-    HostCommDriver* _pHostCommDrv;
-    PcrTask*        _pPcrTask;
-    static uint8_t  _arResponseBuf[HostMsg::kMaxResponseSize];
-  
+    HostCommDriver& _hostCommDrv;
+    PcrTask&        _pcrTask;
+    uint8_t*        _pMsgBuf;
+
 private:
 };
 

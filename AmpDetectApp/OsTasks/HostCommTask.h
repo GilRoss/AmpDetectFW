@@ -14,7 +14,7 @@ public:
     static HostCommTask* GetInstance();
     static HostCommTask* GetInstancePtr()    {return _pHostCommTask;}   //No instantiation.
 
-    void ExecuteThread(PcrTask* pPcrTask);
+    void ExecuteThread(PcrTask& pcrTask);
     
 protected:
   

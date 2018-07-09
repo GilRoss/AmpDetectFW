@@ -10,8 +10,8 @@
 class SetManControlSetpointCmd : public HostCommand
 {
 public:
-    SetManControlSetpointCmd(const uint8_t* pMsgBuf = NULL, HostCommDriver* pCommDrv = NULL, PcrTask* pPcrTask = NULL)
-        :HostCommand(&_request, pMsgBuf, pCommDrv, pPcrTask)
+    SetManControlSetpointCmd(uint8_t* pMsgBuf, HostCommDriver& hostCommDrv, PcrTask& pcrTask)
+        :HostCommand(pMsgBuf, hostCommDrv, pcrTask)
     {
         _request << pMsgBuf;
     }
@@ -21,26 +21,24 @@ public:
         ErrCode nErrCode = ErrCode::kInvalidCmdParams;
         
         //If site index is valid.
-        if (_request.GetSiteIdx() < _pPcrTask->GetNumSites())
+        if (_request.GetSiteIdx() < _pcrTask.GetNumSites())
         {
             //Try to set the setpoint.
-            Site* pSite = _pPcrTask->GetSitePtr(_request.GetSiteIdx());
+            Site* pSite = _pcrTask.GetSitePtr(_request.GetSiteIdx());
             nErrCode = pSite->SetManControlSetpoint(_request.GetSetpoint());
         }
         
         //Send response.
-        HostMsg response;
-        response = (HostMsg)_request;
-        response.SetError(nErrCode);
-        response.SetMsgSize(response.GetStreamSize());
-        response >> _arResponseBuf;
-        _pHostCommDrv->TxMessage(_arResponseBuf, response.GetStreamSize());
+        _response.SetResponseHeader(_request, nErrCode);
+        _response >> _pMsgBuf;
+        _hostCommDrv.TxMessage(_pMsgBuf, _response.GetStreamSize());
     }
 
 protected:
   
 private:
-    SetManControlSetpointReq     _request;
+    SetManControlSetpointReq    _request;
+    HostMsg                     _response;
 };
 
 #endif // __SetManControlSetpointCmd_H
