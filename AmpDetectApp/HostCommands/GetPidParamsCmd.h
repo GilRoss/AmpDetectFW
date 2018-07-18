@@ -1,5 +1,5 @@
 /*
- * GetOpticsDiodeCmd.h
+ * GetPidParamsCmd.h
  *
  *  Created on: May 30, 2018
  *      Author: z003xk2p
@@ -14,7 +14,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-class GetOpticsDiodeCmd : public HostCommand
+class GetPidParamsCmd : public HostCommand
 {
 public:
     GetPidParamsCmd(uint8_t* pMsgBuf, HostCommDriver& hostCommDrv, PcrTask& pcrTask)
@@ -26,6 +26,9 @@ public:
     virtual void Execute()
     {
         ErrCode nErrCode = ErrCode::kInvalidCmdParams;
+
+        _pcrTask.GetPidParams(PidType::kTemperature, &pidParams)
+        _response.SetYIntercept(55);
 
         //Send response.
         _response.SetResponseHeader(_request, nErrCode);
