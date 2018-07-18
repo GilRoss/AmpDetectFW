@@ -75,7 +75,7 @@ void Site::Execute()
             //If Detector type is Camera
             if (_pcrProtocol.GetDetectorType() == _pcrProtocol.kCamera)
             {
-               /*
+/*
                 if(!_siteStatus.GetCaptureCameraImageFlg())
                 {
                     // Turn On LED
@@ -93,8 +93,8 @@ void Site::Execute()
                for (int i=0; i<_pcrProtocol.GetNumOpticalReads(); i++)
                {
                    optRead = _pcrProtocol.GetOpticalRead(i);
-               opticsRec._nTimeTag_ms     = _siteStatus.GetRunTimer();
-               opticsRec._nCycleIdx       = _siteStatus.GetCycle();
+                   opticsRec._nTimeTag_ms     = _siteStatus.GetRunTimer();
+                   opticsRec._nCycleIdx       = _siteStatus.GetCycle();
                    opticsRec._nLedIdx               = optRead.GetLedIdx();
                    opticsRec._nDetectorIdx          = optRead.GetDetectorIdx();
                    opticsRec._nDarkRead             = _opticsDrv.GetDarkReading(optRead);
