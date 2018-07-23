@@ -35,14 +35,14 @@ public:
     void                SetCurrentPidParams(const PidParams& r)      { _currentPidParams = r; }
     PidParams           GetCurrentPidParams() const                  { return _currentPidParams; }
 
-    bool                WriteToFlash();
+    bool                WriteToFlash()
     {
-
+        return true;
     }
 
-    bool                ReadFromFlash();
+    bool                ReadFromFlash()
     {
-
+        return true;
     }
 
 protected:
