@@ -8,6 +8,8 @@ Site::Site(uint32_t nSiteIdx)
     ,_opticsDrv(nSiteIdx)
     ,_bMeerstetterPid(false)
     ,_pid((double)kPidTick_ms / 1000, 5000, -5000, 0.00017, 0.000013, 0.0)
+    ,_nTemperaturePidSlope(1000)
+    ,_nTemperaturePidYIntercept(0)
     ,_nTempStableTolerance_mC(8000) // + or -
     ,_nTempStableTime_ms(1000)
     ,_arThermalRecs(kMaxThermalRecs)
@@ -73,7 +75,7 @@ void Site::Execute()
         {
             OpticsRec opticsRec;
             //If Detector type is Camera
-            if (_pcrProtocol.GetDetectorType() == _pcrProtocol.kCamera)
+            if (_pcrProtocol.GetFluorDetectorType() == FluorDetectorType::kCamera)
             {
 /*
                 if(!_siteStatus.GetCaptureCameraImageFlg())
@@ -87,7 +89,7 @@ void Site::Execute()
                     _siteStatus.SetCameraIdx(_pcrProtocol.GetDetectorIdx());
                 }*/
             }
-            else if (_pcrProtocol.GetDetectorType() == _pcrProtocol.kPhotoDiode)
+            else if (_pcrProtocol.GetFluorDetectorType() == FluorDetectorType::kPhotoDiode)
             {
                OpticalRead optRead;
                for (int i=0; i<_pcrProtocol.GetNumOpticalReads(); i++)
@@ -213,6 +215,24 @@ ErrCode Site::PauseRun(bool bPause)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+ErrCode Site::SetPidParams(PidType nPidType, const PidParams& pidParams)
+{
+    if (nPidType == PidType::kTemperature)
+    {
+        _nTemperaturePidSlope = pidParams.GetSlope();
+        _nTemperaturePidYIntercept = pidParams.GetYIntercept();
+        _pid.SetGains(pidParams.GetKp(), pidParams.GetKi(), pidParams.GetKd());
+    }
+    else //if (nPidType == PidType::kCurrent)
+    {
+        _thermalDrv.SetPidParams(nPidType, pidParams);
+    }
+
+    return ErrCode::kNoError;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 ErrCode Site::SetManControlSetpoint(int32_t nSp_mC)
 {
     ErrCode     nErrCode = ErrCode::kNoError;
@@ -230,19 +250,27 @@ ErrCode Site::SetManControlSetpoint(int32_t nSp_mC)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-ErrCode Site::SetPidParams(uint32_t nKp, uint32_t nKi, uint32_t nKd)
+/*ErrCode Site::SetPidParams(PidType nType, const PidParams& params)
 {
     ErrCode     nErrCode = ErrCode::kNoError;
     
     //If there is not an active run on this site.
     if (_siteStatus.GetRunningFlg() == false)
     {
+        if (nType == PidType::kTemperature)
+        {
+            _nTemperaturePidSlope = params.GetSlope();
+            _nTemperaturePidYIntercept = params.GetYIntercept();
+            _pid.SetGains(params.GetKp(), params.GetKi(), params.GetKd());
+        }
+        else //if (nType == PidType::kCurrent)
+            _thermalDrv.SetPidParams(nType, params);
     }
     else
         nErrCode = ErrCode::kRunInProgressErr;
     
     return nErrCode;
-}
+}*/
 
 ///////////////////////////////////////////////////////////////////////////////
 ErrCode Site::SetOpticsLed(uint32_t nChanIdx, uint32_t nIntensity, uint32_t nDuration)

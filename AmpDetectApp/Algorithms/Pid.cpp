@@ -13,8 +13,12 @@ class PIDImpl
         PIDImpl( double dt, double max, double min, double Kp, double Ki, double Kd );
         ~PIDImpl();
         double calculate( double setpoint, double pv );
-        void SetProportionalGain(double nPropGain)  {_Kp = nPropGain;}
-        void SetIntegralGain(double nIntegralGain)  {_Ki = nIntegralGain;}
+        void SetGains(double nKp, double nKi, double nKd)
+        {
+            _Kp = nKp;
+            _Ki = nKi;
+            _Kd = nKd;
+        }
 
     private:
         double _dt;
@@ -41,13 +45,9 @@ Pid::~Pid()
     delete pimpl;
 }
 
-void Pid::SetProportionalGain(double nPropGain)
+void Pid::SetGains(double nKp, double nKi, double nKd)
 {
-    pimpl->SetProportionalGain(nPropGain);
-}
-void Pid::SetIntegralGain(double nIntegralGain)
-{
-    pimpl->SetIntegralGain(nIntegralGain);
+    pimpl->SetGains(nKp, nKi, nKd);
 }
 
 

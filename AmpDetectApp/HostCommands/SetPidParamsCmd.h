@@ -18,15 +18,16 @@ public:
 
     virtual void Execute()
     {
-        ErrCode nErrCode = ErrCode::kNoError;
+        ErrCode nErrCode = ErrCode::kRunInProgressErr;
         
-        //If site index is valid.
-        for (int i = 0; i < (int)_pcrTask.GetNumSites(); i++)
+        //Make certain run is not in progress.
+        Site* pSite = _pcrTask.GetSitePtr(0);
+        if (pSite->GetRunningFlg() == false)
         {
-            //Try to set the PID parameters.
-            Site* pSite = _pcrTask.GetSitePtr(i);
-            if (nErrCode == ErrCode::kNoError)
-                nErrCode = pSite->SetPidParams(_request.GetPGain(), _request.GetIGain(), _request.GetDGain());
+            //Write PID parameters to persistent memory.
+
+            //Write PID parameters to PID object.
+            nErrCode = pSite->SetPidParams(_request.GetType(), _request.GetPidParams());
         }
         
         //Send response.

@@ -1,8 +1,9 @@
 #ifndef __ThermalDriver_H
 #define __ThermalDriver_H
 
-#include    <cstdint>
-#include    "Pid.h"
+#include <cstdint>
+#include "Pid.h"
+#include "Common.h"
 
 
 struct conversion {
@@ -27,8 +28,7 @@ public:
     void        Enable() {_bCurrentPidEnabled = true;}
     void        Disable() {_bCurrentPidEnabled = false;}
     int32_t     convertVoltageToTemp(float ain, int standard = 0 /*Celcius*/);
-    void        SetProportionalGain(double nGain) {_nProportionalGain = nGain;}
-    void        SetIntegralGain(double nGain) {_nIntegralGain = nGain;}
+    void        SetPidParams(PidType nType, const PidParams& params);
     
 protected:
   

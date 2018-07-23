@@ -3,6 +3,7 @@
 #include "HostCommTask.h"
 #include "HostCmdFactory.h"
 #include "HostCommDriver.h"
+#include "PersistentMem.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 HostCommTask*        HostCommTask::_pHostCommTask = nullptr;         //Singleton.
@@ -40,6 +41,7 @@ HostCommTask::HostCommTask()
 ///////////////////////////////////////////////////////////////////////////////
 void HostCommTask::ExecuteThread(PcrTask& pcrTask)
 {
+    PersistentMem*      pPersistentMem = PersistentMem::GetInstance();
     HostCommDriver*     pHostCommDrv = new HostCommDriver;
     std::unique_ptr<uint8_t[]> pRequestBuf = std::make_unique<uint8_t[]>(HostMsg::kMaxRequestSize);
     

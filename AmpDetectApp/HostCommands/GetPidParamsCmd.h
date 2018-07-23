@@ -25,13 +25,14 @@ public:
 
     virtual void Execute()
     {
-        ErrCode nErrCode = ErrCode::kInvalidCmdParams;
-
-        _pcrTask.GetPidParams(PidType::kTemperature, &pidParams)
-        _response.SetYIntercept(55);
+        Site* pSite = _pcrTask.GetSitePtr(0);
+        PidParams pidParams;
+        ErrCode nErrCode = ErrCode::kNoError;
 
         //Send response.
         _response.SetResponseHeader(_request, nErrCode);
+        _response.SetType(_request.GetType());
+        _response.SetPidParams(pidParams);
         _response >> _pMsgBuf;
         _hostCommDrv.TxMessage(_pMsgBuf, _response.GetStreamSize());
     }
