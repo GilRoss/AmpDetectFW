@@ -102,7 +102,7 @@
 #ifndef _PLATFORM_TYPES_H_
 #define _PLATFORM_TYPES_H_
 #endif
-//#include "F021.h"
+#include "F021.h"
 #include "hal_stdtypes.h"
 #include "Device_types.h"
 

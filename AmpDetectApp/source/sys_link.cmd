@@ -91,6 +91,7 @@ SECTIONS
 /* USER CODE BEGIN (4) */
 	.init_array   		: {} > FLASH0
 	FEE_CONST_SECTION   : {} > FLASH0
+	FEE_TEXT_SECTION    : {} > FLASH0
     FEE_DATA_SECTION	: {} > RAM
     .sysmem       		: {} > RAM
 /* USER CODE END */

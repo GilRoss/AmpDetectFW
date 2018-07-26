@@ -15,12 +15,9 @@
 class PersistentMem
 {
 public:
-    static PersistentMem* GetInstance()      //Singleton
-    {
-        if (_pPersistentMem == nullptr)
-            _pPersistentMem = new PersistentMem;
-        return _pPersistentMem;
-    }
+    enum    {kMaxPMemSize = 1024};
+
+    static PersistentMem* GetInstance();      //Singleton
 
     virtual ~PersistentMem() {}
 
@@ -35,15 +32,8 @@ public:
     void                SetCurrentPidParams(const PidParams& r)      { _currentPidParams = r; }
     PidParams           GetCurrentPidParams() const                  { return _currentPidParams; }
 
-    bool                WriteToFlash()
-    {
-        return true;
-    }
-
-    bool                ReadFromFlash()
-    {
-        return true;
-    }
+    bool                WriteToFlash();
+    bool                ReadFromFlash();
 
 protected:
 
@@ -54,7 +44,8 @@ private:
         , _nFluorDetectorType(FluorDetectorType::kPhotoDiode)
     {
     }
-    static PersistentMem* _pPersistentMem;
+    static PersistentMem*   _pPersistentMem;
+    static uint8_t          _arBuf[];
 
     uint32_t             _nSerialNum;
     uint32_t             _nCanId;
