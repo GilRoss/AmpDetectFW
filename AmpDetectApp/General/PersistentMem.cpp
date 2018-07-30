@@ -26,7 +26,7 @@ PersistentMem* PersistentMem::GetInstance()      //Singleton
     if (_pPersistentMem == nullptr)
         _pPersistentMem = new PersistentMem;
 
-    bool bSuccess = _pPersistentMem->ReadFromFlash();
+/*    bool bSuccess = _pPersistentMem->ReadFromFlash();
     if (bSuccess == false)
         _pPersistentMem->WriteToFlash();
 
@@ -37,7 +37,7 @@ PersistentMem* PersistentMem::GetInstance()      //Singleton
     for (int i = 0; i < kMaxPMemSize; i++)
         _arBuf[i] = 0;
     nRetVal = TI_Fee_ReadSync(1, 0, _arBuf, kMaxPMemSize);
-
+*/
     return _pPersistentMem;
 }
 
