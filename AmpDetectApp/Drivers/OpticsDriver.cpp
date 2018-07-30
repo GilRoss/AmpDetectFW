@@ -99,11 +99,11 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
         nBitPattern[1] = (uint16_t)nLedIntensity;
     else
         nBitPattern[1] = (uint16_t)maxLedIntensity;
-    gioSetBit(hetPORT1, 13, 0);
+    gioSetBit(hetPORT1, LED_CS_PIN, 0);
     mibspiSetData(mibspiREG3, kledDacGroup, nBitPattern);
     mibspiTransfer(mibspiREG3, kledDacGroup);
     while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
-    gioSetBit(hetPORT1, 13, 1);
+    gioSetBit(hetPORT1, LED_CS_PIN, 1);
 }
 
 /**
@@ -169,7 +169,7 @@ uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChan
 
     /* Reset Integrator first */
     SetIntegratorState(RESET_STATE, npdChanIdx);
-    gioSetBit(hetPORT1, LATCH_PIN, 1); //Enable Reset State
+    gioSetBit(hetPORT1, PDSR_LATCH_PIN, 1); //Enable Reset State
     for(int i=0; i<delay_uS*5; i++); //Hold in reset state for 5 ms
 
     /* Turn On LED */
@@ -184,7 +184,7 @@ uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChan
     /* Wait until interrupt occurs */
     while (!_integrationEnd);
     _integrationEnd = false;
-    gioSetBit(hetPORT1, LATCH_PIN, 1); //Enable Integration State (start integrating)
+    gioSetBit(hetPORT1, PDSR_LATCH_PIN, 1); //Enable Integration State (start integrating)
 
     SetIntegratorState(HOLD_STATE, npdChanIdx); //Configure Hold state
 
@@ -227,20 +227,20 @@ void OpticsDriver::OpticsDriverInit(void)
     uint32_t gpioOutputState = 0x00000000;
 
     /* Set GPIO pin direction */
-    gpioDirectionConfig |= (1<<PIN_HET_12);
-    gpioDirectionConfig |= (1<<PIN_HET_13);
+    gpioDirectionConfig |= (1<<LED_LDAC_PIN);
+    gpioDirectionConfig |= (1<<LED_CS_PIN);
     gpioDirectionConfig |= (1<<PIN_HET_14);
-    gpioDirectionConfig |= (1<<PIN_HET_24);
-    gpioDirectionConfig |= (1<<PIN_HET_26);
-    gpioDirectionConfig |= (1<<PIN_HET_28);
+    gpioDirectionConfig |= (1<<PDSR_DATA_PIN);
+    gpioDirectionConfig |= (1<<PDSR_CLK_PIN);
+    gpioDirectionConfig |= (1<<PDSR_LATCH_PIN);
 
     /* Set GPIO output state */
-    gpioOutputState |= (1<<PIN_HET_12);
-    gpioOutputState |= (1<<PIN_HET_13);
+    gpioOutputState |= (1<<LED_LDAC_PIN);
+    gpioOutputState |= (1<<LED_CS_PIN);
     gpioOutputState |= (1<<PIN_HET_14);
-    gpioOutputState |= (0<<PIN_HET_24);
-    gpioOutputState |= (0<<PIN_HET_26);
-    gpioOutputState |= (1<<PIN_HET_28); //Latch pin is high to start with
+    gpioOutputState |= (0<<PDSR_DATA_PIN);
+    gpioOutputState |= (0<<PDSR_CLK_PIN);
+    gpioOutputState |= (1<<PDSR_LATCH_PIN); //Latch pin is high to start with
 
     gioSetDirection(hetPORT1, gpioDirectionConfig);
     gioSetPort(hetPORT1, gpioOutputState);
@@ -364,8 +364,8 @@ void OpticsDriver::SetIntegratorState(pdIntegratorState state, uint32_t npdChanI
     uint16_t serialDataIn = 0;
     /* Initialize GPIOs for Shift Register: Pin */
     /* Pull-down Latch pin, Clk pin and Data pin */
-    gioSetBit(hetPORT1, LATCH_PIN, 0);
-    gioSetBit(hetPORT1, DATA_PIN, 0);
+    gioSetBit(hetPORT1, PDSR_LATCH_PIN, 0);
+    gioSetBit(hetPORT1, PDSR_DATA_PIN, 0);
 
     switch (state)
     {
@@ -386,7 +386,7 @@ void OpticsDriver::SetIntegratorState(pdIntegratorState state, uint32_t npdChanI
     /* shift data into shift register */
     for (int i = 15; i>=0; i--)
     {
-        gioSetBit(hetPORT1, CLK_PIN, 0);
+        gioSetBit(hetPORT1, PDSR_CLK_PIN, 0);
         /* Checks if serial data is 1 or 0 shifts accordingly */
         if (serialDataIn & (1<<i))
         {
@@ -396,11 +396,11 @@ void OpticsDriver::SetIntegratorState(pdIntegratorState state, uint32_t npdChanI
         {
             pinState = 0;
         }
-        gioSetBit(hetPORT1, DATA_PIN, pinState);
-        gioSetBit(hetPORT1, CLK_PIN, 1);
-        gioSetBit(hetPORT1, DATA_PIN, 0);
+        gioSetBit(hetPORT1, PDSR_DATA_PIN, pinState);
+        gioSetBit(hetPORT1, PDSR_CLK_PIN, 1);
+        gioSetBit(hetPORT1, PDSR_DATA_PIN, 0);
     }
-    gioSetBit(hetPORT1, CLK_PIN, 0);
+    gioSetBit(hetPORT1, PDSR_CLK_PIN, 0);
     //gioSetBit(hetPORT1, LATCH_PIN, 1);
 }
 
@@ -415,7 +415,7 @@ void OpticsDriver::OpticsIntegrationDoneISR()
 /*  enter user code between the USER CODE BEGIN and USER CODE END. */
 /* USER CODE BEGIN (35) */
    /* Trigger Hold on Integrated Value */
-   gioSetBit(hetPORT1, PIN_HET_28, 1);
+   gioSetBit(hetPORT1, PDSR_LATCH_PIN, 1);
    /* Set flag pwmNotification */
    _integrationEnd = true;
 
