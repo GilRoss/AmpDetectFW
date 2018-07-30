@@ -28,7 +28,7 @@ public:
     void        Enable() {_bCurrentPidEnabled = true;}
     void        Disable() {_bCurrentPidEnabled = false;}
     int32_t     convertVoltageToTemp(float ain, int standard = 0 /*Celcius*/);
-    void        SetPidParams(PidType nType, const PidParams& params);
+    void        SetPidParams(const PidParams& params);
     
 protected:
   

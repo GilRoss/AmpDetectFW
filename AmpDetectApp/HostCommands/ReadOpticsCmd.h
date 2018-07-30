@@ -26,7 +26,7 @@ public:
 
     virtual void Execute()
     {
-        ErrCode nErrCode = ErrCode::kInvalidCmdParams;
+        ErrCode nErrCode = ErrCode::kInvalidCmdParamsErr;
         uint32_t diodeValue = 0;
 
         //If site and LED channel index are valid.

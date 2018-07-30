@@ -11,6 +11,7 @@
 #include <cstdint>
 #include "HostCommand.h"
 #include "HostMessages.h"
+#include "PersistentMem.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -28,6 +29,14 @@ public:
         Site* pSite = _pcrTask.GetSitePtr(0);
         PidParams pidParams;
         ErrCode nErrCode = ErrCode::kNoError;
+
+        PersistentMem* pPMem = PersistentMem::GetInstance();
+        if (_request.GetType() == PidType::kCurrent)
+            pidParams = pPMem->GetCurrentPidParams();
+        else if (_request.GetType() == PidType::kTemperature)
+            pidParams = pPMem->GetTemperaturePidParams();
+        else
+            nErrCode = ErrCode::kInvalidCmdParamsErr;
 
         //Send response.
         _response.SetResponseHeader(_request, nErrCode);

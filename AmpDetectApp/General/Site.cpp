@@ -1,4 +1,5 @@
 #include "Site.h"
+#include "PersistentMem.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -25,6 +26,16 @@ Site::Site(uint32_t nSiteIdx)
 ///////////////////////////////////////////////////////////////////////////////
 void Site::Execute()
 {
+    //Make certain we have latest temperature PID params.
+    PersistentMem* pPMem = PersistentMem::GetInstance();
+    PidParams pidParams = pPMem->GetTemperaturePidParams();
+    _pid.SetGains(pidParams.GetKp(), pidParams.GetKi(), pidParams.GetKd());
+    _nTemperaturePidSlope = pidParams.GetSlope();
+    _nTemperaturePidYIntercept = pidParams.GetYIntercept();
+
+    //Make certain we have latest current PID params.
+    _thermalDrv.SetPidParams(pPMem->GetTemperaturePidParams());
+
     //Set setpoint according to the active segment and step.
     const Segment& seg = _pcrProtocol.GetSegment(_siteStatus.GetSegmentIdx());
     const Step& step = seg.GetStep(_siteStatus.GetStepIdx());
@@ -212,24 +223,6 @@ ErrCode Site::PauseRun(bool bPause)
         nErrCode = ErrCode::kRunInProgressErr;
 
     return nErrCode;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-ErrCode Site::SetPidParams(PidType nPidType, const PidParams& pidParams)
-{
-    if (nPidType == PidType::kTemperature)
-    {
-        _nTemperaturePidSlope = pidParams.GetSlope();
-        _nTemperaturePidYIntercept = pidParams.GetYIntercept();
-        _pid.SetGains(pidParams.GetKp(), pidParams.GetKi(), pidParams.GetKd());
-    }
-    else //if (nPidType == PidType::kCurrent)
-    {
-        _thermalDrv.SetPidParams(nPidType, pidParams);
-    }
-
-    return ErrCode::kNoError;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
