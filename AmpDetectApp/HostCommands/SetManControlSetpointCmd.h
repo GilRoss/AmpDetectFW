@@ -18,7 +18,7 @@ public:
 
     virtual void Execute()
     {
-        ErrCode nErrCode = ErrCode::kInvalidCmdParams;
+        ErrCode nErrCode = ErrCode::kInvalidCmdParamsErr;
         
         //If site index is valid.
         if (_request.GetSiteIdx() < _pcrTask.GetNumSites())

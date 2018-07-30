@@ -14,6 +14,7 @@
 #include        "GetOpticalRecsCmd.h"
 #include        "SetManControlSetpointCmd.h"
 #include        "SetPidParamsCmd.h"
+#include        "GetPidParamsCmd.h"
 #include        "SetOpticsLedCmd.h"
 #include        "GetOpticsDiodeCmd.h"
 #include        "ReadOpticsCmd.h"
@@ -50,6 +51,8 @@ public:
             pHostCmd = new SetManControlSetpointCmd(pMsgBuf, hostCommDrv, pcrTask);
         else if (nMsgId == HostMsg::MakeObjId('S', 'P', 'i', 'd'))
             pHostCmd = new SetPidParamsCmd(pMsgBuf, hostCommDrv, pcrTask);
+        else if (nMsgId == HostMsg::MakeObjId('G', 'P', 'i', 'd'))
+            pHostCmd = new GetPidParamsCmd(pMsgBuf, hostCommDrv, pcrTask);
         else if (nMsgId == HostMsg::MakeObjId('S', 'O', 'L', 'd'))
             pHostCmd = new SetOpticsLedCmd(pMsgBuf, hostCommDrv, pcrTask);
         else if (nMsgId == HostMsg::MakeObjId('G', 'O', 'D', 'i'))

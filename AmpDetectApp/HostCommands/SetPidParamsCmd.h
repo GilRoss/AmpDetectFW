@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include "HostCommand.h"
+#include "PersistentMem.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,13 +21,30 @@ public:
     {
         ErrCode nErrCode = ErrCode::kNoError;
         
-        //If site index is valid.
-        for (int i = 0; i < (int)_pcrTask.GetNumSites(); i++)
+        //Make certain run is not in progress.
+        Site* pSite = _pcrTask.GetSitePtr(0);
+        if (pSite->GetRunningFlg() == false)
         {
-            //Try to set the PID parameters.
-            Site* pSite = _pcrTask.GetSitePtr(i);
+            //Write PID parameters to global, persistent memory object.
+            PersistentMem* pPMem = PersistentMem::GetInstance();
+            if (_request.GetType() == PidType::kCurrent)
+                pPMem->SetCurrentPidParams(_request.GetPidParams());
+            else if (_request.GetType() == PidType::kTemperature)
+                pPMem->SetTemperaturePidParams(_request.GetPidParams());
+            else
+                nErrCode = ErrCode::kInvalidCmdParamsErr;
+
             if (nErrCode == ErrCode::kNoError)
-                nErrCode = pSite->SetPidParams(_request.GetPGain(), _request.GetIGain(), _request.GetDGain());
+            {
+                //Write persistent memory object to flash.
+                bool bSuccess = pPMem->WriteToFlash();
+                if (! bSuccess)
+                    nErrCode = ErrCode::kWriteToFlashErr;
+            }
+        }
+        else //if (pSite->GetRunningFlg() == true)
+        {
+            nErrCode = ErrCode::kRunInProgressErr;
         }
         
         //Send response.

@@ -35,6 +35,7 @@
 								<option id="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.ENUM_TYPE.515525587" name="Designate enum type (--enum_type)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.ENUM_TYPE" value="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.ENUM_TYPE.packed" valueType="enumerated"/>
 								<option id="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.INCLUDE_PATH.182163074" name="Add dir to #include search path (--include_path, -I)" superClass="com.ti.ccstudio.buildDefinitions.TMS470_18.1.compilerID.INCLUDE_PATH" valueType="includePath">
 									<listOptionValue builtIn="false" value="${PROJECT_ROOT}"/>
+									<listOptionValue builtIn="false" value="${TI_PRODUCTS_DIR}/Hercules/F021 Flash API/02.01.01/include"/>
 									<listOptionValue builtIn="false" value="D:\Data\Projects\Shared\CommMessages"/>
 									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}/Algorithms}"/>
 									<listOptionValue builtIn="false" value="${workspace_loc:/${ProjName}/Drivers}"/>

@@ -1,5 +1,5 @@
 /*
- * GetOpticsDiodeCmd.h
+ * GetPidParamsCmd.h
  *
  *  Created on: May 30, 2018
  *      Author: z003xk2p
@@ -11,10 +11,11 @@
 #include <cstdint>
 #include "HostCommand.h"
 #include "HostMessages.h"
+#include "PersistentMem.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-class GetOpticsDiodeCmd : public HostCommand
+class GetPidParamsCmd : public HostCommand
 {
 public:
     GetPidParamsCmd(uint8_t* pMsgBuf, HostCommDriver& hostCommDrv, PcrTask& pcrTask)
@@ -25,10 +26,22 @@ public:
 
     virtual void Execute()
     {
-        ErrCode nErrCode = ErrCode::kInvalidCmdParams;
+        Site* pSite = _pcrTask.GetSitePtr(0);
+        PidParams pidParams;
+        ErrCode nErrCode = ErrCode::kNoError;
+
+        PersistentMem* pPMem = PersistentMem::GetInstance();
+        if (_request.GetType() == PidType::kCurrent)
+            pidParams = pPMem->GetCurrentPidParams();
+        else if (_request.GetType() == PidType::kTemperature)
+            pidParams = pPMem->GetTemperaturePidParams();
+        else
+            nErrCode = ErrCode::kInvalidCmdParamsErr;
 
         //Send response.
         _response.SetResponseHeader(_request, nErrCode);
+        _response.SetType(_request.GetType());
+        _response.SetPidParams(pidParams);
         _response >> _pMsgBuf;
         _hostCommDrv.TxMessage(_pMsgBuf, _response.GetStreamSize());
     }

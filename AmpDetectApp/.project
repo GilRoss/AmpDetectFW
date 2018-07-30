@@ -24,4 +24,11 @@
 		<nature>org.eclipse.cdt.core.ccnature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>F021_API_CortexR4_BE_V3D16.lib</name>
+			<type>1</type>
+			<location>C:/ti/Hercules/F021 Flash API/02.01.01/F021_API_CortexR4_BE_V3D16.lib</location>
+		</link>
+	</linkedResources>
 </projectDescription>

@@ -39,11 +39,10 @@ public:
     ErrCode             StopRun();
     ErrCode             PauseRun(bool bPause, bool bCaptureCameraImage);
     ErrCode             SetManControlSetpoint(int32_t nSp_mC);
-    ErrCode             SetPidParams(uint32_t nKp, uint32_t nKi, uint32_t nKd);
     ErrCode             SetOpticsLed(uint32_t nChanIdx, uint32_t nIntensity, uint32_t nDuration);
     uint32_t            GetOpticsDiode(uint32_t nDiodeIdx);
     uint32_t            ReadOptics(uint32_t nLedIdx, uint32_t nDiodeIdx, uint32_t nLedIntensity, uint32_t nIntegrationTime_us);
-    
+
 protected:
   
 private:
@@ -53,6 +52,8 @@ private:
     PcrProtocol                 _pcrProtocol;
     bool                        _bMeerstetterPid;
     Pid                         _pid;
+    int32_t                     _nTemperaturePidSlope;
+    int32_t                     _nTemperaturePidYIntercept;
     SiteStatus                  _siteStatus;
     int32_t                     _nTempStableTolerance_mC;
     uint32_t                    _nTempStableTime_ms;

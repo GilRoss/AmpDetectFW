@@ -22,7 +22,7 @@ public:
 
     virtual void Execute()
     {
-        ErrCode nErrCode = ErrCode::kInvalidCmdParams;
+        ErrCode nErrCode = ErrCode::kInvalidCmdParamsErr;
         _response.ClearAllOpticsRecs();
 
         if (_request.GetSiteIdx() < _pcrTask.GetNumSites())

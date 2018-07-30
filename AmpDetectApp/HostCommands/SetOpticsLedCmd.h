@@ -19,7 +19,7 @@ public:
 
     virtual void Execute()
     {
-        ErrCode nErrCode = ErrCode::kInvalidCmdParams;
+        ErrCode nErrCode = ErrCode::kInvalidCmdParamsErr;
         
         //If site and LED channel index are valid.
         if ((_request.GetSiteIdx() < _pcrTask.GetNumSites()) && (_request.GetChanIdx() < OpticsDriver::kNumOptChans))
