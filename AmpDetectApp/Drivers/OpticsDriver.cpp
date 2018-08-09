@@ -99,11 +99,11 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
         nBitPattern[1] = (uint16_t)nLedIntensity;
     else
         nBitPattern[1] = (uint16_t)maxLedIntensity;
-    gioSetBit(hetPORT1, LED_CS_PIN, 0);
+    gioSetBit(hetPORT1, LED_DAC_CS_PIN, 0);
     mibspiSetData(mibspiREG3, kledDacGroup, nBitPattern);
     mibspiTransfer(mibspiREG3, kledDacGroup);
     while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
-    gioSetBit(hetPORT1, LED_CS_PIN, 1);
+    gioSetBit(hetPORT1, LED_DAC_CS_PIN, 1);
 }
 
 /**
@@ -227,26 +227,30 @@ void OpticsDriver::OpticsDriverInit(void)
     uint32_t gpioOutputState = 0x00000000;
 
     /* Set GPIO pin direction */
-    gpioDirectionConfig |= (1<<LED_LDAC_PIN);
-    gpioDirectionConfig |= (1<<LED_CS_PIN);
-    gpioDirectionConfig |= (1<<PIN_HET_14);
-    gpioDirectionConfig |= (1<<PDSR_DATA_PIN);
-    gpioDirectionConfig |= (1<<PDSR_CLK_PIN);
-    gpioDirectionConfig |= (1<<PDSR_LATCH_PIN);
+    //gpioDirectionConfig |= (1<<LED_LDAC_PIN);
+    gpioDirectionConfig |= (1<<LED_DAC_CS_PIN);
+    gpioDirectionConfig |= (1<<LED_CTRL_S0);
+    gpioDirectionConfig |= (1<<LED_CTRL_S1);
+    //gpioDirectionConfig |= (1<<PIN_HET_14);
+    //gpioDirectionConfig |= (1<<PDSR_DATA_PIN);
+    //gpioDirectionConfig |= (1<<PDSR_CLK_PIN);
+    //gpioDirectionConfig |= (1<<PDSR_LATCH_PIN);
 
     /* Set GPIO output state */
-    gpioOutputState |= (1<<LED_LDAC_PIN);
-    gpioOutputState |= (1<<LED_CS_PIN);
-    gpioOutputState |= (1<<PIN_HET_14);
-    gpioOutputState |= (0<<PDSR_DATA_PIN);
-    gpioOutputState |= (0<<PDSR_CLK_PIN);
-    gpioOutputState |= (1<<PDSR_LATCH_PIN); //Latch pin is high to start with
+    //gpioOutputState |= (1<<LED_LDAC_PIN);
+    gpioOutputState |= (1<<LED_DAC_CS_PIN);
+    gpioOutputState |= (0<<LED_CTRL_S0);
+    gpioOutputState |= (0<<LED_CTRL_S1);
+    //gpioOutputState |= (1<<PIN_HET_14);
+    //gpioOutputState |= (0<<PDSR_DATA_PIN);
+    //gpioOutputState |= (0<<PDSR_CLK_PIN);
+    //gpioOutputState |= (1<<PDSR_LATCH_PIN); //Latch pin is high to start with
 
     gioSetDirection(hetPORT1, gpioDirectionConfig);
     gioSetPort(hetPORT1, gpioOutputState);
 
     /* Configure ADC on Photo Diode board */
-    AdcConfig();
+    //AdcConfig();
 
     /* Disable PWM notification */
     pwmDisableNotification(hetREG1, pwm0, pwmEND_OF_BOTH);
