@@ -173,7 +173,7 @@ uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChan
     for(int i=0; i<delay_uS*5; i++); //Hold in reset state for 5 ms
 
     /* Turn On LED */
-    SetLedIntensity(nledChanIdx, nLedIntensity);
+    //SetLedIntensity(nledChanIdx, nLedIntensity);
     for(int i=0; i<delay_uS*10; i++); //Hold for 10 ms time after turning on LED
 
     /* Set Duration for Integration */
@@ -194,7 +194,7 @@ uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChan
 
     for(int i=0; i<delay_uS; i++); //1 ms delay
     /* Turn Off LED */
-    SetLedsOff();
+    //SetLedsOff();
 
     for(int i=0; i<delay_uS; i++); //Hold for 1 ms time before reading
 
@@ -202,8 +202,8 @@ uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChan
 
     //for(int i=0; i<delay_uS; i++);
 
-    //SetIntegratorState(RESET_STATE, npdChanIdx);
-    //gioSetBit(hetPORT1, LATCH_PIN, 1); //Enable Reset State
+    SetIntegratorState(RESET_STATE, npdChanIdx);
+    gioSetBit(hetPORT1, PDSR_LATCH_PIN, 1); //Enable Reset State
 
     return (uint32_t)adcValue;
 }
@@ -225,25 +225,35 @@ void OpticsDriver::OpticsDriverInit(void)
      */
     uint32_t gpioDirectionConfig = 0x00000000;
     uint32_t gpioOutputState = 0x00000000;
+    uint32_t pdAdcGpioConfig = 0x00000000;
+    uint32_t pdAdcGpioOutputState = 0x00000000;
 
-    /* Set GPIO pin direction */
-    gpioDirectionConfig |= (1<<LED_LDAC_PIN);
-    gpioDirectionConfig |= (1<<LED_CS_PIN);
-    gpioDirectionConfig |= (1<<PIN_HET_14);
+    /* Set GPIO pin direction - Disable LED functionality */
+    //gpioDirectionConfig |= (1<<LED_LDAC_PIN);
+    //gpioDirectionConfig |= (1<<LED_CS_PIN);
+    gpioDirectionConfig |= (1<<PD_CS_PIN);
     gpioDirectionConfig |= (1<<PDSR_DATA_PIN);
     gpioDirectionConfig |= (1<<PDSR_CLK_PIN);
     gpioDirectionConfig |= (1<<PDSR_LATCH_PIN);
 
     /* Set GPIO output state */
-    gpioOutputState |= (1<<LED_LDAC_PIN);
-    gpioOutputState |= (1<<LED_CS_PIN);
-    gpioOutputState |= (1<<PIN_HET_14);
+    //gpioOutputState |= (1<<LED_LDAC_PIN);
+    //gpioOutputState |= (1<<LED_CS_PIN);
+    gpioOutputState |= (1<<PD_CS_PIN);
     gpioOutputState |= (0<<PDSR_DATA_PIN);
     gpioOutputState |= (0<<PDSR_CLK_PIN);
     gpioOutputState |= (1<<PDSR_LATCH_PIN); //Latch pin is high to start with
 
     gioSetDirection(hetPORT1, gpioDirectionConfig);
     gioSetPort(hetPORT1, gpioOutputState);
+
+    /* Set GPIO pin direction to enable communication using mibSPI3 */
+    pdAdcGpioConfig |= (1<<PIN_CS0);
+
+    pdAdcGpioOutputState |= (1<<PIN_CS0);
+
+    gioSetDirection(mibspiPORT3, pdAdcGpioConfig);
+    gioSetPort(mibspiPORT3, pdAdcGpioOutputState);
 
     /* Configure ADC on Photo Diode board */
     AdcConfig();
@@ -263,37 +273,41 @@ void OpticsDriver::AdcConfig(void)
     adcConfig |= UNIPOLAR_REF_TO_GND << IN_CH_CFG_SHIFT;
     adcConfig |= PDINPUTA1 << IN_CH_SEL_SHIFT;
     adcConfig |= FULL_BW << FULL_BW_SEL_SHIFT;
-    adcConfig |= EXT_REF << REF_SEL_SHIFT;
+    adcConfig |= INT_REF4_096_AND_TEMP_SENS << REF_SEL_SHIFT;
     adcConfig |= DISABLE_SEQ << SEQ_EN_SHIFT;
     adcConfig |= READ_BACK_DISABLE << READ_BACK_SHIFT;
     adcConfig <<= 2;
 
+    gioSetBit(mibspiPORT3, PIN_CS0, 0);
+
     /* Send 2 dummy conversion to update config register on Photo Diode ADC */
     /* First dummy conversion */
     mibspiSetData(mibspiREG3, kpdAdcGroup, adcConfigPointer); //Set Config command
-    gioSetBit(hetPORT1, 14, 0); //Start sending command
+    gioSetBit(hetPORT1, PD_CS_PIN, 0); //Start sending command
     mibspiTransfer(mibspiREG3, kpdAdcGroup);
     while(!(mibspiIsTransferComplete(mibspiREG3, kpdAdcGroup)));
-    gioSetBit(hetPORT1, 14, 1);
+    gioSetBit(hetPORT1, PD_CS_PIN, 1);
     for(int i=0; i<1000; i++); //Wait for sometime for conv/acq to complete
 
     /* Wait for conversion to complete ~ 3.2 uS */
     adcConfig = 0;
     /* Second dummy conversion */
     mibspiSetData(mibspiREG3, kpdAdcGroup, adcConfigPointer); //Set Config command
-    gioSetBit(hetPORT1, 14, 0); //Start dummy conversion
+    gioSetBit(hetPORT1, PD_CS_PIN, 0); //Start dummy conversion
     mibspiTransfer(mibspiREG3, kpdAdcGroup);
     while(!(mibspiIsTransferComplete(mibspiREG3, kpdAdcGroup)));
-    gioSetBit(hetPORT1, 14, 1);
+    gioSetBit(hetPORT1, PD_CS_PIN, 1);
     for(int i=0; i<1000; i++);
 
     /* Set Configuration Value */
     mibspiSetData(mibspiREG3, kpdAdcGroup, adcConfigPointer); //Set Config command
-    gioSetBit(hetPORT1, 14, 0); //Start dummy conversion
+    gioSetBit(hetPORT1, PD_CS_PIN, 0); //Start dummy conversion
     mibspiTransfer(mibspiREG3, kpdAdcGroup);
     while(!(mibspiIsTransferComplete(mibspiREG3, kpdAdcGroup)));
-    gioSetBit(hetPORT1, 14, 1);
+    gioSetBit(hetPORT1, PD_CS_PIN, 1);
     for(int i=0; i<1000; i++);
+
+    //gioSetBit(mibspiPORT3, PIN_CS0, 0);
 }
 
 /**
@@ -317,36 +331,40 @@ uint16_t OpticsDriver::GetAdc(uint32_t nChanIdx)
     adcConfig |= UNIPOLAR_REF_TO_GND << IN_CH_CFG_SHIFT;
     adcConfig |= (uint16_t) nChanIdx << IN_CH_SEL_SHIFT;
     adcConfig |= FULL_BW << FULL_BW_SEL_SHIFT;
-    adcConfig |= EXT_REF << REF_SEL_SHIFT;
+    adcConfig |= INT_REF4_096_AND_TEMP_SENS << REF_SEL_SHIFT;
     adcConfig |= DISABLE_SEQ << SEQ_EN_SHIFT;
     adcConfig |= READ_BACK_DISABLE << READ_BACK_SHIFT;
     adcConfig <<= 2;
 
+    //gioSetBit(mibspiPORT3, PIN_CS0, 1);
+
     mibspiSetData(mibspiREG3, kpdAdcGroup, adcConfigPointer); //Set Config command
-    gioSetBit(hetPORT1, 14, 0); //Start dummy conversion
+    gioSetBit(hetPORT1, PD_CS_PIN, 0); //Start dummy conversion
     mibspiTransfer(mibspiREG3, kpdAdcGroup);
     while(!(mibspiIsTransferComplete(mibspiREG3, kpdAdcGroup)));
-    gioSetBit(hetPORT1, 14, 1);
+    gioSetBit(hetPORT1, PD_CS_PIN, 1);
     mibspiGetData(mibspiREG3, kpdAdcGroup, data); //Get ADC Value
     for(int i=0; i<1000; i++);
 
     adcConfig = 0;
 
     mibspiSetData(mibspiREG3, kpdAdcGroup, adcConfigPointer); //Set Config command
-    gioSetBit(hetPORT1, 14, 0); //Start dummy conversion
+    gioSetBit(hetPORT1, PD_CS_PIN, 0); //Start dummy conversion
     mibspiTransfer(mibspiREG3, kpdAdcGroup);
     while(!(mibspiIsTransferComplete(mibspiREG3, kpdAdcGroup)));
-    gioSetBit(hetPORT1, 14, 1);
+    gioSetBit(hetPORT1, PD_CS_PIN, 1);
     mibspiGetData(mibspiREG3, kpdAdcGroup, data); //Get ADC Value
     for(int i=0; i<1000; i++);
 
     mibspiSetData(mibspiREG3, kpdAdcGroup, adcConfigPointer); //Set Config command
-    gioSetBit(hetPORT1, 14, 0); //Start dummy conversion
+    gioSetBit(hetPORT1, PD_CS_PIN, 0); //Start dummy conversion
     mibspiTransfer(mibspiREG3, kpdAdcGroup);
     while(!(mibspiIsTransferComplete(mibspiREG3, kpdAdcGroup)));
-    gioSetBit(hetPORT1, 14, 1);
+    gioSetBit(hetPORT1, PD_CS_PIN, 1);
     mibspiGetData(mibspiREG3, kpdAdcGroup, data); //Get ADC Value
     for(int i=0; i<1000; i++);
+
+    //gioSetBit(mibspiPORT3, PIN_CS0, 0);
 
     nAdcVal = *data;
     return nAdcVal;
@@ -370,7 +388,7 @@ void OpticsDriver::SetIntegratorState(pdIntegratorState state, uint32_t npdChanI
     switch (state)
     {
         case RESET_STATE:
-            serialDataIn = 0x0000;
+            serialDataIn = 0xFF00;
             break;
         case HOLD_STATE:
             serialDataIn = 0xFFFF;
