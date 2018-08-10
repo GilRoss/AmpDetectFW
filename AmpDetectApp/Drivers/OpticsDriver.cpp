@@ -91,6 +91,7 @@ void OpticsDriver::SetLedState2(uint32_t nChanIdx, uint32_t nIntensity, uint32_t
  */
 void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
 {
+#if 0
     uint16_t nBitPattern[2] = {0xFF00, 0x0000};
 
     nBitPattern[0] = (uint16_t)(nBitPattern[0] | (((uint16_t)kwrInputupdateN << 4) | nChanIdx));
@@ -104,6 +105,8 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
     mibspiTransfer(mibspiREG3, kledDacGroup);
     while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
     gioSetBit(hetPORT1, LED_DAC_CS_PIN, 1);
+#endif
+
 }
 
 /**
