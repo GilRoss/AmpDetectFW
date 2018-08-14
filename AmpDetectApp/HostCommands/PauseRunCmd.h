@@ -44,7 +44,7 @@ public:
 protected:
 
 private:
-    PauseRunReq     _request;
+    SetPauseRunReq  _request;
     HostMsg         _response;
 };
 
