@@ -37,7 +37,7 @@ public:
     
     ErrCode             StartRun(bool bMeerstetterPid);
     ErrCode             StopRun();
-    ErrCode             PauseRun(bool bPause);
+    ErrCode             PauseRun(bool bPause, bool bCaptureCameraImage);
     ErrCode             SetManControlSetpoint(int32_t nSp_mC);
     ErrCode             SetOpticsLed(uint32_t nChanIdx, uint32_t nIntensity, uint32_t nDuration);
     uint32_t            GetOpticsDiode(uint32_t nDiodeIdx);

@@ -39,6 +39,7 @@ void Site::Execute()
     //Set setpoint according to the active segment and step.
     const Segment& seg = _pcrProtocol.GetSegment(_siteStatus.GetSegmentIdx());
     const Step& step = seg.GetStep(_siteStatus.GetStepIdx());
+    static int cameraCaptureCount = 0;
     
     int32_t nBlockTemp = _thermalDrv.GetBlockTemp();
     _siteStatus.SetTemperature(nBlockTemp);
@@ -85,24 +86,36 @@ void Site::Execute()
         if ((step.GetOpticalAcqFlg() == true))
         {
             OpticsRec opticsRec;
+            OpticalRead optRead;
             //If Detector type is Camera
             if (_pcrProtocol.GetFluorDetectorType() == FluorDetectorType::kCamera)
             {
-/*
                 if(!_siteStatus.GetCaptureCameraImageFlg())
                 {
+                    _opticsDrv.SetLedsOff();
+
+                    if (cameraCaptureCount < _pcrProtocol.GetNumOpticalReads())
+                    {
+                        optRead = _pcrProtocol.GetOpticalRead(cameraCaptureCount);
                     // Turn On LED
-                    _opticsDrv.SetLedIntensity(_pcrProtocol.GetLedIdx(), _pcrProtocol.GetLedIntensity());
+                        _opticsDrv.SetLedIntensity(optRead.GetLedIdx(), optRead.GetLedIntensity());
                     // Set Pause flag
-                    //PauseRun(true);
                     _siteStatus.SetPausedFlg(true);
                     _siteStatus.SetCaptureCameraImageFlg(true);
-                    _siteStatus.SetCameraIdx(_pcrProtocol.GetDetectorIdx());
-                }*/
+                        _siteStatus.SetCameraIdx(optRead.GetDetectorIdx());
+                        _siteStatus.SetCameraExposure(optRead.GetDetectorIntegrationTime());
+                        _siteStatus.SetLedIntensity(optRead.GetLedIntensity());
+                        cameraCaptureCount++;
+            }
+                    else
+                    {
+                        cameraCaptureCount = 0;
+                    }
+
+                }
             }
             else if (_pcrProtocol.GetFluorDetectorType() == FluorDetectorType::kPhotoDiode)
             {
-               OpticalRead optRead;
                for (int i=0; i<_pcrProtocol.GetNumOpticalReads(); i++)
                {
                    optRead = _pcrProtocol.GetOpticalRead(i);
@@ -122,6 +135,8 @@ void Site::Execute()
         }
         }
 
+        if (!_siteStatus.GetPausedFlg())
+        {
         //If done with all steps in this segment.
         _siteStatus.NextStep();
         if (_siteStatus.GetStepIdx() >= seg.GetNumSteps())
@@ -135,6 +150,7 @@ void Site::Execute()
             if (_siteStatus.GetSegmentIdx() >= _pcrProtocol.GetNumSegs())
                 _siteStatus.SetRunningFlg(false);
         }
+    }
     }
 
     //If time to record the thermals.
@@ -210,7 +226,7 @@ ErrCode Site::StopRun()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-ErrCode Site::PauseRun(bool bPause)
+ErrCode Site::PauseRun(bool bPause, bool bCaptureCameraImage)
 {
     ErrCode     nErrCode = ErrCode::kNoError;
 
@@ -218,6 +234,7 @@ ErrCode Site::PauseRun(bool bPause)
     if (_siteStatus.GetRunningFlg() == true)
     {
         _siteStatus.SetPausedFlg(bPause);
+        _siteStatus.SetCaptureCameraImageFlg(bCaptureCameraImage);
     }
     else
         nErrCode = ErrCode::kRunInProgressErr;
