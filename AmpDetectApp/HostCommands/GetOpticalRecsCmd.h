@@ -22,20 +22,17 @@ public:
 
     virtual void Execute()
     {
-        ErrCode nErrCode = ErrCode::kInvalidCmdParamsErr;
+        ErrCode nErrCode = ErrCode::kNoError;
+        Site*   pSite = _pcrTask.GetSitePtr(0);
         _response.ClearAllOpticsRecs();
 
-        if (_request.GetSiteIdx() < _pcrTask.GetNumSites())
-        {
-            Site* pSite = _pcrTask.GetSitePtr(_request.GetSiteIdx());
-            if ((_request.GetNumRecsToRead() <= 10) &&
-                ((_request.GetFirstRecToReadIdx() + _request.GetNumRecsToRead()) <= pSite->GetNumOpticsRecs()))
-            {
-                for (int i = 0; i < (int)_request.GetNumRecsToRead(); i++)
-                    _response.AddOpticsRec(*(pSite->GetOpticsRec(_request.GetFirstRecToReadIdx() + i)));
-                nErrCode = ErrCode::kNoError;
-            }
-        }
+        int nNumToRead = _request.GetMaxRecsToRead();
+        nNumToRead = (nNumToRead > 10) ? 10 : nNumToRead;
+        nNumToRead = (nNumToRead > (pSite->GetNumOpticsRecs() - _request.GetFirstRecToReadIdx())) ?
+                (pSite->GetNumOpticsRecs() - _request.GetFirstRecToReadIdx()) : nNumToRead;
+
+        for (int i = 0; i < nNumToRead; i++)
+            _response.AddOpticsRec(*(pSite->GetOpticsRec(_request.GetFirstRecToReadIdx() + i)));
 
         _response.SetResponseHeader(_request, nErrCode);
         _response >> _pMsgBuf;
