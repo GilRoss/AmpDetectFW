@@ -103,7 +103,7 @@ void Site::Execute()
                         _siteStatus.SetPausedFlg(true);
                         _siteStatus.SetCaptureCameraImageFlg(true);
                         _siteStatus.SetCameraIdx(optRead.GetDetectorIdx());
-                        _siteStatus.SetCameraExposure(optRead.GetDetectorIntegrationTime());
+//                        _siteStatus.SetOpticsDetectorIntegrationTime(optRead.GetDetectorIntegrationTime());
                         _siteStatus.SetLedIntensity(optRead.GetLedIntensity());
                         cameraCaptureCount++;
                     }
@@ -120,7 +120,7 @@ void Site::Execute()
                {
                    optRead = _pcrProtocol.GetOpticalRead(i);
                    opticsRec._nTimeTag_ms     = _siteStatus.GetRunTimer();
-                   opticsRec._nCycleIdx       = _siteStatus.GetCycle();
+                   opticsRec._nCycleNum       = _siteStatus.GetCycleNum();
                    opticsRec._nLedIdx               = optRead.GetLedIdx();
                    opticsRec._nDetectorIdx          = optRead.GetDetectorIdx();
                    opticsRec._nDarkRead             = _opticsDrv.GetDarkReading(optRead);
@@ -143,7 +143,7 @@ void Site::Execute()
             {
                 //If done with all cycles in this segment.
                 _siteStatus.NextCycle();
-                if (_siteStatus.GetCycle() >= seg.GetNumCycles())
+                if (_siteStatus.GetCycleNum() > seg.GetNumCycles())
                     _siteStatus.NextSegment();
 
                 //If done with entire protocol.
