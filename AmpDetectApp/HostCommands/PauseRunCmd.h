@@ -32,8 +32,7 @@ public:
         {
             //Try to start the run.
             Site* pSite = _pcrTask.GetSitePtr(_request.GetSiteIdx());
-            nErrCode = pSite->PauseRun(_request.GetPausedFlg(),
-                                       _request.GetCaptureCameraImageFlg());
+            nErrCode = pSite->PauseRun(_request.GetPausedFlg());
         }
 
         //Send response.

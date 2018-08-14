@@ -12,7 +12,7 @@ extern "C"
 #include "ti_fee.h"
 }
 
-#pragma SWI_ALIAS(swiSwitchToMode, 1)
+//#pragma SWI_ALIAS(swiSwitchToMode, 1)
 
 extern void swiSwitchToMode ( uint32 mode );
 
