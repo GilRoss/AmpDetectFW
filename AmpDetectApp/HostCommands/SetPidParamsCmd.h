@@ -22,7 +22,7 @@ public:
         ErrCode nErrCode = ErrCode::kNoError;
         
         //Make certain run is not in progress.
-        Site* pSite = _pcrTask.GetSitePtr(0);
+        Site* pSite = _pcrTask.GetSitePtr();
         if (pSite->GetRunningFlg() == false)
         {
             //Write PID parameters to global, persistent memory object.

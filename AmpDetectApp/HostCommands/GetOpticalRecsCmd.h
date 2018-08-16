@@ -23,7 +23,7 @@ public:
     virtual void Execute()
     {
         ErrCode nErrCode = ErrCode::kNoError;
-        Site*   pSite = _pcrTask.GetSitePtr(0);
+        Site*   pSite = _pcrTask.GetSitePtr();
         _response.ClearAllOpticsRecs();
 
         int nNumToRead = _request.GetMaxRecsToRead();
