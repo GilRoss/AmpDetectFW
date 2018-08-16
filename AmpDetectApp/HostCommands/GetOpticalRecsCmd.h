@@ -22,7 +22,8 @@ public:
 
     virtual void Execute()
     {
-        ErrCode nErrCode = ErrCode::kInvalidCmdParamsErr;
+        ErrCode nErrCode = ErrCode::kNoError;
+        Site*   pSite = _pcrTask.GetSitePtr();
         _response.ClearAllOpticsRecs();
 
 /*        Site* pSite = _pcrTask.GetSitePtr(0);

@@ -26,7 +26,7 @@ public:
 
     virtual void Execute()
     {
-        Site* pSite = _pcrTask.GetSitePtr(0);
+        Site* pSite = _pcrTask.GetSitePtr();
         PidParams pidParams;
         ErrCode nErrCode = ErrCode::kNoError;
 

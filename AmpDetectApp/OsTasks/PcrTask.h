@@ -23,8 +23,7 @@ public:
     static PcrTask* GetInstancePtr()    {return _pPcrTask;}   //No instantiation.
     void            ExecuteThread();
   
-    uint32_t        GetNumSites() const   {return _arSitePtrs.size();}
-    Site*           GetSitePtr(uint32_t nSiteIdx = 0)   {return _arSitePtrs[nSiteIdx];}
+    Site*           GetSitePtr()            {return &_site;}
     void            GetSysStatus(SysStatus* pSysStatus);
 
 protected:
@@ -33,7 +32,7 @@ private:
     PcrTask();              //Singleton.
 
     static PcrTask*         _pPcrTask;
-    std::vector<Site*>      _arSitePtrs;
+    Site                    _site;
     SysStatus               _sysStatus;
     SemaphoreHandle_t       _sysStatusSemId;
 };

@@ -24,8 +24,10 @@ OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
 
     while(1)
     {
+        SetLedIntensity(1, 0);
         SetLedIntensity(1, 1000);
-        for(int i=0; i<delay_uS; i++);
+        SetLedIntensity(1, 2000);
+        vTaskDelay (100 / portTICK_PERIOD_MS);
         //SetLedIntensity(1, 0);
         //for(int i=0; i<delay_uS; i++);
     }

@@ -9,10 +9,11 @@
 #define PERSISTENTMEM_H_
 
 #include "Common.h"
+#include "StreamingObj.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-class PersistentMem
+class PersistentMem : StreamingObj
 {
 public:
     enum    {kMaxPMemSize = 1024};
@@ -35,11 +36,50 @@ public:
     bool                WriteToFlash();
     bool                ReadFromFlash();
 
+
+    virtual uint32_t GetStreamSize() const
+    {
+        uint32_t nSize = StreamingObj::GetStreamSize();
+        nSize += sizeof(_nSerialNum);
+        nSize += sizeof(_nCanId);
+        nSize += sizeof(_nFluorDetectorType);
+        nSize += _temeraturePidParams.GetStreamSize();
+        nSize += _currentPidParams.GetStreamSize();
+        return nSize;
+    }
+
+    virtual void     operator<<(const uint8_t* pData)
+    {
+        StreamingObj::operator<<(pData);
+        uint32_t*   pSrc = (uint32_t*)(pData + StreamingObj::GetStreamSize());
+        _nSerialNum             = swap_uint32(*pSrc++);
+        _nCanId                 = swap_uint32(*pSrc++);
+        _nFluorDetectorType     = (FluorDetectorType)swap_uint32(*pSrc++);
+        _temeraturePidParams    << (uint8_t*)pSrc;
+        pSrc += _temeraturePidParams.GetStreamSize() / sizeof(uint32_t);
+        _currentPidParams       << (uint8_t*)pSrc;
+        pSrc += _currentPidParams.GetStreamSize() / sizeof(uint32_t);
+    }
+
+    virtual void     operator>>(uint8_t* pData)
+    {
+        StreamingObj::operator>>(pData);
+        uint32_t*   pDst = (uint32_t*)(pData + StreamingObj::GetStreamSize());
+        *pDst++ = swap_uint32(_nSerialNum);
+        *pDst++ = swap_uint32(_nCanId);
+        *pDst++ = swap_uint32((uint32_t)_nFluorDetectorType);
+        _temeraturePidParams >> (uint8_t*)pDst;
+        pDst += _temeraturePidParams.GetStreamSize() / sizeof(uint32_t);
+        _currentPidParams >> (uint8_t*)pDst;
+        pDst += _currentPidParams.GetStreamSize() / sizeof(uint32_t);
+    }
+
 protected:
 
 private:
     PersistentMem()         //Singleton
-        : _nSerialNum(0)
+        : StreamingObj((MakeObjId('P', 'M', 'e', 'm')))
+        , _nSerialNum(0)
         , _nCanId(1)
         , _nFluorDetectorType(FluorDetectorType::kPhotoDiode)
     {

@@ -34,7 +34,7 @@ void Site::Execute()
     _nTemperaturePidYIntercept = pidParams.GetYIntercept();
 
     //Make certain we have latest current PID params.
-    _thermalDrv.SetPidParams(pPMem->GetTemperaturePidParams());
+    _thermalDrv.SetPidParams(pPMem->GetCurrentPidParams());
 
     //Set setpoint according to the active segment and step.
     const Segment& seg = _pcrProtocol.GetSegment(_siteStatus.GetSegmentIdx());
@@ -93,13 +93,11 @@ void Site::Execute()
                 if(!_siteStatus.GetCaptureCameraImageFlg())
                 {
                     _opticsDrv.SetLedsOff();
-
                     if (cameraCaptureCount < _pcrProtocol.GetNumOpticalReads())
                     {
                         optRead = _pcrProtocol.GetOpticalRead(cameraCaptureCount);
                         // Turn On LED
                         _opticsDrv.SetLedIntensity(optRead.GetLedIdx(), optRead.GetLedIntensity());
-                        // Set Pause flag
                         _siteStatus.SetPausedFlg(true);
                         _siteStatus.SetCaptureCameraImageFlg(true);
                         _siteStatus.SetCameraIdx(optRead.GetDetectorIdx());
@@ -108,9 +106,7 @@ void Site::Execute()
                         cameraCaptureCount++;
                     }
                     else
-                    {
                         cameraCaptureCount = 0;
-                    }
 
                 }
             }
@@ -118,6 +114,7 @@ void Site::Execute()
             {
                for (int i=0; i<_pcrProtocol.GetNumOpticalReads(); i++)
                {
+                   //Save the optical record.
                    optRead = _pcrProtocol.GetOpticalRead(i);
                    opticsRec._nTimeTag_ms     = _siteStatus.GetRunTimer();
                    opticsRec._nCycleNum       = _siteStatus.GetCycleNum();
@@ -129,7 +126,7 @@ void Site::Execute()
                    opticsRec._nRefIlluminatedRead   = _opticsDrv.GetAdc(optRead.GetReferenceIdx());
                    opticsRec._nShuttleTemp_mC = 0;
                    _arOpticsRecs.push_back( opticsRec );
-                   // Turn Off all LED
+
                    _opticsDrv.SetLedsOff();
                }
             }
@@ -226,16 +223,13 @@ ErrCode Site::StopRun()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-ErrCode Site::PauseRun(bool bPause, bool bCaptureCameraImage)
+ErrCode Site::PauseRun(bool bPause)
 {
     ErrCode     nErrCode = ErrCode::kNoError;
 
     //If there is not an active run on this site.
-    if (_siteStatus.GetRunningFlg() == true)
-    {
-        _siteStatus.SetPausedFlg(bPause);
-        _siteStatus.SetCaptureCameraImageFlg(bCaptureCameraImage);
-    }
+    if (_siteStatus.GetRunningFlg() == true)    {
+        _siteStatus.SetPausedFlg(bPause);    }
     else
         nErrCode = ErrCode::kRunInProgressErr;
 
