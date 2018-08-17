@@ -25,8 +25,9 @@ OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
     while(1)
     {
         SetLedIntensity(1, 0);
-        SetLedIntensity(1, 1000);
-        SetLedIntensity(1, 2000);
+        SetLedIntensity(1, 250);
+        SetLedIntensity(1, 500);
+//        SetLedIntensity(1, 1000);
         vTaskDelay (100 / portTICK_PERIOD_MS);
         //SetLedIntensity(1, 0);
         //for(int i=0; i<delay_uS; i++);
@@ -102,23 +103,9 @@ void OpticsDriver::SetLedState2(uint32_t nChanIdx, uint32_t nIntensity, uint32_t
 void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
 {
 
-    uint16_t ledData[2] = {0x0010, 0x0000}; // Write input/DAC
-    uint16_t updateDAC[2] = {0x0020, 0x0000}; // Update DAC
-#if 0
-    uint16_t nBitPattern[2] = {0xFF00, 0x0000};
+    uint16_t ledData[2] = {0x0000, 0x0000}; // Write input/DAC
+//    uint16_t updateDAC[2] = {0x0020, 0x0000}; // Update DAC
 
-    nBitPattern[0] = (uint16_t)(nBitPattern[0] | (((uint16_t)kwrInputupdateN << 4) | nChanIdx));
-    /* Checks if Led Intensity exceeds 2.5 V ~ 40000 counts and caps it */
-    if (nLedIntensity <= maxLedIntensity)
-        nBitPattern[1] = (uint16_t)nLedIntensity;
-    else
-        nBitPattern[1] = (uint16_t)maxLedIntensity;
-    gioSetBit(hetPORT1, LED_DAC_CS_PIN, 0);
-    mibspiSetData(mibspiREG3, kledDacGroup, nBitPattern);
-    mibspiTransfer(mibspiREG3, kledDacGroup);
-    while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
-    gioSetBit(hetPORT1, LED_DAC_CS_PIN, 1);
-#endif
     switch(nChanIdx)
     {
         case 1:
@@ -143,16 +130,8 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
             break;
     }
 
-    if (nLedIntensity == 0)
-    {
-        ledData[0] |= 0x0000;
-        ledData[1] |= 0x0000;
-    }
-    else
-    {
-        ledData[0] |= 0x0002;
-        ledData[1] |= 0x7100;
-    }
+    ledData[0] = 0x3000 + ((uint16_t)nLedIntensity >> 4);
+    ledData[1] = (uint16_t)nLedIntensity << 12;
 
     gioSetBit(hetPORT1, LED_DAC_CS_PIN, 0);
     mibspiSetData(mibspiREG3, kledDacGroup, ledData);
@@ -160,11 +139,11 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
     while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
     gioSetBit(hetPORT1, LED_DAC_CS_PIN, 1);
 
-    gioSetBit(hetPORT1, LED_DAC_CS_PIN, 0);
+/*    gioSetBit(hetPORT1, LED_DAC_CS_PIN, 0);
     mibspiSetData(mibspiREG3, kledDacGroup, updateDAC);
     mibspiTransfer(mibspiREG3, kledDacGroup);
     while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
-    gioSetBit(hetPORT1, LED_DAC_CS_PIN, 1);
+    gioSetBit(hetPORT1, LED_DAC_CS_PIN, 1);*/
 }
 
 /**
@@ -287,7 +266,7 @@ void OpticsDriver::OpticsDriverInit(void)
     uint32_t gpioDirectionConfig = 0x00000000;
     uint32_t gpioOutputState = 0x00000000;
     uint32_t ledDacConfig = 0x00000000;
-    uint16_t configData_w_Reset[2] = {0x0048, 0x0000}; //Stand alone mode; Gain = 2*Vref; Ref = Enabled; Operation = Normal Mode; Reset Input/DAC registers
+    uint16_t configData_w_Reset[2] = {0x4000, 0x0000}; //Stand alone mode; Gain = 2*Vref; Ref = Enabled; Operation = Normal Mode; Reset Input/DAC registers
     uint16_t configData_wo_Reset[2] = {0x0040, 0x8000};
 
     /* Set GPIO pin direction */
@@ -320,11 +299,11 @@ void OpticsDriver::OpticsDriverInit(void)
     while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
     gioSetBit(hetPORT1, LED_DAC_CS_PIN, 1);
 
-    gioSetBit(hetPORT1, LED_DAC_CS_PIN, 0);
+/*    gioSetBit(hetPORT1, LED_DAC_CS_PIN, 0);
     mibspiSetData(mibspiREG3, kledDacGroup, configData_wo_Reset);
     mibspiTransfer(mibspiREG3, kledDacGroup);
     while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
-    gioSetBit(hetPORT1, LED_DAC_CS_PIN, 1);
+    gioSetBit(hetPORT1, LED_DAC_CS_PIN, 1);*/
 
     /* Configure ADC on Photo Diode board */
     //AdcConfig();
