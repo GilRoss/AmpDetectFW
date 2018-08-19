@@ -27,7 +27,7 @@
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_PROJECT.Texas Instruments XDS2xx USB Debug Probe_0/CortexR4" value="AmpDetectApp"/>
 <stringAttribute key="com.ti.ccstudio.debug.debugModel.ATTR_TARGET_CONFIG" value="${target_config_active_default:AmpDetectApp}"/>
 <mapAttribute key="com.ti.ccstudio.debug.ui.displayFormats">
-<mapEntry key="Texas Instruments XDS110 USB Debug Probe/CortexR4@##separator##@0" value="32-Bit Hex - TI Style"/>
+<mapEntry key="Texas Instruments XDS110 USB Debug Probe/CortexR4@##separator##@0" value="16-Bit Hex - TI Style"/>
 <mapEntry key="Texas Instruments XDS110 USB Debug Probe_0/CortexR4@##separator##@0" value="8-Bit Hex - TI Style"/>
 </mapAttribute>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">

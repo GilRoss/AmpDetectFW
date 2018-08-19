@@ -36,7 +36,6 @@ public:
     bool                WriteToFlash();
     bool                ReadFromFlash();
 
-
     virtual uint32_t GetStreamSize() const
     {
         uint32_t nSize = StreamingObj::GetStreamSize();
@@ -45,34 +44,12 @@ public:
         nSize += sizeof(_nFluorDetectorType);
         nSize += _temeraturePidParams.GetStreamSize();
         nSize += _currentPidParams.GetStreamSize();
+        nSize += sizeof(_nCrc);
         return nSize;
     }
 
-    virtual void     operator<<(const uint8_t* pData)
-    {
-        StreamingObj::operator<<(pData);
-        uint32_t*   pSrc = (uint32_t*)(pData + StreamingObj::GetStreamSize());
-        _nSerialNum             = swap_uint32(*pSrc++);
-        _nCanId                 = swap_uint32(*pSrc++);
-        _nFluorDetectorType     = (FluorDetectorType)swap_uint32(*pSrc++);
-        _temeraturePidParams    << (uint8_t*)pSrc;
-        pSrc += _temeraturePidParams.GetStreamSize() / sizeof(uint32_t);
-        _currentPidParams       << (uint8_t*)pSrc;
-        pSrc += _currentPidParams.GetStreamSize() / sizeof(uint32_t);
-    }
-
-    virtual void     operator>>(uint8_t* pData)
-    {
-        StreamingObj::operator>>(pData);
-        uint32_t*   pDst = (uint32_t*)(pData + StreamingObj::GetStreamSize());
-        *pDst++ = swap_uint32(_nSerialNum);
-        *pDst++ = swap_uint32(_nCanId);
-        *pDst++ = swap_uint32((uint32_t)_nFluorDetectorType);
-        _temeraturePidParams >> (uint8_t*)pDst;
-        pDst += _temeraturePidParams.GetStreamSize() / sizeof(uint32_t);
-        _currentPidParams >> (uint8_t*)pDst;
-        pDst += _currentPidParams.GetStreamSize() / sizeof(uint32_t);
-    }
+    virtual void     operator<<(const uint8_t* pData);
+    virtual void     operator>>(uint8_t* pData);
 
 protected:
 
@@ -82,7 +59,11 @@ private:
         , _nSerialNum(0)
         , _nCanId(1)
         , _nFluorDetectorType(FluorDetectorType::kPhotoDiode)
+        , _nCrc(0)
     {
+        bool bSuccess = ReadFromFlash();
+        if (bSuccess == false)
+            bSuccess = WriteToFlash();
     }
     static PersistentMem*   _pPersistentMem;
     static uint8_t          _arBuf[];
@@ -92,6 +73,7 @@ private:
     FluorDetectorType    _nFluorDetectorType;
     PidParams            _temeraturePidParams;
     PidParams            _currentPidParams;
+    uint32_t             _nCrc;
 };
 
 #endif /* PERSISTENTMEM_H_ */

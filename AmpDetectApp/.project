@@ -26,6 +26,16 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>CRC32</name>
+			<type>2</type>
+			<location>D:/Data/Projects/Shared/CRC32</location>
+		</link>
+		<link>
+			<name>CommMessages</name>
+			<type>2</type>
+			<location>D:/Data/Projects/Shared/CommMessages</location>
+		</link>
+		<link>
 			<name>F021_API_CortexR4_BE_V3D16.lib</name>
 			<type>1</type>
 			<location>C:/ti/Hercules/F021 Flash API/02.01.01/F021_API_CortexR4_BE_V3D16.lib</location>

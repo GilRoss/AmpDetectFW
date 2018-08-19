@@ -56,7 +56,6 @@
 #include "mibspi.h"
 #include "het.h"
 #include "sci.h"
-#include "ti_fee.h"
 /* USER CODE END */
 
 /** @fn void main(void)
@@ -80,24 +79,11 @@ int main(void)
     hetInit();
     sciInit();
 
-    //Initialize flash and wait for complete.
-    TI_Fee_Init();
-    uint16_t nStatus = UNINIT;
-    while(nStatus != IDLE)
-    {
-        TI_Fee_MainFunction();
-        uint16_t dummycnt = 0xFFU;
-        while(dummycnt > 0)
-            dummycnt--;
-
-        nStatus = TI_Fee_GetStatus(0);
-    }
-
     //Create the PCR task.
     xTaskCreate(StartPcrTask, "PcrTask", 4 * 1024, NULL, 3, NULL );
 
     //Create the host communications task.
-    xTaskCreate(StartHostCommTask, "HostCommTask", 4 * 1024, NULL, 3, NULL );
+    xTaskCreate(StartHostCommTask, "HostCommTask", 4 * 1024, NULL, 3 | portPRIVILEGE_BIT, NULL );
 
     //Start the RTOS.
     vTaskStartScheduler();
