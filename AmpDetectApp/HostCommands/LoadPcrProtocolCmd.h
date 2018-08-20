@@ -22,7 +22,7 @@ public:
     {
         ErrCode nErrCode = ErrCode::kNoError;
 
-        Site* pSite = _pcrTask.GetSitePtr(_request.GetSiteIdx());
+        Site* pSite = _pcrTask.GetSitePtr();
         if (pSite->GetRunningFlg() == true)
         {
             nErrCode = ErrCode::kRunInProgressErr;

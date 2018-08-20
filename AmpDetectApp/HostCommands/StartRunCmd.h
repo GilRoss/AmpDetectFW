@@ -18,15 +18,9 @@ public:
 
     virtual void Execute()
     {
-        ErrCode nErrCode = ErrCode::kInvalidCmdParamsErr;
-        
-        //If site index is valid.
-        if (_request.GetSiteIdx() < _pcrTask.GetNumSites())
-        {
-            //Try to start the run.
-            Site* pSite = _pcrTask.GetSitePtr(_request.GetSiteIdx());
-            nErrCode = pSite->StartRun(_request.GetMeerstetterPidFlg());
-        }
+        //Try to start the run.
+        Site* pSite = _pcrTask.GetSitePtr();
+        ErrCode nErrCode = pSite->StartRun(_request.GetMeerstetterPidFlg());
         
         //Send response.
         _response.SetResponseHeader(_request, nErrCode);

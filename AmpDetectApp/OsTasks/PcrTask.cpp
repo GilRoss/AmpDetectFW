@@ -33,12 +33,7 @@ void StartPcrTask(void * pvParameters)
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 PcrTask::PcrTask()
-    :_arSitePtrs(kNumSites)
-    ,_sysStatus(kNumSites)
 {
-    for (int i = 0; i < (int)_arSitePtrs.size(); i++)
-        _arSitePtrs[i] = new Site(i);
-
     _sysStatusSemId = xSemaphoreCreateMutex();
 }
 
@@ -46,8 +41,6 @@ PcrTask::PcrTask()
 ///////////////////////////////////////////////////////////////////////////////
 PcrTask::~PcrTask()
 {
-    for (int i = 0; i < (int)_arSitePtrs.size(); i++)
-        delete _arSitePtrs[i];
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -61,18 +54,15 @@ void    PcrTask::ExecuteThread()
         //Wait for PID delta time.
         vTaskDelayUntil (&nPrevWakeTime, (TickType_t)Site::kPidTick_ms / portTICK_PERIOD_MS);
 
-        //Make sure while updating the sites, we do not try to read the site status.
+        //Make sure while updating the site, we do not try to read the site status.
         xSemaphoreTake(_sysStatusSemId, portMAX_DELAY);
         
-        //For each site in the system.
-        for (int i = 0; i < (int)_arSitePtrs.size(); i++)
-        {
-            //If this site is active.
-            if (_arSitePtrs[i]->GetRunningFlg() == true)
-                _arSitePtrs[i]->Execute();
-            else
-                _arSitePtrs[i]->ManualControl();
-        }
+        //If the site is active.
+        if (_site.GetRunningFlg() == true)
+            _site.Execute();
+        else
+            _site.ManualControl();
+
         xSemaphoreGive(_sysStatusSemId);
     }
 }
@@ -82,9 +72,6 @@ void    PcrTask::GetSysStatus(SysStatus* pSysStatus)
 {
     //Make sure while we are reading the site status, we do not update the site.
     xSemaphoreTake(_sysStatusSemId, portMAX_DELAY);
-    
-    //For each site in the system.
-    for (int i = 0; i < (int)_arSitePtrs.size(); i++)
-        pSysStatus->SetSiteStatus(i, _arSitePtrs[i]->GetStatus());
+    pSysStatus->SetSiteStatus(_site.GetStatus());
     xSemaphoreGive(_sysStatusSemId);
 }
