@@ -9,7 +9,7 @@
 #include "het.h"
 
 bool        OpticsDriver::_integrationEnd = false;
-#define delay_uS 10000
+#define delay_uS 1000
 
 /**
  * Name: OpticsDriver
@@ -170,11 +170,11 @@ uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChan
     /* Reset Integrator first */
     SetIntegratorState(RESET_STATE, npdChanIdx);
     gioSetBit(hetPORT1, PDSR_LATCH_PIN, 1); //Enable Reset State
-    for(int i=0; i<delay_uS*5; i++); //Hold in reset state for 5 ms
+    for(int i=0; i<delay_uS*4; i++); //Hold in reset state for 400-500 us
 
     /* Turn On LED */
     //SetLedIntensity(nledChanIdx, nLedIntensity);
-    for(int i=0; i<delay_uS*10; i++); //Hold for 10 ms time after turning on LED
+    //for(int i=0; i<delay_uS*10; i++); //Hold for 10 ms time after turning on LED
 
     /* Set Duration for Integration */
     pwmSetSignal(hetRAM1, pwm0, signal);
@@ -192,11 +192,11 @@ uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChan
     while (!_integrationEnd);
     pwmDisableNotification(hetREG1, pwm0, pwmEND_OF_BOTH);
 
-    for(int i=0; i<delay_uS; i++); //1 ms delay
+    for(int i=0; i<delay_uS*4; i++); //~400-500 us delay
     /* Turn Off LED */
     //SetLedsOff();
 
-    for(int i=0; i<delay_uS; i++); //Hold for 1 ms time before reading
+    //for(int i=0; i<delay_uS; i++); //Hold for 1 ms time before reading
 
     adcValue = GetAdc(adcChannel);
 
@@ -388,7 +388,7 @@ void OpticsDriver::SetIntegratorState(pdIntegratorState state, uint32_t npdChanI
     switch (state)
     {
         case RESET_STATE:
-            serialDataIn = 0xFF00;
+            serialDataIn = 0x0000;
             break;
         case HOLD_STATE:
             serialDataIn = 0xFFFF;
