@@ -22,7 +22,7 @@ public:
         ErrCode nErrCode = ErrCode::kInvalidCmdParamsErr;
         
         //If site and LED channel index are valid.
-        if ((_request.GetSiteIdx() < _pcrTask.GetNumSites()) && (_request.GetChanIdx() < OpticsDriver::kNumOptChans))
+        if (_request.GetChanIdx() < OpticsDriver::kNumOptChans)
         {
             //Try to set the setpoint.
             Site* pSite = _pcrTask.GetSitePtr();

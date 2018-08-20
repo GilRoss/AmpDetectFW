@@ -18,15 +18,9 @@ public:
 
     virtual void Execute()
     {
-        ErrCode nErrCode = ErrCode::kInvalidCmdParamsErr;
-        
-        //If site index is valid.
-        if (_request.GetSiteIdx() < _pcrTask.GetNumSites())
-        {
-            //Try to set the setpoint.
-            Site* pSite = _pcrTask.GetSitePtr(_request.GetSiteIdx());
-            nErrCode = pSite->SetManControlSetpoint(_request.GetSetpoint());
-        }
+        //Try to set the setpoint.
+        Site* pSite = _pcrTask.GetSitePtr();
+        ErrCode nErrCode = pSite->SetManControlSetpoint(_request.GetSetpoint());
         
         //Send response.
         _response.SetResponseHeader(_request, nErrCode);

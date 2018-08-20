@@ -23,7 +23,7 @@ public:
     virtual void Execute()
     {
         _response.ClearAllThermalRecs();
-        Site* pSite = _pcrTask.GetSitePtr(0);
+        Site* pSite = _pcrTask.GetSitePtr();
         uint32_t nNumRecs = pSite->GetNumThermalRecs() > 10 ? 10 : pSite->GetNumThermalRecs();
         for (int i = 0; i < (int)nNumRecs; i++)
             _response.AddThermalRec(pSite->GetAndDelNextThermalRec());
