@@ -170,7 +170,7 @@ uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChan
     /* Reset Integrator first */
     SetIntegratorState(RESET_STATE, npdChanIdx);
     gioSetBit(hetPORT1, PDSR_LATCH_PIN, 1); //Enable Reset State
-    for(int i=0; i<delay_uS*4; i++); //Hold in reset state for 400-500 us
+    for(int i=0; i<delay_uS*5; i++); //Hold in reset state for 500-600 us
 
     /* Turn On LED */
     //SetLedIntensity(nledChanIdx, nLedIntensity);
@@ -192,7 +192,7 @@ uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChan
     while (!_integrationEnd);
     pwmDisableNotification(hetREG1, pwm0, pwmEND_OF_BOTH);
 
-    for(int i=0; i<delay_uS*4; i++); //~400-500 us delay
+    for(int i=0; i<delay_uS*5; i++); //~500-600 us delay
     /* Turn Off LED */
     //SetLedsOff();
 
