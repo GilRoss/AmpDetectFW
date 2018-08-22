@@ -19,8 +19,29 @@ bool        OpticsDriver::_integrationEnd = false;
  */
 OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
 {
+    int i = 4;
     /* Initialize LED and PD Board Driver */
     OpticsDriverInit();
+    while (1)
+    {
+#if 1
+        if (i > 8)
+            i = 4;
+        else if (i == 5)
+            i = 8;
+#endif
+
+        SetLedIntensity(i, 50);
+        vTaskDelay (1000 / portTICK_PERIOD_MS);
+        SetLedIntensity(i, 10000);
+    //        SetLedIntensity(i, 500);
+    //        SetLedIntensity(1, 1000);
+        vTaskDelay (1000 / portTICK_PERIOD_MS);
+        i++;
+        //SetLedIntensity(1, 0);
+        //for(int i=0; i<delay_uS; i++);
+    }
+
 }
 
 /**
@@ -95,44 +116,86 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
     uint16_t ledData[2] = {0x0000, 0x0000}; // Write input/DAC
 //    uint16_t updateDAC[2] = {0x0020, 0x0000}; // Update DAC
 
-    switch(nChanIdx)
-    {
-        case 1:
-            gioSetBit(hetPORT1, LED_CTRL_S0, 0);
-            gioSetBit(hetPORT1, LED_CTRL_S1, 0);
-            break;
-        case 2:
-            gioSetBit(hetPORT1, LED_CTRL_S0, 1);
-            gioSetBit(hetPORT1, LED_CTRL_S1, 0);
-            break;
-        case 3:
-            gioSetBit(hetPORT1, LED_CTRL_S0, 0);
-            gioSetBit(hetPORT1, LED_CTRL_S1, 1);
-            break;
-        case 4:
-            gioSetBit(hetPORT1, LED_CTRL_S0, 1);
-            gioSetBit(hetPORT1, LED_CTRL_S1, 1);
-            break;
-        default:
-            gioSetBit(hetPORT1, LED_CTRL_S0, 0);
-            gioSetBit(hetPORT1, LED_CTRL_S1, 0);
-            break;
-    }
+    /* If nLedIntensity is 0, Turn off LEDs by switching to unused channel (in this case 8) */
 
-    ledData[0] = 0x3000 + ((uint16_t)nLedIntensity >> 4);
-    ledData[1] = (uint16_t)nLedIntensity << 12;
+#if 0
+        gioSetBit(hetPORT1, LED_CTRL_S2, 1);
+        gioSetBit(hetPORT1, LED_CTRL_S1, 1);
+        gioSetBit(hetPORT1, LED_CTRL_S0, 1);
 
-    gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 0);
-    mibspiSetData(mibspiREG3, kledDacGroup, ledData);
-    mibspiTransfer(mibspiREG3, kledDacGroup);
-    while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
-    gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 1);
+        ledData[0] = 0x3000 + ((uint16_t)0x0000 >> 4);
+        ledData[1] = (uint16_t)0x0000 << 12;
 
-/*    gioSetBit(hetPORT1, LED_DAC_CS_PIN, 0);
-    mibspiSetData(mibspiREG3, kledDacGroup, updateDAC);
-    mibspiTransfer(mibspiREG3, kledDacGroup);
-    while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
-    gioSetBit(hetPORT1, LED_DAC_CS_PIN, 1);*/
+        gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 0);
+        mibspiSetData(mibspiREG3, kledDacGroup, ledData);
+        mibspiTransfer(mibspiREG3, kledDacGroup);
+        while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
+        gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 1);
+
+        vTaskDelay (1000 / portTICK_PERIOD_MS);
+#endif
+
+        //if(nLedIntensity != 0)
+        //{
+
+            switch(nChanIdx)
+            {
+                case 1:
+                    gioSetBit(hetPORT1, LED_CTRL_S2, 0);
+                    gioSetBit(hetPORT1, LED_CTRL_S1, 0);
+                    gioSetBit(hetPORT1, LED_CTRL_S0, 0);
+                    break;
+                case 2:
+                    gioSetBit(hetPORT1, LED_CTRL_S2, 0);
+                    gioSetBit(hetPORT1, LED_CTRL_S1, 0);
+                    gioSetBit(hetPORT1, LED_CTRL_S0, 1);
+                    break;
+                case 3:
+                    gioSetBit(hetPORT1, LED_CTRL_S2, 0);
+                    gioSetBit(hetPORT1, LED_CTRL_S1, 1);
+                    gioSetBit(hetPORT1, LED_CTRL_S0, 0);
+                    break;
+                case 4:
+                    gioSetBit(hetPORT1, LED_CTRL_S2, 0);
+                    gioSetBit(hetPORT1, LED_CTRL_S1, 1);
+                    gioSetBit(hetPORT1, LED_CTRL_S0, 1);
+                    break;
+                case 5:
+                    gioSetBit(hetPORT1, LED_CTRL_S2, 1);
+                    gioSetBit(hetPORT1, LED_CTRL_S1, 0);
+                    gioSetBit(hetPORT1, LED_CTRL_S0, 0);
+                    break;
+                case 6:
+                    gioSetBit(hetPORT1, LED_CTRL_S2, 1);
+                    gioSetBit(hetPORT1, LED_CTRL_S1, 0);
+                    gioSetBit(hetPORT1, LED_CTRL_S0, 1);
+                    break;
+                default:
+                    gioSetBit(hetPORT1, LED_CTRL_S2, 1);
+                    gioSetBit(hetPORT1, LED_CTRL_S1, 1);
+                    gioSetBit(hetPORT1, LED_CTRL_S0, 1);
+                    break;
+            }
+
+            ledData[0] = 0x3000 + ((uint16_t)nLedIntensity >> 4);
+            ledData[1] = (uint16_t)nLedIntensity << 12;
+
+            gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 0);
+            mibspiSetData(mibspiREG3, kledDacGroup, ledData);
+            mibspiTransfer(mibspiREG3, kledDacGroup);
+            while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
+            gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 1);
+        //}
+
+
+
+
+        /*    gioSetBit(hetPORT1, LED_DAC_CS_PIN, 0);
+            mibspiSetData(mibspiREG3, kledDacGroup, updateDAC);
+            mibspiTransfer(mibspiREG3, kledDacGroup);
+            while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
+            gioSetBit(hetPORT1, LED_DAC_CS_PIN, 1);*/
+
 }
 
 /**
@@ -143,10 +206,13 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
  */
 void OpticsDriver::SetLedsOff()
 {
-    for (int nChanIdx=0; nChanIdx < 6; nChanIdx++)
+    /*for (int nChanIdx=0; nChanIdx < 6; nChanIdx++)
     {
         SetLedIntensity(nChanIdx, 0);
-    }
+    }*/
+    gioSetBit(hetPORT1, LED_CTRL_S0, 1);
+    gioSetBit(hetPORT1, LED_CTRL_S1, 1);
+    gioSetBit(hetPORT1, LED_CTRL_S2, 1);
 }
 
 /**
@@ -254,15 +320,16 @@ void OpticsDriver::OpticsDriverInit(void)
      */
     uint32_t gpioDirectionConfig = 0x00000000;
     uint32_t gpioOutputState = 0x00000000;
-    uint32_t ledDacConfig = 0x00000000;
+    //uint32_t ledDacConfig = 0x00000000;
     uint16_t configData_w_Reset[2] = {0x4000, 0x0000}; //Stand alone mode; Gain = 2*Vref; Ref = Enabled; Operation = Normal Mode; Reset Input/DAC registers
     uint16_t configData_wo_Reset[2] = {0x0040, 0x8000};
 
     /* Set GPIO pin direction */
     //gpioDirectionConfig |= (1<<LED_LDAC_PIN);
-    gpioDirectionConfig |= (1<<LED_DAC_CS_PIN);
+    //gpioDirectionConfig |= (1<<LED_DAC_CS_PIN);
     gpioDirectionConfig |= (1<<LED_CTRL_S0);
     gpioDirectionConfig |= (1<<LED_CTRL_S1);
+    gpioDirectionConfig |= (1<<LED_CTRL_S2);
     //gpioDirectionConfig |= (1<<PIN_HET_14);
     //gpioDirectionConfig |= (1<<PDSR_DATA_PIN);
     //gpioDirectionConfig |= (1<<PDSR_CLK_PIN);
@@ -270,16 +337,29 @@ void OpticsDriver::OpticsDriverInit(void)
 
     /* Set GPIO output state */
     //gpioOutputState |= (1<<LED_LDAC_PIN);
-    gpioOutputState |= (1<<LED_DAC_CS_PIN);
+    //gpioOutputState |= (1<<LED_DAC_CS_PIN);
     gpioOutputState |= (0<<LED_CTRL_S0);
     gpioOutputState |= (0<<LED_CTRL_S1);
+    gpioOutputState |= (0<<LED_CTRL_S2);
     //gpioOutputState |= (1<<PIN_HET_14);
     //gpioOutputState |= (0<<PDSR_DATA_PIN);
     //gpioOutputState |= (0<<PDSR_CLK_PIN);
     //gpioOutputState |= (1<<PDSR_LATCH_PIN); //Latch pin is high to start with
 
+    /* GPIO setting using HET1 port */
     gioSetDirection(hetPORT1, gpioDirectionConfig);
     gioSetPort(hetPORT1, gpioOutputState);
+
+    /* Set GPIO pin direction */
+    gpioDirectionConfig &= 0x0000 | (1<<LED_DAC_CS_PIN);
+
+    /* Set GPIO output state */
+    gpioOutputState &= 0x0000 | (1<<LED_DAC_CS_PIN);
+
+    /* GPIO setting using MIBSPI3 port */
+    gioSetDirection(mibspiPORT3, gpioDirectionConfig);
+    gioSetPort(mibspiPORT3, gpioOutputState);
+
 
     //Configure LED DAC: AD5683R
     gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 0);
@@ -296,6 +376,7 @@ void OpticsDriver::OpticsDriverInit(void)
 
     /* Configure ADC on Photo Diode board */
     //AdcConfig();
+    //SetLedsOff();
 
     /* Disable PWM notification */
     pwmDisableNotification(hetREG1, pwm0, pwmEND_OF_BOTH);

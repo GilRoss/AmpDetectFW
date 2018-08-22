@@ -50,6 +50,7 @@
 #define     kledDacGroup        (0)
 #define     kpdAdcGroup         (1)
 #define     maxLedIntensity     (40000)
+#define     maxMuxChannel       (8)
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -116,12 +117,12 @@ public:
         PDSR_LATCH_PIN = PIN_HET_28
     };
     enum ledDacPins {
-        LED_DAC_CS_PIN = PIN_HET_14
+        LED_DAC_CS_PIN = PIN_CS2
     };
     enum ledControlPins{
         LED_CTRL_S0 = PIN_HET_11,
         LED_CTRL_S1 = PIN_HET_12,
-        LED_CRTL_S2 = PIN_HET_13
+        LED_CTRL_S2 = PIN_HET_13
     };
 
     //bool _integrationEnd;
