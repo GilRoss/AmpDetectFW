@@ -142,6 +142,7 @@ public:
     void SetIntegratorState(pdIntegratorState state, uint32_t npdChanIdx);
     static void OpticsIntegrationDoneISR();
     uint16_t GetAdc(uint32_t nChanIdx);
+    uint32_t SetLedOutputState(uint32_t nChanIdx);
     
 protected:
   

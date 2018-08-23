@@ -576,7 +576,7 @@ uint32 i ;
                      | (uint32)((uint32)0U << 21U)  /* wait on enable */
                      | (uint32)((uint32)0U << 20U)  /* shift direction */
                      | (uint32)((uint32)0U << 17U)  /* clock polarity */
-                     | (uint32)((uint32)1U << 16U)  /* clock phase */
+                     | (uint32)((uint32)0U << 16U)  /* clock phase */
                      | (uint32)((uint32)79U << 8U)  /* baudrate prescale */
                      | (uint32)((uint32)16U << 0U); /* data word length */
 
@@ -1005,7 +1005,7 @@ uint32 i ;
 
 
     /* MIBSPI3 set all pins to functional */
-    mibspiREG3->PC0 = (uint32)((uint32)1U << 0U)  /* SCS[0] */
+    mibspiREG3->PC0 = (uint32)((uint32)0U << 0U)  /* SCS[0] */
                     | (uint32)((uint32)0U << 1U)  /* SCS[1] */
                     | (uint32)((uint32)0U << 2U)  /* SCS[2] */
                     | (uint32)((uint32)0U << 3U)  /* SCS[3] */

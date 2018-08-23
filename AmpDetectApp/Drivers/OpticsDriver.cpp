@@ -19,28 +19,90 @@ bool        OpticsDriver::_integrationEnd = false;
  */
 OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
 {
-    int i = 4;
+#if 1
+    int i = 1;
+    int temp = 0;
+    int j = 0;
+    int upperlimit = 40000;
+    int lowerlimit = 0;
+    int stepsize = 500;
+#endif
     /* Initialize LED and PD Board Driver */
     OpticsDriverInit();
+#if 0
     while (1)
     {
-#if 1
-        if (i > 8)
-            i = 4;
-        else if (i == 5)
-            i = 8;
-#endif
 
-        SetLedIntensity(i, 50);
-        vTaskDelay (1000 / portTICK_PERIOD_MS);
-        SetLedIntensity(i, 10000);
-    //        SetLedIntensity(i, 500);
-    //        SetLedIntensity(1, 1000);
-        vTaskDelay (1000 / portTICK_PERIOD_MS);
+        if (i > 6)
+            i = 1;
+        //else if (i == 5)
+        //    i = 8;
+
+        if (j == upperlimit)
+        {
+            temp = 1;
+        }
+        else if (j == lowerlimit)
+        {
+            temp = 0;
+            //SetLedsOff();
+        }
+
+        if (temp)
+        {
+            for (j = upperlimit; j>lowerlimit; j-=stepsize)
+            {
+                SetLedIntensity(i, j);
+                vTaskDelay (5 / portTICK_PERIOD_MS);
+                //SetLedIntensity(i, 250);
+            //        SetLedIntensity(i, 500);
+            //        SetLedIntensity(1, 1000);
+            //    vTaskDelay (1000 / portTICK_PERIOD_MS);
+                //SetLedIntensity(i, 0);
+                //SetLedsOff();
+                //vTaskDelay (10 / portTICK_PERIOD_MS);
+                //i++;
+                //SetLedIntensity(i, 0);
+            }
+        }
+        else
+        {
+            for (j = lowerlimit; j <upperlimit; j+=stepsize)
+            {
+                SetLedIntensity(i, j);
+                vTaskDelay (5 / portTICK_PERIOD_MS);
+                //SetLedIntensity(i, 250);
+            //        SetLedIntensity(i, 500);
+            //        SetLedIntensity(1, 1000);
+            //    vTaskDelay (1000 / portTICK_PERIOD_MS);
+                //SetLedIntensity(i, 0);
+                //SetLedsOff();
+                //vTaskDelay (10 / portTICK_PERIOD_MS);
+                //i++;
+                //SetLedIntensity(i, 0);
+            }
+        }
+
+
+        //SetLedIntensity(i, 0);
+        //vTaskDelay (1000 / portTICK_PERIOD_MS);
+        for (int count = 0; count < 1; count++)
+        {
+            //SetLedIntensity(i, 5000);
+        //        SetLedIntensity(i, 500);
+        //        SetLedIntensity(1, 1000);
+            vTaskDelay (10 / portTICK_PERIOD_MS);
+            SetLedIntensity(i, 0);
+            //SetLedsOff();
+            vTaskDelay (10 / portTICK_PERIOD_MS);
+            SetLedIntensity(i, 10000);
+            //vTaskDelay (10 / portTICK_PERIOD_MS);
+        }
+
         i++;
-        //SetLedIntensity(1, 0);
         //for(int i=0; i<delay_uS; i++);
     }
+#endif
 
 }
 
@@ -114,30 +176,9 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
 {
 
     uint16_t ledData[2] = {0x0000, 0x0000}; // Write input/DAC
-//    uint16_t updateDAC[2] = {0x0020, 0x0000}; // Update DAC
-
-    /* If nLedIntensity is 0, Turn off LEDs by switching to unused channel (in this case 8) */
+    uint32_t gpioOutputState = 0x00000000;
 
 #if 0
-        gioSetBit(hetPORT1, LED_CTRL_S2, 1);
-        gioSetBit(hetPORT1, LED_CTRL_S1, 1);
-        gioSetBit(hetPORT1, LED_CTRL_S0, 1);
-
-        ledData[0] = 0x3000 + ((uint16_t)0x0000 >> 4);
-        ledData[1] = (uint16_t)0x0000 << 12;
-
-        gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 0);
-        mibspiSetData(mibspiREG3, kledDacGroup, ledData);
-        mibspiTransfer(mibspiREG3, kledDacGroup);
-        while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
-        gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 1);
-
-        vTaskDelay (1000 / portTICK_PERIOD_MS);
-#endif
-
-        //if(nLedIntensity != 0)
-        //{
-
             switch(nChanIdx)
             {
                 case 1:
@@ -176,26 +217,26 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
                     gioSetBit(hetPORT1, LED_CTRL_S0, 1);
                     break;
             }
+#endif
+    if (nLedIntensity == 0)
+    {
+        gpioOutputState = SetLedOutputState(7);
+        gioSetPort(hetPORT1, gpioOutputState);
+    }
+    else
+    {
+        gpioOutputState = SetLedOutputState(nChanIdx);
+        gioSetPort(hetPORT1, gpioOutputState);
 
-            ledData[0] = 0x3000 + ((uint16_t)nLedIntensity >> 4);
-            ledData[1] = (uint16_t)nLedIntensity << 12;
+        ledData[0] = 0x3000 + ((uint16_t)nLedIntensity >> 4);
+        ledData[1] = (uint16_t)nLedIntensity << 12;
 
-            gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 0);
-            mibspiSetData(mibspiREG3, kledDacGroup, ledData);
-            mibspiTransfer(mibspiREG3, kledDacGroup);
-            while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
-            gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 1);
-        //}
-
-
-
-
-        /*    gioSetBit(hetPORT1, LED_DAC_CS_PIN, 0);
-            mibspiSetData(mibspiREG3, kledDacGroup, updateDAC);
-            mibspiTransfer(mibspiREG3, kledDacGroup);
-            while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
-            gioSetBit(hetPORT1, LED_DAC_CS_PIN, 1);*/
-
+        gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 0);
+        mibspiSetData(mibspiREG3, kledDacGroup, ledData);
+        mibspiTransfer(mibspiREG3, kledDacGroup);
+        while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
+        gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 1);
+    }
 }
 
 /**
@@ -206,13 +247,23 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
  */
 void OpticsDriver::SetLedsOff()
 {
-    /*for (int nChanIdx=0; nChanIdx < 6; nChanIdx++)
-    {
-        SetLedIntensity(nChanIdx, 0);
-    }*/
-    gioSetBit(hetPORT1, LED_CTRL_S0, 1);
-    gioSetBit(hetPORT1, LED_CTRL_S1, 1);
-    gioSetBit(hetPORT1, LED_CTRL_S2, 1);
+    uint32_t gpioOutputState = 0x00000000;
+
+    gpioOutputState = SetLedOutputState(7);
+    gioSetPort(hetPORT1, gpioOutputState);
+
+    //gioSetBit(hetPORT1, LED_CTRL_S0, 1);
+    //gioSetBit(hetPORT1, LED_CTRL_S1, 1);
+    //gioSetBit(hetPORT1, LED_CTRL_S2, 1);
+}
+
+uint32_t OpticsDriver::SetLedOutputState (uint32_t nChanIdx)
+{
+    uint32_t gpioOutputState = 0x00000000;
+
+    gpioOutputState |= (nChanIdx << LED_CTRL_S0);
+
+    return gpioOutputState;
 }
 
 /**
@@ -322,7 +373,7 @@ void OpticsDriver::OpticsDriverInit(void)
     uint32_t gpioOutputState = 0x00000000;
     //uint32_t ledDacConfig = 0x00000000;
     uint16_t configData_w_Reset[2] = {0x4000, 0x0000}; //Stand alone mode; Gain = 2*Vref; Ref = Enabled; Operation = Normal Mode; Reset Input/DAC registers
-    uint16_t configData_wo_Reset[2] = {0x0040, 0x8000};
+    //uint16_t configData_wo_Reset[2] = {0x0040, 0x8000};
 
     /* Set GPIO pin direction */
     //gpioDirectionConfig |= (1<<LED_LDAC_PIN);
@@ -351,10 +402,10 @@ void OpticsDriver::OpticsDriverInit(void)
     gioSetPort(hetPORT1, gpioOutputState);
 
     /* Set GPIO pin direction */
-    gpioDirectionConfig &= 0x0000 | (1<<LED_DAC_CS_PIN);
+    gpioDirectionConfig = (gpioDirectionConfig & 0x0000) | (1<<LED_DAC_CS_PIN);
 
     /* Set GPIO output state */
-    gpioOutputState &= 0x0000 | (1<<LED_DAC_CS_PIN);
+    gpioOutputState = (gpioOutputState & 0x0000) | (1<<LED_DAC_CS_PIN);
 
     /* GPIO setting using MIBSPI3 port */
     gioSetDirection(mibspiPORT3, gpioDirectionConfig);
@@ -376,7 +427,7 @@ void OpticsDriver::OpticsDriverInit(void)
 
     /* Configure ADC on Photo Diode board */
     //AdcConfig();
-    //SetLedsOff();
+    SetLedsOff();
 
     /* Disable PWM notification */
     pwmDisableNotification(hetREG1, pwm0, pwmEND_OF_BOTH);
