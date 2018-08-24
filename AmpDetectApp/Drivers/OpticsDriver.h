@@ -112,17 +112,22 @@ public:
         HOLD_SW = 1
     };
     enum pdShiftRegisterPins {
-        PDSR_DATA_PIN = PIN_HET_24,
-        PDSR_CLK_PIN = PIN_HET_26,
-        PDSR_LATCH_PIN = PIN_HET_28
+        PDSR_DATA_PIN = PIN_HET_0,
+        PDSR_CLK_PIN = PIN_HET_1,
+        PDSR_LATCH_PIN = PIN_HET_2
     };
     enum ledDacPins {
-        LED_DAC_CS_PIN = PIN_CS2
+        LED_ADC_CS_PIN = PIN_CS0,
+        LED_DAC_CS_PIN = PIN_CS2,
+        LED_DAC_MISO_ENABLE_PIN = PIN_ENA
     };
     enum ledControlPins{
         LED_CTRL_S0 = PIN_HET_11,
         LED_CTRL_S1 = PIN_HET_12,
         LED_CTRL_S2 = PIN_HET_13
+    };
+    enum pdAdcPins {
+        PD_ADC_CS_PIN = PIN_CS1
     };
 
     //bool _integrationEnd;

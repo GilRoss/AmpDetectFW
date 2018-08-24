@@ -382,9 +382,9 @@ void OpticsDriver::OpticsDriverInit(void)
     gpioDirectionConfig |= (1<<LED_CTRL_S1);
     gpioDirectionConfig |= (1<<LED_CTRL_S2);
     //gpioDirectionConfig |= (1<<PIN_HET_14);
-    //gpioDirectionConfig |= (1<<PDSR_DATA_PIN);
-    //gpioDirectionConfig |= (1<<PDSR_CLK_PIN);
-    //gpioDirectionConfig |= (1<<PDSR_LATCH_PIN);
+    gpioDirectionConfig |= (1<<PDSR_DATA_PIN);
+    gpioDirectionConfig |= (1<<PDSR_CLK_PIN);
+    gpioDirectionConfig |= (1<<PDSR_LATCH_PIN);
 
     /* Set GPIO output state */
     //gpioOutputState |= (1<<LED_LDAC_PIN);
@@ -393,9 +393,9 @@ void OpticsDriver::OpticsDriverInit(void)
     gpioOutputState |= (0<<LED_CTRL_S1);
     gpioOutputState |= (0<<LED_CTRL_S2);
     //gpioOutputState |= (1<<PIN_HET_14);
-    //gpioOutputState |= (0<<PDSR_DATA_PIN);
-    //gpioOutputState |= (0<<PDSR_CLK_PIN);
-    //gpioOutputState |= (1<<PDSR_LATCH_PIN); //Latch pin is high to start with
+    gpioOutputState |= (0<<PDSR_DATA_PIN);
+    gpioOutputState |= (0<<PDSR_CLK_PIN);
+    gpioOutputState |= (1<<PDSR_LATCH_PIN); //Latch pin is high to start with
 
     /* GPIO setting using HET1 port */
     gioSetDirection(hetPORT1, gpioDirectionConfig);
@@ -403,9 +403,11 @@ void OpticsDriver::OpticsDriverInit(void)
 
     /* Set GPIO pin direction */
     gpioDirectionConfig = (gpioDirectionConfig & 0x0000) | (1<<LED_DAC_CS_PIN);
+    gpioDirectionConfig |= (1<<LED_ADC_CS_PIN);
 
     /* Set GPIO output state */
     gpioOutputState = (gpioOutputState & 0x0000) | (1<<LED_DAC_CS_PIN);
+    gpioOutputState |= (1<<LED_ADC_CS_PIN);
 
     /* GPIO setting using MIBSPI3 port */
     gioSetDirection(mibspiPORT3, gpioDirectionConfig);
@@ -426,7 +428,7 @@ void OpticsDriver::OpticsDriverInit(void)
     gioSetBit(hetPORT1, LED_DAC_CS_PIN, 1);*/
 
     /* Configure ADC on Photo Diode board */
-    //AdcConfig();
+    AdcConfig();
     SetLedsOff();
 
     /* Disable PWM notification */
@@ -444,7 +446,7 @@ void OpticsDriver::AdcConfig(void)
     adcConfig |= UNIPOLAR_REF_TO_GND << IN_CH_CFG_SHIFT;
     adcConfig |= PDINPUTA1 << IN_CH_SEL_SHIFT;
     adcConfig |= FULL_BW << FULL_BW_SEL_SHIFT;
-    adcConfig |= EXT_REF << REF_SEL_SHIFT;
+    adcConfig |= INT_REF4_096_AND_TEMP_SENS << REF_SEL_SHIFT;
     adcConfig |= DISABLE_SEQ << SEQ_EN_SHIFT;
     adcConfig |= READ_BACK_DISABLE << READ_BACK_SHIFT;
     adcConfig <<= 2;
