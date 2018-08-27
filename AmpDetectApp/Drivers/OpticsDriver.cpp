@@ -83,7 +83,6 @@ OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
             }
         }
 
-
         //SetLedIntensity(i, 0);
         //vTaskDelay (1000 / portTICK_PERIOD_MS);
         for (int count = 0; count < 1; count++)
@@ -218,6 +217,14 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
                     break;
             }
 #endif
+    /* Caps Led intensity to maximum allowed if user input higher value */
+#if 1
+    if (nLedIntensity > maxLedIntensity)
+    {
+        nLedIntensity = maxLedIntensity;
+    }
+#endif
+
     if (nLedIntensity == 0)
     {
         gpioOutputState = SetLedOutputState(7);
@@ -372,7 +379,7 @@ void OpticsDriver::OpticsDriverInit(void)
     uint32_t gpioDirectionConfig = 0x00000000;
     uint32_t gpioOutputState = 0x00000000;
     //uint32_t ledDacConfig = 0x00000000;
-    uint16_t configData_w_Reset[2] = {0x4000, 0x0000}; //Stand alone mode; Gain = 2*Vref; Ref = Enabled; Operation = Normal Mode; Reset Input/DAC registers
+    uint16_t configData_w_Reset[2] = {0x4080, 0x0000}; //Stand alone mode; Gain = 2*Vref; Ref = Enabled; Operation = Normal Mode; Reset Input/DAC registers
     //uint16_t configData_wo_Reset[2] = {0x0040, 0x8000};
 
     /* Set GPIO pin direction */
@@ -404,10 +411,12 @@ void OpticsDriver::OpticsDriverInit(void)
     /* Set GPIO pin direction */
     gpioDirectionConfig = (gpioDirectionConfig & 0x0000) | (1<<LED_DAC_CS_PIN);
     gpioDirectionConfig |= (1<<LED_ADC_CS_PIN);
+    gpioDirectionConfig |= (1<<LED_PD_ADC_MISO_ENABLE_PIN);
 
     /* Set GPIO output state */
     gpioOutputState = (gpioOutputState & 0x0000) | (1<<LED_DAC_CS_PIN);
     gpioOutputState |= (1<<LED_ADC_CS_PIN);
+    gpioDirectionConfig |= (1<<LED_PD_ADC_MISO_ENABLE_PIN);
 
     /* GPIO setting using MIBSPI3 port */
     gioSetDirection(mibspiPORT3, gpioDirectionConfig);

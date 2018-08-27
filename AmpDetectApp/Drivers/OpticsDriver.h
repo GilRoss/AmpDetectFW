@@ -119,7 +119,6 @@ public:
     enum ledDacPins {
         LED_ADC_CS_PIN = PIN_CS0,
         LED_DAC_CS_PIN = PIN_CS2,
-        LED_DAC_MISO_ENABLE_PIN = PIN_ENA
     };
     enum ledControlPins{
         LED_CTRL_S0 = PIN_HET_11,
@@ -128,6 +127,9 @@ public:
     };
     enum pdAdcPins {
         PD_ADC_CS_PIN = PIN_CS1
+    };
+    enum ledpdMisoPins {
+        LED_PD_ADC_MISO_ENABLE_PIN = PIN_ENA
     };
 
     //bool _integrationEnd;
