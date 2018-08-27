@@ -121,9 +121,9 @@ void Site::Execute()
                    opticsRec._nLedIdx               = optRead.GetLedIdx();
                    opticsRec._nDetectorIdx          = optRead.GetDetectorIdx();
                    opticsRec._nDarkRead             = _opticsDrv.GetDarkReading(optRead);
-                   opticsRec._nRefDarkRead          = _opticsDrv.GetAdc(optRead.GetReferenceIdx());
+                   opticsRec._nRefDarkRead          = _opticsDrv.GetPhotoDiodeAdc(optRead.GetReferenceIdx());
                    opticsRec._nIlluminatedRead      = _opticsDrv.GetIlluminatedReading(optRead);
-                   opticsRec._nRefIlluminatedRead   = _opticsDrv.GetAdc(optRead.GetReferenceIdx());
+                   opticsRec._nRefIlluminatedRead   = _opticsDrv.GetPhotoDiodeAdc(optRead.GetReferenceIdx());
                    opticsRec._nShuttleTemp_mC       = 0;
                    _arOpticsRecs.push_back( opticsRec );
 
@@ -300,7 +300,7 @@ uint32_t Site::GetOpticsDiode(uint32_t nDiodeIdx)
     //If there is not an active run on this site.
     if (_siteStatus.GetRunningFlg() == false)
     {
-        diodeValue = (uint32_t) _opticsDrv.GetAdc(nDiodeIdx);
+        diodeValue = (uint32_t) _opticsDrv.GetPhotoDiodeAdc(nDiodeIdx);
     }
 
     return diodeValue;

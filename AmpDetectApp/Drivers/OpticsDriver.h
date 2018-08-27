@@ -145,10 +145,12 @@ public:
     void SetLedsOff();
     uint32_t GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChanIdx, uint32_t nDuration_us, uint32_t nLedIntensity);
     void OpticsDriverInit();
-    void AdcConfig();
+    void PhotoDiodeAdcConfig();
+    void LedAdcConfig();
     void SetIntegratorState(pdIntegratorState state, uint32_t npdChanIdx);
     static void OpticsIntegrationDoneISR();
-    uint16_t GetAdc(uint32_t nChanIdx);
+    uint16_t GetPhotoDiodeAdc(uint32_t nChanIdx);
+    uint16_t GetLedAdc(uint32_t nChanIdx);
     uint32_t SetLedOutputState(uint32_t nChanIdx);
     
 protected:
