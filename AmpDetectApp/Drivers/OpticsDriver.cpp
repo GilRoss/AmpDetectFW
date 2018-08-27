@@ -11,6 +11,9 @@
 bool        OpticsDriver::_integrationEnd = false;
 #define delay_uS 10000
 
+#define LED_TEST (1)
+#define PD_TEST (1)
+
 /**
  * Name: OpticsDriver
  * Parameters:
@@ -32,7 +35,6 @@ OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
 #if 0
     while (1)
     {
-
         if (i > 6)
             i = 1;
         //else if (i == 5)
@@ -100,6 +102,16 @@ OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
 
         i++;
         //for(int i=0; i<delay_uS; i++);
+    }
+#endif
+#ifdef PD_TEST
+    uint16_t pdValue = 0;
+    while (1)
+    {
+        for (int idx=0; idx<6; idx++)
+        {
+           pdValue = GetPhotoDiodeAdc(idx);
+        }
     }
 #endif
 
@@ -178,44 +190,64 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
     uint32_t gpioOutputState = 0x00000000;
 
 #if 0
-            switch(nChanIdx)
-            {
-                case 1:
-                    gioSetBit(hetPORT1, LED_CTRL_S2, 0);
-                    gioSetBit(hetPORT1, LED_CTRL_S1, 0);
-                    gioSetBit(hetPORT1, LED_CTRL_S0, 0);
-                    break;
-                case 2:
-                    gioSetBit(hetPORT1, LED_CTRL_S2, 0);
-                    gioSetBit(hetPORT1, LED_CTRL_S1, 0);
-                    gioSetBit(hetPORT1, LED_CTRL_S0, 1);
-                    break;
-                case 3:
-                    gioSetBit(hetPORT1, LED_CTRL_S2, 0);
-                    gioSetBit(hetPORT1, LED_CTRL_S1, 1);
-                    gioSetBit(hetPORT1, LED_CTRL_S0, 0);
-                    break;
-                case 4:
-                    gioSetBit(hetPORT1, LED_CTRL_S2, 0);
-                    gioSetBit(hetPORT1, LED_CTRL_S1, 1);
-                    gioSetBit(hetPORT1, LED_CTRL_S0, 1);
-                    break;
-                case 5:
-                    gioSetBit(hetPORT1, LED_CTRL_S2, 1);
-                    gioSetBit(hetPORT1, LED_CTRL_S1, 0);
-                    gioSetBit(hetPORT1, LED_CTRL_S0, 0);
-                    break;
-                case 6:
-                    gioSetBit(hetPORT1, LED_CTRL_S2, 1);
-                    gioSetBit(hetPORT1, LED_CTRL_S1, 0);
-                    gioSetBit(hetPORT1, LED_CTRL_S0, 1);
-                    break;
-                default:
-                    gioSetBit(hetPORT1, LED_CTRL_S2, 1);
-                    gioSetBit(hetPORT1, LED_CTRL_S1, 1);
-                    gioSetBit(hetPORT1, LED_CTRL_S0, 1);
-                    break;
-            }
+
+    if (nLedIntensity == 0)
+    {
+       //gpioOutputState = SetLedOutputState(7);
+       //gioSetPort(hetPORT1, gpioOutputState);
+        SetLedsOff();
+    }
+    else
+    {
+        switch(nChanIdx)
+        {
+            case 1:
+                gioSetBit(hetPORT1, LED_CTRL_S2, 0);
+                gioSetBit(hetPORT1, LED_CTRL_S1, 0);
+                gioSetBit(hetPORT1, LED_CTRL_S0, 0);
+                break;
+            case 2:
+                gioSetBit(hetPORT1, LED_CTRL_S2, 0);
+                gioSetBit(hetPORT1, LED_CTRL_S1, 0);
+                gioSetBit(hetPORT1, LED_CTRL_S0, 1);
+                break;
+            case 3:
+                gioSetBit(hetPORT1, LED_CTRL_S2, 0);
+                gioSetBit(hetPORT1, LED_CTRL_S1, 1);
+                gioSetBit(hetPORT1, LED_CTRL_S0, 0);
+                break;
+            case 4:
+                gioSetBit(hetPORT1, LED_CTRL_S2, 0);
+                gioSetBit(hetPORT1, LED_CTRL_S1, 1);
+                gioSetBit(hetPORT1, LED_CTRL_S0, 1);
+                break;
+            case 5:
+                gioSetBit(hetPORT1, LED_CTRL_S2, 1);
+                gioSetBit(hetPORT1, LED_CTRL_S1, 0);
+                gioSetBit(hetPORT1, LED_CTRL_S0, 0);
+                break;
+            case 6:
+                gioSetBit(hetPORT1, LED_CTRL_S2, 1);
+                gioSetBit(hetPORT1, LED_CTRL_S1, 0);
+                gioSetBit(hetPORT1, LED_CTRL_S0, 1);
+                break;
+            default:
+                gioSetBit(hetPORT1, LED_CTRL_S2, 1);
+                gioSetBit(hetPORT1, LED_CTRL_S1, 1);
+                gioSetBit(hetPORT1, LED_CTRL_S0, 1);
+                break;
+        }
+        ledData[0] = 0x3000 + ((uint16_t)nLedIntensity >> 4);
+        ledData[1] = (uint16_t)nLedIntensity << 12;
+
+        gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 0);
+        mibspiSetData(mibspiREG3, kledDacGroup, ledData);
+        mibspiTransfer(mibspiREG3, kledDacGroup);
+        while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
+        gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 1);
+    }
+
+
 #endif
     /* Caps Led intensity to maximum allowed if user input higher value */
 #if 1
@@ -223,7 +255,6 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
     {
         nLedIntensity = maxLedIntensity;
     }
-#endif
 
     if (nLedIntensity == 0)
     {
@@ -244,6 +275,7 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
         while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
         gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 1);
     }
+#endif
 }
 
 /**
@@ -383,23 +415,17 @@ void OpticsDriver::OpticsDriverInit(void)
     //uint16_t configData_wo_Reset[2] = {0x0040, 0x8000};
 
     /* Set GPIO pin direction */
-    //gpioDirectionConfig |= (1<<LED_LDAC_PIN);
-    //gpioDirectionConfig |= (1<<LED_DAC_CS_PIN);
     gpioDirectionConfig |= (1<<LED_CTRL_S0);
     gpioDirectionConfig |= (1<<LED_CTRL_S1);
     gpioDirectionConfig |= (1<<LED_CTRL_S2);
-    //gpioDirectionConfig |= (1<<PIN_HET_14);
     gpioDirectionConfig |= (1<<PDSR_DATA_PIN);
     gpioDirectionConfig |= (1<<PDSR_CLK_PIN);
     gpioDirectionConfig |= (1<<PDSR_LATCH_PIN);
 
     /* Set GPIO output state */
-    //gpioOutputState |= (1<<LED_LDAC_PIN);
-    //gpioOutputState |= (1<<LED_DAC_CS_PIN);
     gpioOutputState |= (0<<LED_CTRL_S0);
     gpioOutputState |= (0<<LED_CTRL_S1);
     gpioOutputState |= (0<<LED_CTRL_S2);
-    //gpioOutputState |= (1<<PIN_HET_14);
     gpioOutputState |= (0<<PDSR_DATA_PIN);
     gpioOutputState |= (0<<PDSR_CLK_PIN);
     gpioOutputState |= (1<<PDSR_LATCH_PIN); //Latch pin is high to start with
@@ -411,11 +437,13 @@ void OpticsDriver::OpticsDriverInit(void)
     /* Set GPIO pin direction */
     gpioDirectionConfig = (gpioDirectionConfig & 0x0000) | (1<<LED_DAC_CS_PIN);
     gpioDirectionConfig |= (1<<LED_ADC_CS_PIN);
+    gpioDirectionConfig |= (1<<PD_ADC_CS_PIN);
     gpioDirectionConfig |= (1<<LED_PD_ADC_MISO_ENABLE_PIN);
 
     /* Set GPIO output state */
     gpioOutputState = (gpioOutputState & 0x0000) | (1<<LED_DAC_CS_PIN);
     gpioOutputState |= (1<<LED_ADC_CS_PIN);
+    gpioOutputState |= (1<<PD_ADC_CS_PIN);
     gpioOutputState |= (1<<LED_PD_ADC_MISO_ENABLE_PIN);
 
     /* GPIO setting using MIBSPI3 port */
