@@ -106,11 +106,13 @@ OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
 #endif
 #ifdef PD_TEST
     uint16_t pdValue = 0;
+    uint16_t ledValue = 0;
     while (1)
     {
         for (int idx=0; idx<6; idx++)
         {
            pdValue = GetPhotoDiodeAdc(idx);
+           ledValue = GetLedAdc(idx);
         }
     }
 #endif
@@ -490,7 +492,7 @@ void OpticsDriver::PhotoDiodeAdcConfig(void)
     adcConfig <<= 2;
 
     // Set MCU_SPI3_SOMI_SW low to receive data from PD ADC
-    gioSetBit(mibspiPORT3, LED_PD_ADC_MISO_ENABLE_PIN, 0);
+    //gioSetBit(mibspiPORT3, LED_PD_ADC_MISO_ENABLE_PIN, 0);
 
     /* Send 2 dummy conversion to update config register on Photo Diode ADC */
     /* First dummy conversion */
@@ -537,7 +539,7 @@ void OpticsDriver::LedAdcConfig(void)
     adcConfig <<= 2;
 
     // Set MCU_SPI3_SOMI_SW low to receive data from PD ADC
-    gioSetBit(mibspiPORT3, LED_PD_ADC_MISO_ENABLE_PIN, 1);
+    //gioSetBit(mibspiPORT3, LED_PD_ADC_MISO_ENABLE_PIN, 1);
 
     /* Send 2 dummy conversion to update config register on Photo Diode ADC */
     /* First dummy conversion */
