@@ -9,10 +9,13 @@
 #include "het.h"
 
 bool        OpticsDriver::_integrationEnd = false;
+uint16_t    OpticsDriver::_nActiveLedTemperature = 0;
+uint16_t    OpticsDriver::_nActiveLedMonitorPDValue = 0;
+uint16_t    OpticsDriver::_nActivePhotoDiodeTemperature = 0;
 #define delay_uS 10000
 
 #define LED_TEST (1)
-#define PD_TEST (1)
+#define NO_PD_TEST (1)
 
 /**
  * Name: OpticsDriver
@@ -109,10 +112,17 @@ OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
     uint16_t ledValue = 0;
     while (1)
     {
-        for (int idx=0; idx<6; idx++)
+        for (int idx=0; idx<8; idx++)
         {
-           pdValue = GetPhotoDiodeAdc(idx);
-           ledValue = GetLedAdc(idx);
+           //vTaskDelay (10 / portTICK_PERIOD_MS);
+           //SetLedIntensity(idx, 10000);
+           //pdValue = GetPhotoDiodeAdc(idx);
+           pdValue = GetPhotoDiodeValue(idx, idx, 10000, 5000);
+           //ledValue = GetLedAdc(idx);
+           //vTaskDelay (10 / portTICK_PERIOD_MS);
+           //SetLedsOff();
+
+           // pdValue = GetPhotoDiodeValue(idx, idx, 10000, 5000);
         }
     }
 #endif
@@ -147,6 +157,21 @@ uint32_t OpticsDriver::GetIlluminatedReading(const OpticalRead& optRead)
                                             optRead.GetDetectorIntegrationTime(),
                                             optRead.GetLedIntensity());
     return nValue;
+}
+
+uint32_t OpticsDriver::GetActiveLedMonitorPDValue(void)
+{
+    return (uint32_t)_nActiveLedMonitorPDValue;
+}
+
+uint32_t OpticsDriver::GetActiveLedTemp(void)
+{
+    return (uint32_t)_nActiveLedTemperature;
+}
+
+uint32_t OpticsDriver::GetActivePhotoDiodeTemp(void)
+{
+    return (uint32_t)_nActivePhotoDiodeTemperature;
 }
 
 /**
@@ -260,8 +285,9 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
 
     if (nLedIntensity == 0)
     {
-        gpioOutputState = SetLedOutputState(7);
-        gioSetPort(hetPORT1, gpioOutputState);
+        //gpioOutputState = SetLedOutputState(7);
+        //gioSetPort(hetPORT1, gpioOutputState);
+        SetLedsOff();
     }
     else
     {
@@ -290,7 +316,9 @@ void OpticsDriver::SetLedsOff()
 {
     uint32_t gpioOutputState = 0x00000000;
 
-    gpioOutputState = SetLedOutputState(7);
+    gpioOutputState = gioGetPort(hetPORT1) & LED_MUX_MASK;
+    gpioOutputState |= (7 << LED_CTRL_S0);
+    //gpioOutputState = SetLedOutputState(7);
     gioSetPort(hetPORT1, gpioOutputState);
 
     //gioSetBit(hetPORT1, LED_CTRL_S0, 1);
@@ -302,6 +330,7 @@ uint32_t OpticsDriver::SetLedOutputState (uint32_t nChanIdx)
 {
     uint32_t gpioOutputState = 0x00000000;
 
+    gpioOutputState = gioGetPort(hetPORT1) & LED_MUX_MASK;
     gpioOutputState |= (nChanIdx << LED_CTRL_S0);
 
     return gpioOutputState;
@@ -373,7 +402,15 @@ uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChan
     _integrationEnd = false;
     gioSetBit(hetPORT1, PDSR_LATCH_PIN, 1); //Enable Integration State (start integrating)
 
+    /* CRITICAL TIMING --> These commands need to be completed in integration time specified */
+    //////////////////////////////////////////////////////////////////////////////////////////
     SetIntegratorState(HOLD_STATE, npdChanIdx); //Configure Hold state
+
+    /* Read LED Temperature, LED Monitoring PhotoDiode, PhotoDiode Temperature */
+    //_nActiveLedMonitorPDValue = GetLedAdc(MONITOR_PD); // Get Monitor PD value
+    //_nActiveLedTemperature = GetLedAdc(nledChanIdx);
+    //_nActivePhotoDiodeTemperature = GetPhotoDiodeTemp(npdChanIdx);
+    //////////////////////////////////////////////////////////////////////////////////////////
 
     /* Wait for integrationTimeExpired flag to be set */
     while (!_integrationEnd);
@@ -416,6 +453,7 @@ void OpticsDriver::OpticsDriverInit(void)
     uint16_t configData_w_Reset[2] = {0x4080, 0x0000}; //Stand alone mode; Gain = 2*Vref; Ref = Enabled; Operation = Normal Mode; Reset Input/DAC registers
     //uint16_t configData_wo_Reset[2] = {0x0040, 0x8000};
 
+#if 1
     /* Set GPIO pin direction */
     gpioDirectionConfig |= (1<<LED_CTRL_S0);
     gpioDirectionConfig |= (1<<LED_CTRL_S1);
@@ -423,6 +461,8 @@ void OpticsDriver::OpticsDriverInit(void)
     gpioDirectionConfig |= (1<<PDSR_DATA_PIN);
     gpioDirectionConfig |= (1<<PDSR_CLK_PIN);
     gpioDirectionConfig |= (1<<PDSR_LATCH_PIN);
+    gpioDirectionConfig |= (1<<PD_TEMP_SW_CTRL_A);
+    gpioDirectionConfig |= (1<<PD_TEMP_SW_CTRL_B);
 
     /* Set GPIO output state */
     gpioOutputState |= (0<<LED_CTRL_S0);
@@ -431,19 +471,24 @@ void OpticsDriver::OpticsDriverInit(void)
     gpioOutputState |= (0<<PDSR_DATA_PIN);
     gpioOutputState |= (0<<PDSR_CLK_PIN);
     gpioOutputState |= (1<<PDSR_LATCH_PIN); //Latch pin is high to start with
+    gpioOutputState |= (0<<PD_TEMP_SW_CTRL_A);
+    gpioOutputState |= (0<<PD_TEMP_SW_CTRL_B);
 
     /* GPIO setting using HET1 port */
     gioSetDirection(hetPORT1, gpioDirectionConfig);
     gioSetPort(hetPORT1, gpioOutputState);
+#endif
 
     /* Set GPIO pin direction */
-    gpioDirectionConfig = (gpioDirectionConfig & 0x0000) | (1<<LED_DAC_CS_PIN);
+    gpioDirectionConfig = 0x00000000;
+    gpioDirectionConfig |= (1<<LED_DAC_CS_PIN);
     gpioDirectionConfig |= (1<<LED_ADC_CS_PIN);
     gpioDirectionConfig |= (1<<PD_ADC_CS_PIN);
     gpioDirectionConfig |= (1<<LED_PD_ADC_MISO_ENABLE_PIN);
 
     /* Set GPIO output state */
-    gpioOutputState = (gpioOutputState & 0x0000) | (1<<LED_DAC_CS_PIN);
+    gpioOutputState = 0x00000000;
+    gpioOutputState |= (1<<LED_DAC_CS_PIN);
     gpioOutputState |= (1<<LED_ADC_CS_PIN);
     gpioOutputState |= (1<<PD_ADC_CS_PIN);
     gpioOutputState |= (1<<LED_PD_ADC_MISO_ENABLE_PIN);
@@ -452,6 +497,7 @@ void OpticsDriver::OpticsDriverInit(void)
     gioSetDirection(mibspiPORT3, gpioDirectionConfig);
     gioSetPort(mibspiPORT3, gpioOutputState);
 
+#if 1
 
     //Configure LED DAC: AD5683R
     gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 0);
@@ -459,7 +505,7 @@ void OpticsDriver::OpticsDriverInit(void)
     mibspiTransfer(mibspiREG3, kledDacGroup);
     while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
     gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 1);
-
+#endif
 /*    gioSetBit(hetPORT1, LED_DAC_CS_PIN, 0);
     mibspiSetData(mibspiREG3, kledDacGroup, configData_wo_Reset);
     mibspiTransfer(mibspiREG3, kledDacGroup);
@@ -628,6 +674,53 @@ uint16_t OpticsDriver::GetPhotoDiodeAdc(uint32_t nChanIdx)
     return nAdcVal;
 }
 
+/**
+ * Name: GetPhotoDiodeTemp()
+ * Parameters: uint32_t nChanIdx: ADC channel to read
+ * Returns: uint16_t nAdcVal: ADC value
+ * Description: Obtain value from ADC
+ */
+uint16_t OpticsDriver::GetPhotoDiodeTemp(uint32_t nChanIdx)
+{
+    uint16_t nAdcVal = 0;
+    switch (nChanIdx)
+    {
+    case 0:
+        gioSetBit(hetPORT1, PD_TEMP_SW_CTRL_A, 0);
+        gioSetBit(hetPORT1, PD_TEMP_SW_CTRL_B, 0);
+        nAdcVal = GetPhotoDiodeAdc(PD_TEMP_A);
+        break;
+    case 1:
+        gioSetBit(hetPORT1, PD_TEMP_SW_CTRL_A, 0);
+        gioSetBit(hetPORT1, PD_TEMP_SW_CTRL_B, 0);
+        nAdcVal = GetPhotoDiodeAdc(PD_TEMP_B);
+        break;
+    case 2:
+        gioSetBit(hetPORT1, PD_TEMP_SW_CTRL_A, 1);
+        gioSetBit(hetPORT1, PD_TEMP_SW_CTRL_B, 0);
+        nAdcVal = GetPhotoDiodeAdc(PD_TEMP_A);
+        break;
+    case 3:
+        gioSetBit(hetPORT1, PD_TEMP_SW_CTRL_A, 1);
+        gioSetBit(hetPORT1, PD_TEMP_SW_CTRL_B, 0);
+        nAdcVal = GetPhotoDiodeAdc(PD_TEMP_B);
+        break;
+    case 4:
+        gioSetBit(hetPORT1, PD_TEMP_SW_CTRL_A, 0);
+        gioSetBit(hetPORT1, PD_TEMP_SW_CTRL_B, 1);
+        nAdcVal = GetPhotoDiodeAdc(PD_TEMP_A);
+        break;
+    case 5:
+        gioSetBit(hetPORT1, PD_TEMP_SW_CTRL_A, 0);
+        gioSetBit(hetPORT1, PD_TEMP_SW_CTRL_B, 1);
+        nAdcVal = GetPhotoDiodeAdc(PD_TEMP_B);
+        break;
+    default:
+        gioSetBit(hetPORT1, PD_TEMP_SW_CTRL_A, 0);
+        gioSetBit(hetPORT1, PD_TEMP_SW_CTRL_B, 0);
+    }
+    return nAdcVal;
+}
 /**
  * Name: GetLedAdc()
  * Parameters: uint32_t nChanIdx: ADC channel to read

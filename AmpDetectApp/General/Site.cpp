@@ -307,6 +307,20 @@ uint32_t Site::GetOpticsDiode(uint32_t nDiodeIdx)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+uint32_t Site::GetOpticsLedAdc(uint32_t nLedAdcIdx)
+{
+    uint32_t ledAdcValue = 0;
+
+    //If there is not an active run on this site.
+    if (_siteStatus.GetRunningFlg() == false)
+    {
+        ledAdcValue = (uint32_t) _opticsDrv.GetLedAdc(nLedAdcIdx);
+    }
+
+    return ledAdcValue;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 uint32_t Site::ReadOptics(uint32_t nLedIdx, uint32_t nDiodeIdx, uint32_t nLedIntensity, uint32_t nIntegrationTime_us)
 {
     uint32_t diodeValue = 0;
@@ -318,6 +332,45 @@ uint32_t Site::ReadOptics(uint32_t nLedIdx, uint32_t nDiodeIdx, uint32_t nLedInt
     }
 
     return diodeValue;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+uint32_t Site::GetActiveLedMonitorValue()
+{
+    uint32_t activeLedMonitorValue = 0;
+    //If there is not an active run on this site.
+    if (_siteStatus.GetRunningFlg() == false)
+    {
+        activeLedMonitorValue = _opticsDrv.GetActiveLedMonitorPDValue();
+    }
+
+    return activeLedMonitorValue;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+uint32_t Site::GetActiveLedTemperature()
+{
+    uint32_t activeLedTemp = 0;
+    //If there is not an active run on this site.
+    if (_siteStatus.GetRunningFlg() == false)
+    {
+        activeLedTemp = _opticsDrv.GetActiveLedTemp();
+    }
+
+    return activeLedTemp;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+uint32_t Site::GetActiveDiodeTemperature()
+{
+    uint32_t activeDiodeTemp = 0;
+    //If there is not an active run on this site.
+    if (_siteStatus.GetRunningFlg() == false)
+    {
+        activeDiodeTemp = _opticsDrv.GetActivePhotoDiodeTemp();
+    }
+
+    return activeDiodeTemp;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

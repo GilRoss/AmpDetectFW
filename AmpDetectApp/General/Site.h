@@ -41,6 +41,10 @@ public:
     ErrCode             SetManControlSetpoint(int32_t nSp_mC);
     ErrCode             SetOpticsLed(uint32_t nChanIdx, uint32_t nIntensity, uint32_t nDuration);
     uint32_t            GetOpticsDiode(uint32_t nDiodeIdx);
+    uint32_t            GetOpticsLedAdc(uint32_t nLedAdcIdx);
+    uint32_t            GetActiveLedMonitorValue();
+    uint32_t            GetActiveLedTemperature();
+    uint32_t            GetActiveDiodeTemperature();
     uint32_t            ReadOptics(uint32_t nLedIdx, uint32_t nDiodeIdx, uint32_t nLedIntensity, uint32_t nIntegrationTime_us);
 
 protected:

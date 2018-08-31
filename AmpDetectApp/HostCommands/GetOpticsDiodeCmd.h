@@ -30,7 +30,7 @@ public:
         uint32_t diodeValue = 0;
 
         //If site and LED channel index are valid.
-        if (_request.GetDiodeIdx() < OpticsDriver::kNumOptChans)
+        if (_request.GetDiodeIdx() < OpticsDriver::kNumOpticalAdcChans)
         {
             //Try to set the setpoint.
             Site* pSite = _pcrTask.GetSitePtr();

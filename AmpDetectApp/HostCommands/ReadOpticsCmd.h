@@ -28,6 +28,9 @@ public:
     {
         ErrCode nErrCode = ErrCode::kInvalidCmdParamsErr;
         uint32_t diodeValue = 0;
+        uint32_t activeLedMonitorValue = 0;
+        uint32_t activeLedTemp = 0;
+        uint32_t activeDiodeTemp = 0;
 
         //If site and LED channel index are valid.
         if ((_request.GetLedIdx() < OpticsDriver::kNumOptChans) && (_request.GetDiodeIdx() < OpticsDriver::kNumOptChans))
@@ -38,12 +41,18 @@ public:
                                            _request.GetDiodeIdx(),
                                            _request.GetLedIntensity(),
                                            _request.GetIntegrationTime());
+            activeLedMonitorValue = pSite->GetActiveLedMonitorValue();
+            activeLedTemp = pSite->GetActiveLedTemperature();
+            activeDiodeTemp = pSite->GetActiveDiodeTemperature();
             nErrCode = ErrCode::kNoError;
         }
 
         //Send response.
         _response.SetResponseHeader(_request, nErrCode);
         _response.SetDiodeValue(diodeValue);
+        _response.SetActiveLedMonitorValue(activeLedMonitorValue);
+        _response.SetActiveLedTemp(activeLedTemp);
+        _response.SetActiveDiodeTemp(activeDiodeTemp);
         _response >> _pMsgBuf;
         _hostCommDrv.TxMessage(_pMsgBuf, _response.GetStreamSize());
     }

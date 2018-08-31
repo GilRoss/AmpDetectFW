@@ -58,7 +58,7 @@
 class OpticsDriver
 {
 public:
-    enum    {kBlue1 = 0, kGreen, kRed1, kBrown, kRed2, kBlue2, kNumOptChans};
+    enum    {kBlue1 = 0, kGreen, kRed1, kBrown, kRed2, kBlue2, kNumOptChans, kNumOpticalAdcChans=8};
     enum    {kwrInputRegN = 0, kupdateDACRegN, kwrInputupdateAll, kwrInputupdateN, kpwrDownN, kpwrDownChip, kselectIntRef, kselectExtRef, kNoOp};
     enum AdcCfgBit {KEEP_CFG, OVERWRITE_CFG};
     enum AdcBwSelectBit {QUARTER_BW, FULL_BW};
@@ -87,11 +87,13 @@ public:
          };
     enum PDAdcChannels {
             PDINPUTA1 = 0,
-            PDINPUTA2 = 1,
-            PDINPUTA3 = 2,
-            PDINPUTB1 = 3,
-            PDINPUTB2 = 4,
-            PDINPUTB3 = 5
+            PDINPUTA2,
+            PDINPUTA3,
+            PDINPUTB1,
+            PDINPUTB2,
+            PDINPUTB3,
+            PD_TEMP_A,
+            PD_TEMP_B
         };
     enum AdcCtrlRegisterShifts {
             READ_BACK_SHIFT   =  0,
@@ -131,9 +133,18 @@ public:
     enum ledpdMisoPins {
         LED_PD_ADC_MISO_ENABLE_PIN = PIN_ENA
     };
+    enum ledAdcChannels{LED1_TEMP = 0, LED2_TEMP, LED3_TEMP, LED4_TEMP, LED5_TEMP, LED6_TEMP, MONITOR_PD, LED_CURRENT};
+    enum pdTempSelectPins{
+        PD_TEMP_SW_CTRL_A = PIN_HET_9,
+        PD_TEMP_SW_CTRL_B = PIN_HET_10
+    };
+    enum ledMuxMask
+    {
+        LED_MUX_MASK = 0xFFFFC7FF
+    };
+
 
     //bool _integrationEnd;
-
 
     OpticsDriver(uint32_t nSiteIdx = 0);
        
@@ -151,13 +162,20 @@ public:
     static void OpticsIntegrationDoneISR();
     uint16_t GetPhotoDiodeAdc(uint32_t nChanIdx);
     uint16_t GetLedAdc(uint32_t nChanIdx);
+    uint16_t GetPhotoDiodeTemp(uint32_t nChanIdx);
     uint32_t SetLedOutputState(uint32_t nChanIdx);
+    uint32_t GetActiveLedMonitorPDValue(void);
+    uint32_t GetActiveLedTemp(void);
+    uint32_t GetActivePhotoDiodeTemp(void);
     
 protected:
   
 private:
     uint32_t            _nLedStateMsk;
     static bool         _integrationEnd;
+    static uint16_t     _nActiveLedTemperature;
+    static uint16_t     _nActiveLedMonitorPDValue;
+    static uint16_t     _nActivePhotoDiodeTemperature;
 //    SPI_HandleTypeDef   _hSpi;
 };
 
