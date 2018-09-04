@@ -15,7 +15,7 @@ uint16_t    OpticsDriver::_nActivePhotoDiodeTemperature = 0;
 #define delay_uS 10000
 
 #define LED_TEST (1)
-#define NO_PD_TEST (1)
+#define NOT_PD_TEST (1)
 
 /**
  * Name: OpticsDriver
@@ -25,7 +25,7 @@ uint16_t    OpticsDriver::_nActivePhotoDiodeTemperature = 0;
  */
 OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
 {
-#if 1
+#if 0
     int i = 1;
     int temp = 0;
     int j = 0;
@@ -216,7 +216,7 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
     uint16_t ledData[2] = {0x0000, 0x0000}; // Write input/DAC
     uint32_t gpioOutputState = 0x00000000;
 
-#if 0
+#if 1
 
     if (nLedIntensity == 0)
     {
@@ -277,7 +277,7 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
 
 #endif
     /* Caps Led intensity to maximum allowed if user input higher value */
-#if 1
+#if 0
     if (nLedIntensity > maxLedIntensity)
     {
         nLedIntensity = maxLedIntensity;
@@ -316,14 +316,14 @@ void OpticsDriver::SetLedsOff()
 {
     uint32_t gpioOutputState = 0x00000000;
 
-    gpioOutputState = gioGetPort(hetPORT1) & LED_MUX_MASK;
-    gpioOutputState |= (7 << LED_CTRL_S0);
+ //   gpioOutputState = gioGetPort(hetPORT1) & LED_MUX_MASK;
+ //   gpioOutputState |= (7 << LED_CTRL_S0);
     //gpioOutputState = SetLedOutputState(7);
-    gioSetPort(hetPORT1, gpioOutputState);
+ //   gioSetPort(hetPORT1, gpioOutputState);
 
-    //gioSetBit(hetPORT1, LED_CTRL_S0, 1);
-    //gioSetBit(hetPORT1, LED_CTRL_S1, 1);
-    //gioSetBit(hetPORT1, LED_CTRL_S2, 1);
+    gioSetBit(hetPORT1, LED_CTRL_S0, 1);
+    gioSetBit(hetPORT1, LED_CTRL_S1, 1);
+    gioSetBit(hetPORT1, LED_CTRL_S2, 1);
 }
 
 uint32_t OpticsDriver::SetLedOutputState (uint32_t nChanIdx)
