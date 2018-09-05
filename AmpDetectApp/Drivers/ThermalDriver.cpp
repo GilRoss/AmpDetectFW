@@ -1,11 +1,13 @@
 #include "ThermalDriver.h"
 #include "gio.h"
 #include "mibspi.h"
+#include "het.h"
+#include "stdio.h"
+
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-Pid          ThermalDriver::_pid(0.000050, 5000, -5000, 0.7, 7000, 0);    //Peltier.
-//Pid          ThermalDriver::_pid(0.000050, 10000, -10000, 1.8, 30800, 0);    //Fixed 2ohm load.
+Pid          ThermalDriver::_pid(0.000050, 14000, -14000, 1.0, 0.0, 0);    //Fixed 2ohm load.
 bool         ThermalDriver::_bCurrentPidEnabled = false;
 uint32_t     ThermalDriver::_nIsrCount = 0;
 uint32_t     ThermalDriver::_nBlockTemp_cnts = 0;
@@ -21,6 +23,8 @@ int32_t      ThermalDriver::_nA2DCounts = 0;
 int32_t      ThermalDriver::_nErrCounts = 0;
 
 
+
+static int32_t  _arA2DVals[8];
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 ThermalDriver::ThermalDriver(uint32_t nSiteIdx)
@@ -32,14 +36,22 @@ ThermalDriver::ThermalDriver(uint32_t nSiteIdx)
     uint32_t nDirMsk = (0x01 << kClearBit) + (0x01 << kSyncBit) + (0x01 << kLdacBit);
     gioSetDirection(gioPORTA, nDirMsk);
 
-    gioSetBit(mibspiPORT5, PIN_SIMO, 0);    //Disable TEC.
+    //To generate the 4.096V ref for the ADS8330, initialize the temperature A/D.
+    AD7699Read(0);
+
+    ADS8330Init();
+    AD5683Write(0x04, 0x0800);  //Config A/D
+    for (int i = 0; i < (sizeof(_arA2DVals) / sizeof(uint32_t)); i++)
+        _arA2DVals[i] = ADS8330ReadWrite(0x0D, 0x0000);
+
+//    gioSetBit(mibspiPORT5, PIN_SIMO, 0);    //Disable TEC.
 
     //Initialize DAC8563
-    SendDacMsg(CMD_RESET, 0, POWER_ON_RESET);
+/*    SendDacMsg(CMD_RESET, 0, POWER_ON_RESET);
     SendDacMsg(CMD_ENABLE_INT_REF, 0, DISABLE_INT_REF_AND_RESET_DAC_GAINS_TO_1);
     SendDacMsg(CMD_SET_LDAC_PIN, 0, SET_LDAC_PIN_INACTIVE_DAC_B_INACTIVE_DAC_A);
     SendDacMsg(CMD_POWER_DAC, 0, POWER_DOWN_DAC_B_HI_Z);
-    SetCurrentControlVar((0xFFFF / 2) + 180);
+    SetCurrentControlVar((0xFFFF / 2) + 180);*/
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -52,33 +64,58 @@ void CurrentPidISR()
 
 void ThermalDriver::CurrentPidISR()
 {
+    _pid.SetGains(0.4, 1475, 0);
+    _arA2DVals[_nIsrCount & ((sizeof(_arA2DVals) / sizeof(_arA2DVals[0])) - 1)] = ADS8330ReadWrite(0x0D, 0x0000);
     if (_bCurrentPidEnabled)
     {
-        //Get current A/D counts.
-        _nA2DCounts = (int32_t)GetA2D(1) - 21950;
-        _nA2DCounts += (-25 *_nA2DCounts) / 1000;
-        _nControlVar = _pid.calculate((double)_nSetpoint_mA, (double)_nA2DCounts);
-        SetCurrentControlVar((0xFFFF / 2) + 180 + (int32_t)_nControlVar);
-        gioSetBit(mibspiPORT5, PIN_SIMO, 1);
+        //Get average of last 'n' current readings.
+        int32_t nA2DCounts = 0;
+        for (int i = 0; i < (sizeof(_arA2DVals) / sizeof(_arA2DVals[0])); i++)
+            nA2DCounts += _arA2DVals[i];
+        nA2DCounts = (~(((nA2DCounts >> 3) + 230) - 0x7FFF)) + 1;
+
+        float nControlVar = _pid.calculate((float)_nSetpoint_mA, (float)nA2DCounts * 0.59);
+
+        AD5683Write(0x03, ((uint16_t)0x8000 - 410) - nControlVar);
+        gioSetBit(hetPORT1, PIN_HET_16, 1); //TEC_EN = true
     }
     else
     {
-        gioSetBit(mibspiPORT5, PIN_SIMO, 0);
-        SetCurrentControlVar((0xFFFF / 2) + 180);
+        gioSetBit(hetPORT1, PIN_HET_16, 0); //TEC_EN = false
     }
-
-    if (_nIsrCount == 0)
-        _nBlockTemp_cnts = (int32_t)GetA2D(2);
-    if (_nIsrCount == (400/2))
-        _nSampleTemp_cnts = (int32_t)GetA2D(3);
-    _nIsrCount = (_nIsrCount == 400) ? 0 : _nIsrCount + 1;
+    _nIsrCount++;
 }
+
+/*        static uint32_t arVals[1000];
+        arVals[_nIsrCount++] = nA2DCounts;
+        if (_nIsrCount >= 1000)
+        {
+            gioSetBit(hetPORT1, PIN_HET_16, 0); //TEC_EN = false
+            for (int i = 0; i < 1000; i++)
+            {
+                printf("%d\n", arVals[i]);
+                fflush (stdout);
+            }
+            _nControlVar = 0;
+        }
+*/
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 void ThermalDriver::SetPidParams(const PidParams& params)
 {
 
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+void ThermalDriver::Enable()
+{
+    _pid.Init();
+    uint32_t nA2DVal = ADS8330ReadWrite(0x0D, 0x0000);
+    for (int i = 0; i < (sizeof(_arA2DVals) / sizeof(_arA2DVals[0])); i++)
+        _arA2DVals[i] = nA2DVal;
+    _bCurrentPidEnabled = true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -123,8 +160,9 @@ int32_t ThermalDriver::GetSampleTemp()
 ///////////////////////////////////////////////////////////////////////////////
 int32_t ThermalDriver::GetBlockTemp()
 {
-    float nVoltage_V = _nBlockTemp_cnts * (5.0 / 65535);
-    int32_t nBlockTemp_mC =  convertVoltageToTemp(nVoltage_V);
+    uint32_t nA2DCounts = AD7699Read(0);
+    float nResistance_omhs = (float)nA2DCounts * 0.34;
+    int32_t nBlockTemp_mC =  convertVoltageToTemp(nResistance_omhs);
 
     return nBlockTemp_mC;
 }
@@ -186,28 +224,28 @@ int32_t    ThermalDriver::GetProcessVar()
 ///////////////////////////////////////////////////////////////////////////////
 void ThermalDriver::ReadDacMsg(uint16 cfg, uint16_t* pData)
 {
-    uint16_t    arTxBuf[2];
-    uint16_t    arRxBuf[2];
+    uint16_t    arTxBuf[3];
+    uint16_t    arRxBuf[3];
 
     arTxBuf[0] = cfg >> 8;
     arTxBuf[1] = cfg & 0x00FF;
 
-    gioSetBit(mibspiPORT5, PIN_SOMI, 0);          //Conversion pin
-    mibspiSetData(mibspiREG1, 1, arTxBuf);
-    mibspiTransfer(mibspiREG1, 1);
-    while (! mibspiIsTransferComplete(mibspiREG1, 1));
-    gioSetBit(mibspiPORT5, PIN_SOMI, 1);          //Conversion pin
-    mibspiGetData(mibspiREG1, 1, arRxBuf);
-    gioSetBit(mibspiPORT5, PIN_SOMI, 1);          //Wait 4 us.
-    gioSetBit(mibspiPORT5, PIN_SOMI, 1);          //Wait 4 us.
-    gioSetBit(mibspiPORT5, PIN_SOMI, 1);          //Conversion pin
+    gioSetBit(mibspiPORT5, PIN_ENA, 0);          //Conversion pin
+    mibspiSetData(mibspiREG5, 0, arTxBuf);
+    mibspiTransfer(mibspiREG5, 0);
+    while (! mibspiIsTransferComplete(mibspiREG5, 0));
+    gioSetBit(mibspiPORT5, PIN_ENA, 1);          //Conversion pin
+    mibspiGetData(mibspiREG5, 0, arRxBuf);
+    gioSetBit(mibspiPORT5, PIN_ENA, 1);          //Wait 4 us.
+    gioSetBit(mibspiPORT5, PIN_ENA, 1);          //Wait 4 us.
+    gioSetBit(mibspiPORT5, PIN_ENA, 1);          //Conversion pin
 
     *pData = (arRxBuf[0] << 8) + arRxBuf[1];
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-uint32_t ThermalDriver::GetA2D(int nChanIdx)
+uint32_t ThermalDriver::AD7699Read(int nChanIdx)
 {
     uint16 data;
     uint16 cfg = 0;
@@ -215,13 +253,10 @@ uint32_t ThermalDriver::GetA2D(int nChanIdx)
     cfg |= UNIPOLAR_REF_TO_GND << IN_CH_CFG_SHIFT;
     cfg |= nChanIdx << IN_CH_SEL_SHIFT;
     cfg |= FULL_BW << FULL_BW_SEL_SHIFT;
-    cfg |= EXT_REF << REF_SEL_SHIFT;
+    cfg |= INT_REF4_096_AND_TEMP_SENS << REF_SEL_SHIFT;
     cfg |= DISABLE_SEQ << SEQ_EN_SHIFT;
     cfg |= READ_BACK_DISABLE << READ_BACK_SHIFT;
     cfg <<= 2;
-
-    //Make certain the Somi of Spi1 is connected to the TEC ADC.
-    gioSetBit(mibspiPORT3, PIN_ENA, Spi1SomiSrc::kTecAdc);
 
     ReadDacMsg(cfg, &data); // conv DATA(n-1), clock out CFG(n), clock in DATA(n-2)
     ReadDacMsg(0x00, &data); // conv DATA(n), clock out CFG(n+1), clock in DATA(n-1)
@@ -230,12 +265,60 @@ uint32_t ThermalDriver::GetA2D(int nChanIdx)
     return data;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+uint32_t ThermalDriver::AD5683Write(uint16_t nCmd, uint16_t nA2DCounts)
+{
+    uint16_t    arTxBuf[3] = {0x0000, 0x0000, 0x0000};
+
+    arTxBuf[0] += (nCmd << 4) + (nA2DCounts >> 12);
+    arTxBuf[1] += (nA2DCounts >> 4) & 0xFF;
+    arTxBuf[2] += (nA2DCounts & 0x0F) << 4;
+
+    mibspiSetData(mibspiREG1, 0, arTxBuf);
+    mibspiTransfer(mibspiREG1, 0);
+    while (! mibspiIsTransferComplete(mibspiREG1, 0));
+
+    return 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+uint32_t ThermalDriver::ADS8330ReadWrite(uint16_t nCmd, uint16_t nCfr)
+{
+    uint16_t    arTxBuf[2] = {0x0000, 0x0000};
+    uint16_t    arRxBuf[2] = {0x0000, 0x0000};
+
+    arTxBuf[0] += (nCmd << 4) + (nCfr >> 8);
+    arTxBuf[1] += nCfr & 0xFF;
+
+    mibspiSetData(mibspiREG1, 1, arTxBuf);
+    mibspiTransfer(mibspiREG1, 1);
+    while (! mibspiIsTransferComplete(mibspiREG1, 1));
+    mibspiGetData(mibspiREG1, 1, arRxBuf);
+
+    return (arRxBuf[0] << 8) + (arRxBuf[1] & 0xFF);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+void ThermalDriver::ADS8330Init()
+{
+    //Set configuration register.
+    ADS8330ReadWrite(0x0E, 0x04FD);
+    uint32_t nTemp = ADS8330ReadWrite(0x0C, 0x0000);
+
+    //Select channel 0.
+    ADS8330ReadWrite(0x00, 0x0000);
+}
+
+
 // TEMP_AINx = 2.048 * Rt/(107000 + Rt)
 // 1/TEMP_AINx = (107000 / Rt + 1) / 2.048
 // 1 / Rt = (2.048 /TEMP_AINx - 1) / 107000
-int32_t ThermalDriver::convertVoltageToTemp(float ain, int standard)
+int32_t ThermalDriver::convertVoltageToTemp(float nResistance_omhs, int standard)
 {
-    float rt = 10700 / ((2.048 / ain) - 1);
+    float rt = nResistance_omhs;
     int i;
     float temp;
     if (rt > s_convTable[0].rt) {

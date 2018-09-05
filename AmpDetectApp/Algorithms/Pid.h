@@ -12,6 +12,7 @@ public:
     // max - maximum value of manipulated variable
     // min - minimum value of manipulated variable
     Pid( double dt, double max, double min, double Kp, double Ki, double Kd );
+    void Init();
     void SetGains(double nKp, double nKi, double nKd);
 
     // Returns the manipulated variable given a setpoint and current process value

@@ -16,6 +16,8 @@ struct conversion {
 class ThermalDriver
 {
 public:
+    enum    {kCurrent0Amps = 0x8000 - 1000};
+
     ThermalDriver(uint32_t nSiteIdx = 0);
     
     static void CurrentPidISR();
@@ -25,9 +27,9 @@ public:
     int32_t     GetSinkTemp()   {return 0;}
     int32_t     GetBlockTemp();
     void        Reset();
-    void        Enable() {_bCurrentPidEnabled = true;}
+    void        Enable();
     void        Disable() {_bCurrentPidEnabled = false;}
-    int32_t     convertVoltageToTemp(float ain, int standard = 0 /*Celcius*/);
+    int32_t     convertVoltageToTemp(float nResistance_omhs, int standard = 0 /*Celcius*/);
     void        SetPidParams(const PidParams& params);
     
 protected:
@@ -39,7 +41,10 @@ private:
     static int32_t      GetProcessVar();
     static void         SetControlVar(uint32_t nISetpoint_mA);
     static void         ReadDacMsg(uint16_t cfg, uint16_t* pData);
-    static uint32_t     GetA2D(int channel);
+    static uint32_t     AD7699Read(int channel);
+    static uint32_t     AD5683Write(uint16_t nCmd, uint16_t nA2DCounts);
+    static uint32_t     ADS8330ReadWrite(uint16_t nCmd, uint16_t nCfr);
+    static void         ADS8330Init();
 
     static Pid          _pid;
     static bool         _bCurrentPidEnabled;

@@ -20,7 +20,7 @@ bool        OpticsDriver::_integrationEnd = false;
 OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
 {
     /* Initialize LED and PD Board Driver */
-    OpticsDriverInit();
+//    OpticsDriverInit();
 }
 
 /**

@@ -31,7 +31,7 @@ PersistentMem* PersistentMem::GetInstance()      //Singleton
     if (_pPersistentMem == nullptr)
     {
         //Initialize flash and wait for complete.
-        TI_Fee_Init();
+/*        TI_Fee_Init();
         uint16_t nStatus = UNINIT;
         while(nStatus != IDLE)
         {
@@ -41,7 +41,7 @@ PersistentMem* PersistentMem::GetInstance()      //Singleton
                 dummycnt--;
 
             nStatus = TI_Fee_GetStatus(0);
-        }
+        }*/
 
         _pPersistentMem = new PersistentMem;
     }

@@ -8,10 +8,10 @@ Site::Site(uint32_t nSiteIdx)
     ,_thermalDrv(nSiteIdx)
     ,_opticsDrv(nSiteIdx)
     ,_bMeerstetterPid(false)
-    ,_pid((double)kPidTick_ms / 1000, 5000, -5000, 0.00017, 0.000013, 0.0)
+    ,_pid((double)kPidTick_ms / 1000, 100000, -100000, 0.0, 0, 0.0)
     ,_nTemperaturePidSlope(1000)
     ,_nTemperaturePidYIntercept(0)
-    ,_nTempStableTolerance_mC(8000) // + or -
+    ,_nTempStableTolerance_mC(500) // + or -
     ,_nTempStableTime_ms(1000)
     ,_arThermalRecs(kMaxThermalRecs)
     ,_nThermalAcqTimer_ms(0)
@@ -22,6 +22,9 @@ Site::Site(uint32_t nSiteIdx)
 {
 }
 
+static float _nKp = 0.0003;
+static float _nKi = 0.000026;
+static float _nKd = 0;
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 void Site::Execute()
@@ -29,12 +32,12 @@ void Site::Execute()
     //Make certain we have latest temperature PID params.
     PersistentMem* pPMem = PersistentMem::GetInstance();
     PidParams pidParams = pPMem->GetTemperaturePidParams();
-    _pid.SetGains(pidParams.GetKp(), pidParams.GetKi(), pidParams.GetKd());
+    _pid.SetGains(_nKp, _nKi, _nKd);
     _nTemperaturePidSlope = pidParams.GetSlope();
     _nTemperaturePidYIntercept = pidParams.GetYIntercept();
 
     //Make certain we have latest current PID params.
-    _thermalDrv.SetPidParams(pPMem->GetCurrentPidParams());
+//    _thermalDrv.SetPidParams(pPMem->GetCurrentPidParams());
 
     //Set setpoint according to the active segment and step.
     const Segment& seg = _pcrProtocol.GetSegment(_siteStatus.GetSegmentIdx());

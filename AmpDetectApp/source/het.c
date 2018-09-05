@@ -2100,7 +2100,7 @@ void hetInit(void)
                   | (uint32)((uint32)0U << 23U)
                   | (uint32)((uint32)0U << 22U)
                   | (uint32)((uint32)0U << 21U)
-                  | (uint32)((uint32)0U << 20U)
+                  | (uint32)((uint32)1U << 20U)
                   | (uint32)((uint32)0U << 19U)
                   | (uint32)((uint32)0U << 18U)
                   | (uint32)((uint32)0U << 17U)
@@ -2134,11 +2134,11 @@ void hetInit(void)
                  | (uint32) 0x00000000U
                  | (uint32) 0x00000000U
                  | (uint32) 0x00000000U
+                 | (uint32) 0x00100000U
                  | (uint32) 0x00000000U
                  | (uint32) 0x00000000U
                  | (uint32) 0x00000000U
-                 | (uint32) 0x00000000U
-                 | (uint32) 0x00000000U
+                 | (uint32) 0x00010000U
                  | (uint32) 0x00000000U
                  | (uint32) 0x00000000U
                  | (uint32) 0x00000000U
@@ -2202,11 +2202,11 @@ void hetInit(void)
                     | (uint32) 0x00000000U
                     | (uint32) 0x00000000U
                     | (uint32) 0x00000000U
+                    | (uint32) 0x00100000U
                     | (uint32) 0x00000000U
+                    | (uint32) 0x00040000U
                     | (uint32) 0x00000000U
-                    | (uint32) 0x00000000U
-                    | (uint32) 0x00000000U
-                    | (uint32) 0x00000000U
+                    | (uint32) 0x00010000U
                     | (uint32) 0x00000000U
                     | (uint32) 0x00000000U
                     | (uint32) 0x00000000U
@@ -2236,11 +2236,11 @@ void hetInit(void)
                  | (uint32) 0x00000000U
                  | (uint32) 0x00000000U
                  | (uint32) 0x00000000U
+                 | (uint32) 0x00100000U
                  | (uint32) 0x00000000U
+                 | (uint32) 0x00040000U
                  | (uint32) 0x00000000U
-                 | (uint32) 0x00000000U
-                 | (uint32) 0x00000000U
-                 | (uint32) 0x00000000U
+                 | (uint32) 0x00010000U
                  | (uint32) 0x00000000U
                  | (uint32) 0x00000000U
                  | (uint32) 0x00000000U
