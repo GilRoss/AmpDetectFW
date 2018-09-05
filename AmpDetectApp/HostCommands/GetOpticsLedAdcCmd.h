@@ -1,12 +1,12 @@
 /*
- * GetOpticsDiodeCmd.h
+ * GetOpticsLedAdcCmd.h
  *
- *  Created on: May 30, 2018
+ *  Created on: Aug 29, 2018
  *      Author: z003xk2p
  */
 
-#ifndef _GETOPTICSDIODECMD_H_
-#define _GETOPTICSDIODECMD_H_
+#ifndef _GETOPTICSLEDADCCMD_H_
+#define _GETOPTICSLEDADCCMD_H_
 
 #include <cstdint>
 #include "HostCommand.h"
@@ -15,10 +15,10 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-class GetOpticsDiodeCmd : public HostCommand
+class GetOpticsLedAdcCmd : public HostCommand
 {
 public:
-    GetOpticsDiodeCmd(uint8_t* pMsgBuf, HostCommDriver& hostCommDrv, PcrTask& pcrTask)
+    GetOpticsLedAdcCmd(uint8_t* pMsgBuf, HostCommDriver& hostCommDrv, PcrTask& pcrTask)
         :HostCommand(pMsgBuf, hostCommDrv, pcrTask)
     {
         _request << _pMsgBuf;   //De-serialize request buffer into request object.
@@ -27,20 +27,20 @@ public:
     virtual void Execute()
     {
         ErrCode nErrCode = ErrCode::kInvalidCmdParamsErr;
-        uint32_t diodeValue = 0;
+        uint32_t ledAdcValue = 0;
 
         //If site and LED channel index are valid.
-        if (_request.GetDiodeIdx() < OpticsDriver::kNumOpticalAdcChans)
+        if (_request.GetLedAdcIdx() < OpticsDriver::kNumOpticalAdcChans)
         {
             //Try to set the setpoint.
             Site* pSite = _pcrTask.GetSitePtr();
-            diodeValue = pSite->GetOpticsDiode(_request.GetDiodeIdx());
+            ledAdcValue = pSite->GetOpticsLedAdc(_request.GetLedAdcIdx());
             nErrCode = ErrCode::kNoError;
         }
 
         //Send response.
         _response.SetResponseHeader(_request, nErrCode);
-        _response.SetDiodeValue(diodeValue);
+        _response.SetLedAdcValue(ledAdcValue);
         _response >> _pMsgBuf;
         _hostCommDrv.TxMessage(_pMsgBuf, _response.GetStreamSize());
     }
@@ -48,9 +48,9 @@ public:
 protected:
 
 private:
-    GetOpticsDiodeReq     _request;
-    GetOpticsDiodeRes     _response;
+    GetOpticsLedAdcReq    _request;
+    GetOpticsLedAdcRes    _response;
 };
 
 
-#endif /* _GETOPTICSDIODECMD_H_ */
+#endif /* _GETOPTICSLEDADCCMD_H_ */

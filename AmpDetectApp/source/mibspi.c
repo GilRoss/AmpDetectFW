@@ -1005,7 +1005,7 @@ uint32 i ;
 
 
     /* MIBSPI3 set all pins to functional */
-    mibspiREG3->PC0 = (uint32)((uint32)1U << 0U)  /* SCS[0] */
+    mibspiREG3->PC0 = (uint32)((uint32)0U << 0U)  /* SCS[0] */
                     | (uint32)((uint32)0U << 1U)  /* SCS[1] */
                     | (uint32)((uint32)0U << 2U)  /* SCS[2] */
                     | (uint32)((uint32)0U << 3U)  /* SCS[3] */

@@ -17,6 +17,7 @@
 #include        "GetPidParamsCmd.h"
 #include        "SetOpticsLedCmd.h"
 #include        "GetOpticsDiodeCmd.h"
+#include        "GetOpticsLedAdcCmd.h"
 #include        "ReadOpticsCmd.h"
 
 
@@ -57,6 +58,8 @@ public:
             pHostCmd = new SetOpticsLedCmd(pMsgBuf, hostCommDrv, pcrTask);
         else if (nMsgId == HostMsg::MakeObjId('G', 'O', 'D', 'i'))
             pHostCmd = new GetOpticsDiodeCmd(pMsgBuf, hostCommDrv, pcrTask);
+        else if (nMsgId == HostMsg::MakeObjId('G', 'O', 'L', 'e'))
+            pHostCmd = new GetOpticsLedAdcCmd(pMsgBuf, hostCommDrv, pcrTask);
         else if (nMsgId == HostMsg::MakeObjId('R', 'O', 'p', 't'))
             pHostCmd = new ReadOpticsCmd(pMsgBuf, hostCommDrv, pcrTask);
 

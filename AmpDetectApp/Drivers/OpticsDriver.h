@@ -50,6 +50,7 @@
 #define     kledDacGroup        (0)
 #define     kpdAdcGroup         (1)
 #define     maxLedIntensity     (40000)
+#define     maxMuxChannel       (8)
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -57,7 +58,7 @@
 class OpticsDriver
 {
 public:
-    enum    {kBlue1 = 0, kGreen, kRed1, kBrown, kRed2, kBlue2, kNumOptChans};
+    enum    {kBlue1 = 0, kGreen, kRed1, kBrown, kRed2, kBlue2, kNumOptChans, kNumOpticalAdcChans=8};
     enum    {kwrInputRegN = 0, kupdateDACRegN, kwrInputupdateAll, kwrInputupdateN, kpwrDownN, kpwrDownChip, kselectIntRef, kselectExtRef, kNoOp};
     enum AdcCfgBit {KEEP_CFG, OVERWRITE_CFG};
     enum AdcBwSelectBit {QUARTER_BW, FULL_BW};
@@ -86,11 +87,13 @@ public:
          };
     enum PDAdcChannels {
             PDINPUTA1 = 0,
-            PDINPUTA2 = 1,
-            PDINPUTA3 = 2,
-            PDINPUTB1 = 3,
-            PDINPUTB2 = 4,
-            PDINPUTB3 = 5
+            PDINPUTA2,
+            PDINPUTA3,
+            PDINPUTB1,
+            PDINPUTB2,
+            PDINPUTB3,
+            PD_TEMP_A,
+            PD_TEMP_B
         };
     enum AdcCtrlRegisterShifts {
             READ_BACK_SHIFT   =  0,
@@ -111,17 +114,37 @@ public:
         HOLD_SW = 1
     };
     enum pdShiftRegisterPins {
-        PDSR_DATA_PIN = PIN_HET_24,
-        PDSR_CLK_PIN = PIN_HET_26,
-        PDSR_LATCH_PIN = PIN_HET_28
+        PDSR_DATA_PIN = PIN_HET_0,
+        PDSR_CLK_PIN = PIN_HET_1,
+        PDSR_LATCH_PIN = PIN_HET_2
     };
     enum ledDacPins {
-        LED_LDAC_PIN = PIN_HET_12,
-        LED_CS_PIN = PIN_HET_13
+        LED_ADC_CS_PIN = PIN_CS0,
+        LED_DAC_CS_PIN = PIN_CS2,
+    };
+    enum ledControlPins{
+        LED_CTRL_S0 = PIN_HET_11,
+        LED_CTRL_S1 = PIN_HET_12,
+        LED_CTRL_S2 = PIN_HET_13
+    };
+    enum pdAdcPins {
+        PD_ADC_CS_PIN = PIN_CS1
+    };
+    enum ledpdMisoPins {
+        LED_PD_ADC_MISO_ENABLE_PIN = PIN_ENA
+    };
+    enum ledAdcChannels{LED1_TEMP = 0, LED2_TEMP, LED3_TEMP, LED4_TEMP, LED5_TEMP, LED6_TEMP, MONITOR_PD, LED_CURRENT};
+    enum pdTempSelectPins{
+        PD_TEMP_SW_CTRL_A = PIN_HET_9,
+        PD_TEMP_SW_CTRL_B = PIN_HET_10
+    };
+    enum ledMuxMask
+    {
+        LED_MUX_MASK = 0xFFFFC7FF
     };
 
-    //bool _integrationEnd;
 
+    //bool _integrationEnd;
 
     OpticsDriver(uint32_t nSiteIdx = 0);
        
@@ -133,16 +156,26 @@ public:
     void SetLedsOff();
     uint32_t GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChanIdx, uint32_t nDuration_us, uint32_t nLedIntensity);
     void OpticsDriverInit();
-    void AdcConfig();
+    void PhotoDiodeAdcConfig();
+    void LedAdcConfig();
     void SetIntegratorState(pdIntegratorState state, uint32_t npdChanIdx);
     static void OpticsIntegrationDoneISR();
-    uint16_t GetAdc(uint32_t nChanIdx);
+    uint16_t GetPhotoDiodeAdc(uint32_t nChanIdx);
+    uint16_t GetLedAdc(uint32_t nChanIdx);
+    uint16_t GetPhotoDiodeTemp(uint32_t nChanIdx);
+    uint32_t SetLedOutputState(uint32_t nChanIdx);
+    uint32_t GetActiveLedMonitorPDValue(void);
+    uint32_t GetActiveLedTemp(void);
+    uint32_t GetActivePhotoDiodeTemp(void);
     
 protected:
   
 private:
     uint32_t            _nLedStateMsk;
     static bool         _integrationEnd;
+    static uint16_t     _nActiveLedTemperature;
+    static uint16_t     _nActiveLedMonitorPDValue;
+    static uint16_t     _nActivePhotoDiodeTemperature;
 //    SPI_HandleTypeDef   _hSpi;
 };
 
