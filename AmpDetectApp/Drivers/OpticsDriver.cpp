@@ -112,12 +112,12 @@ OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
     uint16_t ledValue = 0;
     while (1)
     {
-        for (int idx=0; idx<8; idx++)
+        for (int idx=0; idx<6; idx++)
         {
            //vTaskDelay (10 / portTICK_PERIOD_MS);
            //SetLedIntensity(idx, 10000);
            //pdValue = GetPhotoDiodeAdc(idx);
-           pdValue = GetPhotoDiodeValue(idx, idx, 10000, 5000);
+           pdValue = GetPhotoDiodeValue(idx, idx, 10000, 250);
            //ledValue = GetLedAdc(idx);
            //vTaskDelay (10 / portTICK_PERIOD_MS);
            //SetLedsOff();
@@ -216,7 +216,7 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
     uint16_t ledData[2] = {0x0000, 0x0000}; // Write input/DAC
     uint32_t gpioOutputState = 0x00000000;
 
-#if 1
+#if 0
 
     if (nLedIntensity == 0)
     {
@@ -277,7 +277,7 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
 
 #endif
     /* Caps Led intensity to maximum allowed if user input higher value */
-#if 0
+#if 1
     if (nLedIntensity > maxLedIntensity)
     {
         nLedIntensity = maxLedIntensity;
@@ -316,14 +316,14 @@ void OpticsDriver::SetLedsOff()
 {
     uint32_t gpioOutputState = 0x00000000;
 
- //   gpioOutputState = gioGetPort(hetPORT1) & LED_MUX_MASK;
- //   gpioOutputState |= (7 << LED_CTRL_S0);
+    gpioOutputState = gioGetPort(hetPORT1) & LED_MUX_MASK;
+    gpioOutputState |= (7 << LED_CTRL_S0);
     //gpioOutputState = SetLedOutputState(7);
- //   gioSetPort(hetPORT1, gpioOutputState);
+    gioSetPort(hetPORT1, gpioOutputState);
 
-    gioSetBit(hetPORT1, LED_CTRL_S0, 1);
-    gioSetBit(hetPORT1, LED_CTRL_S1, 1);
-    gioSetBit(hetPORT1, LED_CTRL_S2, 1);
+    //gioSetBit(hetPORT1, LED_CTRL_S0, 1);
+    //gioSetBit(hetPORT1, LED_CTRL_S1, 1);
+    //gioSetBit(hetPORT1, LED_CTRL_S2, 1);
 }
 
 uint32_t OpticsDriver::SetLedOutputState (uint32_t nChanIdx)
@@ -491,7 +491,7 @@ void OpticsDriver::OpticsDriverInit(void)
     gpioOutputState |= (1<<LED_DAC_CS_PIN);
     gpioOutputState |= (1<<LED_ADC_CS_PIN);
     gpioOutputState |= (1<<PD_ADC_CS_PIN);
-    gpioOutputState |= (1<<LED_PD_ADC_MISO_ENABLE_PIN);
+    gpioOutputState |= (0<<LED_PD_ADC_MISO_ENABLE_PIN);
 
     /* GPIO setting using MIBSPI3 port */
     gioSetDirection(mibspiPORT3, gpioDirectionConfig);
@@ -514,7 +514,7 @@ void OpticsDriver::OpticsDriverInit(void)
 
     /* Configure ADC on Photo Diode board */
     PhotoDiodeAdcConfig();
-    LedAdcConfig();
+    //LedAdcConfig();
     SetLedsOff();
 
     /* Disable PWM notification */
