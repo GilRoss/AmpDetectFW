@@ -114,13 +114,13 @@ OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
     {
         for (int idx=0; idx<6; idx++)
         {
-           //vTaskDelay (10 / portTICK_PERIOD_MS);
-           //SetLedIntensity(idx, 10000);
+           vTaskDelay (10 / portTICK_PERIOD_MS);
+           SetLedIntensity(idx, 1000);
            //pdValue = GetPhotoDiodeAdc(idx);
-           pdValue = GetPhotoDiodeValue(idx, idx, 10000, 250);
+           //pdValue = GetPhotoDiodeValue(idx, idx, 10000, 250);
            //ledValue = GetLedAdc(idx);
-           //vTaskDelay (10 / portTICK_PERIOD_MS);
-           //SetLedsOff();
+           vTaskDelay (10 / portTICK_PERIOD_MS);
+           SetLedsOff();
 
            // pdValue = GetPhotoDiodeValue(idx, idx, 10000, 5000);
         }
@@ -453,11 +453,11 @@ void OpticsDriver::OpticsDriverInit(void)
     uint16_t configData_w_Reset[2] = {0x4080, 0x0000}; //Stand alone mode; Gain = 2*Vref; Ref = Enabled; Operation = Normal Mode; Reset Input/DAC registers
     //uint16_t configData_wo_Reset[2] = {0x0040, 0x8000};
 
-#if 1
+#if 0
     /* Set GPIO pin direction */
-    gpioDirectionConfig |= (1<<LED_CTRL_S0);
-    gpioDirectionConfig |= (1<<LED_CTRL_S1);
-    gpioDirectionConfig |= (1<<LED_CTRL_S2);
+    //gpioDirectionConfig |= (1<<LED_CTRL_S0);
+    //gpioDirectionConfig |= (1<<LED_CTRL_S1);
+    //gpioDirectionConfig |= (1<<LED_CTRL_S2);
     gpioDirectionConfig |= (1<<PDSR_DATA_PIN);
     gpioDirectionConfig |= (1<<PDSR_CLK_PIN);
     gpioDirectionConfig |= (1<<PDSR_LATCH_PIN);
@@ -465,9 +465,9 @@ void OpticsDriver::OpticsDriverInit(void)
     gpioDirectionConfig |= (1<<PD_TEMP_SW_CTRL_B);
 
     /* Set GPIO output state */
-    gpioOutputState |= (0<<LED_CTRL_S0);
-    gpioOutputState |= (0<<LED_CTRL_S1);
-    gpioOutputState |= (0<<LED_CTRL_S2);
+    //gpioOutputState |= (0<<LED_CTRL_S0);
+    //gpioOutputState |= (0<<LED_CTRL_S1);
+    //sgpioOutputState |= (0<<LED_CTRL_S2);
     gpioOutputState |= (0<<PDSR_DATA_PIN);
     gpioOutputState |= (0<<PDSR_CLK_PIN);
     gpioOutputState |= (1<<PDSR_LATCH_PIN); //Latch pin is high to start with
@@ -477,7 +477,7 @@ void OpticsDriver::OpticsDriverInit(void)
     /* GPIO setting using HET1 port */
     gioSetDirection(hetPORT1, gpioDirectionConfig);
     gioSetPort(hetPORT1, gpioOutputState);
-#endif
+
 
     /* Set GPIO pin direction */
     gpioDirectionConfig = 0x00000000;
@@ -496,6 +496,8 @@ void OpticsDriver::OpticsDriverInit(void)
     /* GPIO setting using MIBSPI3 port */
     gioSetDirection(mibspiPORT3, gpioDirectionConfig);
     gioSetPort(mibspiPORT3, gpioOutputState);
+
+#endif
 
 #if 1
 
