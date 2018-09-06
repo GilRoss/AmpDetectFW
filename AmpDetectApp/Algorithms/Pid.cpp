@@ -12,6 +12,7 @@ class PIDImpl
     public:
         PIDImpl( double dt, double max, double min, double Kp, double Ki, double Kd );
         ~PIDImpl();
+        void Init();
         double calculate( double setpoint, double pv );
         void SetGains(double nKp, double nKi, double nKd)
         {
@@ -36,13 +37,17 @@ Pid::Pid( double dt, double max, double min, double Kp, double Ki, double Kd )
 {
     pimpl = new PIDImpl(dt,max,min,Kp,Ki,Kd);
 }
-double Pid::calculate( double setpoint, double pv )
-{
-    return pimpl->calculate(setpoint,pv);
-}
 Pid::~Pid()
 {
     delete pimpl;
+}
+void Pid::Init( void )
+{
+    pimpl->Init();
+}
+double Pid::calculate( double setpoint, double pv )
+{
+    return pimpl->calculate(setpoint,pv);
 }
 
 void Pid::SetGains(double nKp, double nKi, double nKd)
@@ -64,6 +69,12 @@ PIDImpl::PIDImpl( double dt, double max, double min, double Kp, double Ki, doubl
     _pre_error(0),
     _integral(0)
 {
+}
+
+void PIDImpl::Init( void )
+{
+    _pre_error  = 0;
+    _integral   = 0;
 }
 
 double PIDImpl::calculate( double setpoint, double pv )

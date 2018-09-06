@@ -34,7 +34,7 @@ OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
     int stepsize = 500;
 #endif
     /* Initialize LED and PD Board Driver */
-    OpticsDriverInit();
+//    OpticsDriverInit();
 #if 0
     while (1)
     {
@@ -46,7 +46,7 @@ OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
         if (j == upperlimit)
         {
             temp = 1;
-        }
+}
         else if (j == lowerlimit)
         {
             temp = 0;
@@ -269,10 +269,10 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
 
         gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 0);
         mibspiSetData(mibspiREG3, kledDacGroup, ledData);
-        mibspiTransfer(mibspiREG3, kledDacGroup);
-        while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
+    mibspiTransfer(mibspiREG3, kledDacGroup);
+    while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
         gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 1);
-    }
+}
 
 
 #endif
@@ -327,14 +327,14 @@ void OpticsDriver::SetLedsOff()
 }
 
 uint32_t OpticsDriver::SetLedOutputState (uint32_t nChanIdx)
-{
+    {
     uint32_t gpioOutputState = 0x00000000;
 
     gpioOutputState = gioGetPort(hetPORT1) & LED_MUX_MASK;
     gpioOutputState |= (nChanIdx << LED_CTRL_S0);
 
     return gpioOutputState;
-}
+    }
 
 /**
  * Name: GetPhotoDiodeValue()
