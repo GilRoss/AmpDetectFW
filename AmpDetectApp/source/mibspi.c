@@ -992,9 +992,9 @@ uint32 i ;
 
 
     /** - MIBSPI3 Port pullup / pulldown enable*/
-    mibspiREG3->PC7 = (uint32)((uint32)0U << 0U)  /* SCS[0] */
-                    | (uint32)((uint32)0U << 1U)  /* SCS[1] */
-                    | (uint32)((uint32)0U << 2U)  /* SCS[2] */
+    mibspiREG3->PC7 = (uint32)((uint32)1U << 0U)  /* SCS[0] */
+                    | (uint32)((uint32)1U << 1U)  /* SCS[1] */
+                    | (uint32)((uint32)1U << 2U)  /* SCS[2] */
                     | (uint32)((uint32)0U << 3U)  /* SCS[3] */
                     | (uint32)((uint32)0U << 4U)  /* SCS[4] */
                     | (uint32)((uint32)0U << 5U)  /* SCS[5] */

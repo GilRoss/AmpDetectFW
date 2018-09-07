@@ -65,15 +65,16 @@ void CurrentPidISR()
 void ThermalDriver::CurrentPidISR()
 {
     _pid.SetGains(0.4, 1475, 0);
-    _arA2DVals[_nIsrCount & ((sizeof(_arA2DVals) / sizeof(_arA2DVals[0])) - 1)] = ADS8330ReadWrite(0x0D, 0x0000);
+//    _arA2DVals[_nIsrCount & ((sizeof(_arA2DVals) / sizeof(_arA2DVals[0])) - 1)] = ADS8330ReadWrite(0x0D, 0x0000);
+    int32_t nA2DCounts = ADS8330ReadWrite(0x0D, 0x0000);
     if (_bCurrentPidEnabled)
     {
         //Get average of last 'n' current readings.
-        int32_t nA2DCounts = 0;
-        for (int i = 0; i < (sizeof(_arA2DVals) / sizeof(_arA2DVals[0])); i++)
-            nA2DCounts += _arA2DVals[i];
-        nA2DCounts = (~(((nA2DCounts >> 3) + 230) - 0x7FFF)) + 1;
+//        for (int i = 0; i < (sizeof(_arA2DVals) / sizeof(_arA2DVals[0])); i++)
+//            nA2DCounts += _arA2DVals[i];
+//        nA2DCounts = (~(((nA2DCounts >> 3) + 230) - 0x7FFF)) + 1;
 
+        nA2DCounts = (~(((nA2DCounts) + 230) - 0x7FFF)) + 1;
         float nControlVar = _pid.calculate((float)_nSetpoint_mA, (float)nA2DCounts * 0.59);
 
         AD5683Write(0x03, ((uint16_t)0x8000 - 410) - nControlVar);
