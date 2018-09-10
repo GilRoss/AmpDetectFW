@@ -34,7 +34,7 @@ OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
     int stepsize = 500;
 #endif
     /* Initialize LED and PD Board Driver */
-//    OpticsDriverInit();
+    OpticsDriverInit();
 #if 0
     while (1)
     {
@@ -114,13 +114,13 @@ OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
     {
         for (int idx=0; idx<6; idx++)
         {
-           vTaskDelay (10 / portTICK_PERIOD_MS);
-           SetLedIntensity(idx, 1000);
+           //vTaskDelay (10 / portTICK_PERIOD_MS);
+           //SetLedIntensity(idx, 1000);
            //pdValue = GetPhotoDiodeAdc(idx);
-           //pdValue = GetPhotoDiodeValue(idx, idx, 10000, 250);
+           pdValue = GetPhotoDiodeValue(idx, idx, 10000, 250);
            //ledValue = GetLedAdc(idx);
            vTaskDelay (10 / portTICK_PERIOD_MS);
-           SetLedsOff();
+           //SetLedsOff();
 
            // pdValue = GetPhotoDiodeValue(idx, idx, 10000, 5000);
         }

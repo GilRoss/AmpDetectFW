@@ -27,7 +27,7 @@ public:
     {
         //Try to pause the run.
         Site* pSite = _pcrTask.GetSitePtr();
-        ErrCode nErrCode = pSite->PauseRun(_request.GetPausedFlg());
+        ErrCode nErrCode = pSite->PauseRun(_request.GetPausedFlg(), _request.GetCaptureCameraImageFlg());
 
         //Send response.
         _response.SetResponseHeader(_request, nErrCode);

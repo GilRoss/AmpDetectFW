@@ -90,6 +90,10 @@ void Site::Execute()
         {
             OpticsRec opticsRec;
             OpticalRead optRead;
+            int numReads = 0;
+
+            numReads = _pcrProtocol.GetNumOpticalReads();
+
             //If Detector type is Camera
             if (_pcrProtocol.GetFluorDetectorType() == FluorDetectorType::kCamera)
             {
@@ -135,7 +139,7 @@ void Site::Execute()
             }
         }
 
-        if (!_siteStatus.GetPausedFlg())
+        if ((!_siteStatus.GetPausedFlg()) && (cameraCaptureCount == 0))
         {
             //If done with all steps in this segment.
             _siteStatus.NextStep();
@@ -226,13 +230,15 @@ ErrCode Site::StopRun()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-ErrCode Site::PauseRun(bool bPause)
+ErrCode Site::PauseRun(bool bPause, bool bCaptureCameraImageFlg)
 {
     ErrCode     nErrCode = ErrCode::kNoError;
 
     //If there is not an active run on this site.
     if (_siteStatus.GetRunningFlg() == true)    {
-        _siteStatus.SetPausedFlg(bPause);    }
+        _siteStatus.SetPausedFlg(bPause);
+        _siteStatus.SetCaptureCameraImageFlg(bCaptureCameraImageFlg);
+    }
     else
         nErrCode = ErrCode::kRunInProgressErr;
 
