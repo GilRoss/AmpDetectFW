@@ -156,6 +156,7 @@ public:
     void SetLedsOff();
     uint32_t GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChanIdx, uint32_t nDuration_us, uint32_t nLedIntensity);
     void OpticsDriverInit();
+    void ADC7689ReadWrite(uint16_t* config, uint16_t* data);
     void PhotoDiodeAdcConfig();
     void LedAdcConfig();
     void SetIntegratorState(pdIntegratorState state, uint32_t npdChanIdx);
