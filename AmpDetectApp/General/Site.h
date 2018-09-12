@@ -3,6 +3,8 @@
 
 #include <cstdint>
 #include <vector>
+#include "FreeRTOS.h"
+#include "os_semphr.h"
 #include "PcrProtocol.h"
 #include "Pid.h"
 #include "SysStatus.h"
@@ -17,7 +19,7 @@ class Site
 public:
     enum    {kPidTick_ms = 25};
     enum    {kThermalAcqPeriod_ms = 100};
-    enum    {kMaxThermalRecs = 2};
+    enum    {kMaxThermalRecs = 100};
     
     enum    ManCtrlState : uint32_t
             {kIdle = 0, kSetpointControl, kOpticsLedControl};
@@ -25,14 +27,15 @@ public:
     Site(uint32_t nSiteIdx = 0);
     
     void                Execute();
-    void                ManualControl();
+    void                ExecutePcr();
+    void                ExecuteManualControl();
     bool                GetRunningFlg() const {return _siteStatus.GetRunningFlg();}
     uint32_t            GetNumThermalRecs() const;
-    ThermalRec          GetAndDelNextThermalRec();
+    void                GetAndDelThermalRecs(uint32_t nMaxRecs, std::vector<ThermalRec>*);
     uint32_t            GetNumOpticsRecs() const;
     const OpticsRec*    GetOpticsRec(uint32_t nIdx) const;
     void                SetPcrProtocol(const PcrProtocol& p)   {_pcrProtocol = p;}
-    const SiteStatus&   GetStatus();
+    void                GetSiteStatus(SiteStatus*);
     OpticsDriver&       GetOpticsDrvPtr()   {return _opticsDrv;}
     
     ErrCode             StartRun(bool bMeerstetterPid);
@@ -51,6 +54,7 @@ protected:
   
 private:
     uint32_t                    _nSiteIdx;
+    SemaphoreHandle_t           _sysStatusSemId;
     ThermalDriver               _thermalDrv;
     OpticsDriver                _opticsDrv;
     PcrProtocol                 _pcrProtocol;

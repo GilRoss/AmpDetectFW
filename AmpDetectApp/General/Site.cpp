@@ -20,14 +20,32 @@ Site::Site(uint32_t nSiteIdx)
     ,_nManControlState(kIdle)
     ,_nManControlSetpoint_mC(0)
 {
+    _sysStatusSemId = xSemaphoreCreateMutex();
 }
 
-static float _nKp = 0.0014;
-static float _nKi = 0.000037;
+static float _nKp = 0.00081;
+static float _nKi = 0.000053;
 static float _nKd = 0;
+
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 void Site::Execute()
+{
+    //Make sure while updating the site, we do not try to read the site status.
+    xSemaphoreTake(_sysStatusSemId, portMAX_DELAY);
+
+    //If the site is active.
+    if (GetRunningFlg() == true)
+        ExecutePcr();
+    else
+        ExecuteManualControl();
+
+    xSemaphoreGive(_sysStatusSemId);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+void Site::ExecutePcr()
 {
     //Make certain we have latest temperature PID params.
     PersistentMem* pPMem = PersistentMem::GetInstance();
@@ -90,9 +108,6 @@ void Site::Execute()
         {
             OpticsRec opticsRec;
             OpticalRead optRead;
-            int numReads = 0;
-
-            numReads = _pcrProtocol.GetNumOpticalReads();
 
             //If Detector type is Camera
             if (_pcrProtocol.GetFluorDetectorType() == FluorDetectorType::kCamera)
@@ -177,7 +192,7 @@ void Site::Execute()
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void Site::ManualControl()
+void Site::ExecuteManualControl()
 {
     //If the user is setting target temperatures.
     if (_nManControlState == kSetpointControl)
@@ -383,11 +398,15 @@ uint32_t Site::GetActiveDiodeTemperature()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-const SiteStatus&   Site::GetStatus()
+void Site::GetSiteStatus(SiteStatus* pSiteStatus)
 {
+    xSemaphoreTake(_sysStatusSemId, portMAX_DELAY);
     _siteStatus.SetNumThermalRecs(GetNumThermalRecs());
     _siteStatus.SetNumOpticsRecs(GetNumOpticsRecs());
-    return _siteStatus;
+    _siteStatus.SetTemperature(_thermalDrv.GetBlockTemp());
+
+    *pSiteStatus = _siteStatus;
+    xSemaphoreGive(_sysStatusSemId);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -400,12 +419,21 @@ uint32_t    Site::GetNumThermalRecs() const
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-ThermalRec    Site::GetAndDelNextThermalRec()
+void Site::GetAndDelThermalRecs(uint32_t nMaxRecs, std::vector<ThermalRec>* pThermalRecs)
 {
-    ThermalRec thermalRec = _arThermalRecs[_nThermalRecGetIdx++];
-    if (_nThermalRecGetIdx >= kMaxThermalRecs)
-        _nThermalRecGetIdx = 0;
-    return thermalRec;
+    xSemaphoreTake(_sysStatusSemId, portMAX_DELAY);
+    for (int i = 0; i < nMaxRecs; i++)
+    {
+        //If there are more thermal records.
+        if (_nThermalRecGetIdx != _nThermalRecPutIdx)
+        {
+            pThermalRecs->push_back(_arThermalRecs[_nThermalRecGetIdx]);
+
+            //Inc Get index and take care of wrap.
+            _nThermalRecGetIdx = (_nThermalRecGetIdx == kMaxThermalRecs-1) ? 0 : _nThermalRecGetIdx + 1;
+        }
+    }
+    xSemaphoreGive(_sysStatusSemId);
 }
     
 ///////////////////////////////////////////////////////////////////////////////

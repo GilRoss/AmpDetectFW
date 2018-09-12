@@ -2,8 +2,6 @@
 #define __PcrTask_H
 
 #include "FreeRTOS.h"
-#include "os_task.h"
-#include "os_semphr.h"
 
 #include <cstdint>
 #include <vector>
@@ -15,8 +13,6 @@
 class PcrTask
 {
 public:
-    enum {kNumSites = 1};
-
     ~PcrTask();
   
     static PcrTask* GetInstance();
@@ -34,7 +30,6 @@ private:
     static PcrTask*         _pPcrTask;
     Site                    _site;
     SysStatus               _sysStatus;
-    SemaphoreHandle_t       _sysStatusSemId;
 };
 
 #endif // __PcrTask_H

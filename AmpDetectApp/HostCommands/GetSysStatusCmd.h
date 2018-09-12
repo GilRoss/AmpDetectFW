@@ -22,7 +22,8 @@ public:
 
     virtual void Execute()
     {
-        _pcrTask.GetSysStatus(_response.GetSysStatusPtr());
+        SysStatus* pSysStatus = _response.GetSysStatusPtr();
+        _pcrTask.GetSysStatus(pSysStatus);
         _response.SetResponseHeader(_request, ErrCode::kNoError);
         _response >> _pMsgBuf;
         _hostCommDrv.TxMessage(_pMsgBuf, _response.GetStreamSize());
