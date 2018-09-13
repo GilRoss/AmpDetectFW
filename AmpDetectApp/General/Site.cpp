@@ -23,8 +23,8 @@ Site::Site(uint32_t nSiteIdx)
     _sysStatusSemId = xSemaphoreCreateMutex();
 }
 
-static float _nKp = 0.00081;
-static float _nKi = 0.000053;
+static float _nKp = 0.0007;
+static float _nKi = 0.00007;
 static float _nKd = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -195,9 +195,9 @@ void Site::ExecutePcr()
 void Site::ExecuteManualControl()
 {
     //If the user is setting target temperatures.
+    int32_t nBlockTemp = _thermalDrv.GetBlockTemp();
     if (_nManControlState == kSetpointControl)
     {
-        int32_t nBlockTemp = _thermalDrv.GetBlockTemp();
         double nControlVar = _pid.calculate(_nManControlSetpoint_mC, nBlockTemp);
         _thermalDrv.SetControlVar((int32_t)(nControlVar * 1000));
         _thermalDrv.Enable();
