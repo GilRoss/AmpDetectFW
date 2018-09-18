@@ -20,7 +20,9 @@ public:
 
     static PersistentMem* GetInstance();      //Singleton
 
-    virtual ~PersistentMem() {}
+    virtual ~PersistentMem()
+    {
+    }
 
     void                SetSerialNum(uint32_t n)    { _nSerialNum = n; }
     uint32_t            GetSerialNum() const        { return _nSerialNum; }
@@ -28,8 +30,8 @@ public:
     uint32_t            GetCanId() const            { return _nCanId; }
     void                SetFluorDetectorType(FluorDetectorType n)    { _nFluorDetectorType = n; }
     FluorDetectorType   GetFluorDetectorType() const                 { return _nFluorDetectorType; }
-    void                SetTemperaturePidParams(const PidParams& r)  { _temeraturePidParams = r;}
-    PidParams           GetTemperaturePidParams() const              { return _temeraturePidParams; }
+    void                SetTemperaturePidParams(const PidParams& r)  { _temperaturePidParams = r;}
+    PidParams           GetTemperaturePidParams() const              { return _temperaturePidParams; }
     void                SetCurrentPidParams(const PidParams& r)      { _currentPidParams = r; }
     PidParams           GetCurrentPidParams() const                  { return _currentPidParams; }
 
@@ -42,7 +44,7 @@ public:
         nSize += sizeof(_nSerialNum);
         nSize += sizeof(_nCanId);
         nSize += sizeof(_nFluorDetectorType);
-        nSize += _temeraturePidParams.GetStreamSize();
+        nSize += _temperaturePidParams.GetStreamSize();
         nSize += _currentPidParams.GetStreamSize();
         nSize += sizeof(_nCrc);
         return nSize;
@@ -59,6 +61,8 @@ private:
         , _nSerialNum(0)
         , _nCanId(1)
         , _nFluorDetectorType(FluorDetectorType::kPhotoDiode)
+        , _temperaturePidParams(0.0007, 0.00007, 0, 1000, 0)
+        , _currentPidParams(0.4, 1475, 0, 1000, 0)
         , _nCrc(0)
     {
         bool bSuccess = ReadFromFlash();
@@ -71,7 +75,7 @@ private:
     uint32_t             _nSerialNum;
     uint32_t             _nCanId;
     FluorDetectorType    _nFluorDetectorType;
-    PidParams            _temeraturePidParams;
+    PidParams            _temperaturePidParams;
     PidParams            _currentPidParams;
     uint32_t             _nCrc;
 };

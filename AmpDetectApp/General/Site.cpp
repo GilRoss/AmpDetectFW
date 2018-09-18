@@ -8,7 +8,8 @@ Site::Site(uint32_t nSiteIdx)
     ,_thermalDrv(nSiteIdx)
     ,_opticsDrv(nSiteIdx)
     ,_bMeerstetterPid(false)
-    ,_pid((double)kPidTick_ms / 1000, 100000, -100000, 0.0, 0, 0.0)
+//    ,_pid((double)kPidTick_ms / 1000, 100000, -100000, 0.0, 0, 0.0)
+    ,_pid(1, 100000, -100000, 0.0, 0, 0.0)
     ,_nTemperaturePidSlope(1000)
     ,_nTemperaturePidYIntercept(0)
     ,_nTempStableTolerance_mC(500) // + or -
@@ -23,9 +24,9 @@ Site::Site(uint32_t nSiteIdx)
     _sysStatusSemId = xSemaphoreCreateMutex();
 }
 
-static float _nKp = 0.0007;
-static float _nKi = 0.00007;
-static float _nKd = 0;
+static double _nKp = 0.00081;
+static double _nKi = 0.00000065;
+static double _nKd = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -85,7 +86,10 @@ void Site::ExecutePcr()
             {
                 _siteStatus.SetStableTimer(_siteStatus.GetStableTimer() + kPidTick_ms);
                 if (_siteStatus.GetStableTimer() >= _nTempStableTime_ms)
+                {
                     _siteStatus.SetTempStableFlg(true);
+                    _siteStatus.SetHoldTimer(_nTempStableTime_ms);
+                }
             }
             else
                 _siteStatus.SetStableTimer(0);
@@ -181,7 +185,7 @@ void Site::ExecutePcr()
         _arThermalRecs[_nThermalRecPutIdx]._nChan2_mC   = _thermalDrv.GetSampleTemp();
         _arThermalRecs[_nThermalRecPutIdx]._nChan3_mC   = 0;
         _arThermalRecs[_nThermalRecPutIdx]._nChan4_mC   = 0;
-        _arThermalRecs[_nThermalRecPutIdx]._nCurrent_mA = nControlVar * 1000;
+        _arThermalRecs[_nThermalRecPutIdx]._nCurrent_mA = ((float)_thermalDrv.GetISenseCounts() * 0.56);
 
         //Next record, and check for wrap.
         _nThermalRecPutIdx = (_nThermalRecPutIdx >= (kMaxThermalRecs - 1)) ? 0 : _nThermalRecPutIdx + 1;

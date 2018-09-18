@@ -82,7 +82,8 @@ int main(void)
     //Create the PCR task.
     xTaskCreate(StartPcrTask, "PcrTask", 4 * 1024, NULL, 3, NULL );
 
-    //Create the host communications task.
+    //Create the host communications task. Run this task in privileged mode.
+    //This mode allows us to write to flash.
     xTaskCreate(StartHostCommTask, "HostCommTask", 4 * 1024, NULL, 3 | portPRIVILEGE_BIT, NULL );
 
     //Start the RTOS.

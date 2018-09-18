@@ -26,6 +26,7 @@ public:
     int32_t     GetSampleTemp();
     int32_t     GetSinkTemp()   {return 0;}
     int32_t     GetBlockTemp();
+    int32_t     GetISenseCounts();
     void        Reset();
     void        Enable();
     void        Disable() {_bCurrentPidEnabled = false;}
@@ -42,25 +43,15 @@ private:
     static void         SetControlVar(uint32_t nISetpoint_mA);
     static void         ReadDacMsg(uint16_t cfg, uint16_t* pData);
     static uint32_t     AD7699Read(int channel);
-    static uint32_t     AD5683Write(uint16_t nCmd, uint16_t nA2DCounts);
+    static uint32_t     AD5683Write(uint16_t nCmd, uint16_t nA2DCounts, bool bWaitForDone);
     static uint32_t     ADS8330ReadWrite(uint16_t nCmd, uint16_t nCfr);
     static void         ADS8330Init();
 
     static Pid          _pid;
     static bool         _bCurrentPidEnabled;
-    static uint32_t     _nIsrCount;
-    static uint32_t     _nBlockTemp_cnts;
-    static uint32_t     _nSampleTemp_cnts;
     static int32_t      _nSetpoint_mA;
-    static uint32_t     _nProportionalGain;
-    static uint32_t     _nIntegralGain;
-    static uint32_t     _nDerivativeGain;
-
-    static int32_t      _nPrevPidError_A2DCounts;
-    static int32_t      _nAccError_A2DCounts;
-    static double       _nControlVar;
     static int32_t      _nA2DCounts;
-    static int32_t      _nErrCounts;
+
     const static conversion   s_convTable[];
 
     //Control bits for D/A.
