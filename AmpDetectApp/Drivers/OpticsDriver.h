@@ -2,6 +2,7 @@
 #define __OpticsDriver_H
 
 #include <cstdint>
+#include <stdio.h>
 #include "FreeRTOS.h"
 #include "os_task.h"
 #include "os_semphr.h"
@@ -118,17 +119,15 @@ public:
         PDSR_CLK_PIN = PIN_HET_1,
         PDSR_LATCH_PIN = PIN_HET_2
     };
-    enum ledDacPins {
+    enum spiChipSelect {
         LED_ADC_CS_PIN = PIN_CS0,
+        PD_ADC_CS_PIN = PIN_CS1,
         LED_DAC_CS_PIN = PIN_CS2,
     };
     enum ledControlPins{
         LED_CTRL_S0 = PIN_HET_11,
         LED_CTRL_S1 = PIN_HET_12,
         LED_CTRL_S2 = PIN_HET_13
-    };
-    enum pdAdcPins {
-        PD_ADC_CS_PIN = PIN_CS1
     };
     enum ledpdMisoPins {
         LED_PD_ADC_MISO_ENABLE_PIN = PIN_ENA
@@ -156,7 +155,7 @@ public:
     void SetLedsOff();
     uint32_t GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChanIdx, uint32_t nDuration_us, uint32_t nLedIntensity);
     void OpticsDriverInit();
-    void ADC7689ReadWrite(uint16_t* config, uint16_t* data);
+    void ADC7689ReadWrite(uint16_t* config, uint16_t* data, spiChipSelect chipSelect);
     void PhotoDiodeAdcConfig();
     void LedAdcConfig();
     void SetIntegratorState(pdIntegratorState state, uint32_t npdChanIdx);
