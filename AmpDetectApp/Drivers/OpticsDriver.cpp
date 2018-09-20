@@ -407,9 +407,9 @@ uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChan
     SetIntegratorState(HOLD_STATE, npdChanIdx); //Configure Hold state
 
     /* Read LED Temperature, LED Monitoring PhotoDiode, PhotoDiode Temperature */
-    //_nActiveLedMonitorPDValue = GetLedAdc(MONITOR_PD); // Get Monitor PD value
-    //_nActiveLedTemperature = GetLedAdc(nledChanIdx);
-    //_nActivePhotoDiodeTemperature = GetPhotoDiodeTemp(npdChanIdx);
+    _nActiveLedMonitorPDValue = GetLedAdc(MONITOR_PD); // Get Monitor PD value
+    _nActiveLedTemperature = GetLedAdc(nledChanIdx);
+    _nActivePhotoDiodeTemperature = GetPhotoDiodeTemp(npdChanIdx);
     //////////////////////////////////////////////////////////////////////////////////////////
 
     /* Wait for integrationTimeExpired flag to be set */
@@ -447,59 +447,7 @@ void OpticsDriver::OpticsDriverInit(void)
      * PD SR GPIO: N2HET1[24] -> DS (Serial Data In); N2HET1[26] -> SHCP (Shift Reg Clock Input)
      *             N2HET1[28] -> STCP (Storage Reg Clock Input)
      */
-    uint32_t gpioDirectionConfig = 0x00000000;
-    uint32_t gpioOutputState = 0x00000000;
-    //uint32_t ledDacConfig = 0x00000000;
     uint16_t configData_w_Reset[2] = {0x4080, 0x0000}; //Stand alone mode; Gain = 2*Vref; Ref = Enabled; Operation = Normal Mode; Reset Input/DAC registers
-    //uint16_t configData_wo_Reset[2] = {0x0040, 0x8000};
-
-#if 0
-    /* Set GPIO pin direction */
-    //gpioDirectionConfig |= (1<<LED_CTRL_S0);
-    //gpioDirectionConfig |= (1<<LED_CTRL_S1);
-    //gpioDirectionConfig |= (1<<LED_CTRL_S2);
-    gpioDirectionConfig |= (1<<PDSR_DATA_PIN);
-    gpioDirectionConfig |= (1<<PDSR_CLK_PIN);
-    gpioDirectionConfig |= (1<<PDSR_LATCH_PIN);
-    gpioDirectionConfig |= (1<<PD_TEMP_SW_CTRL_A);
-    gpioDirectionConfig |= (1<<PD_TEMP_SW_CTRL_B);
-
-    /* Set GPIO output state */
-    //gpioOutputState |= (0<<LED_CTRL_S0);
-    //gpioOutputState |= (0<<LED_CTRL_S1);
-    //sgpioOutputState |= (0<<LED_CTRL_S2);
-    gpioOutputState |= (0<<PDSR_DATA_PIN);
-    gpioOutputState |= (0<<PDSR_CLK_PIN);
-    gpioOutputState |= (1<<PDSR_LATCH_PIN); //Latch pin is high to start with
-    gpioOutputState |= (0<<PD_TEMP_SW_CTRL_A);
-    gpioOutputState |= (0<<PD_TEMP_SW_CTRL_B);
-
-    /* GPIO setting using HET1 port */
-    gioSetDirection(hetPORT1, gpioDirectionConfig);
-    gioSetPort(hetPORT1, gpioOutputState);
-
-
-    /* Set GPIO pin direction */
-    gpioDirectionConfig = 0x00000000;
-    gpioDirectionConfig |= (1<<LED_DAC_CS_PIN);
-    gpioDirectionConfig |= (1<<LED_ADC_CS_PIN);
-    gpioDirectionConfig |= (1<<PD_ADC_CS_PIN);
-    gpioDirectionConfig |= (1<<LED_PD_ADC_MISO_ENABLE_PIN);
-
-    /* Set GPIO output state */
-    gpioOutputState = 0x00000000;
-    gpioOutputState |= (1<<LED_DAC_CS_PIN);
-    gpioOutputState |= (1<<LED_ADC_CS_PIN);
-    gpioOutputState |= (1<<PD_ADC_CS_PIN);
-    gpioOutputState |= (0<<LED_PD_ADC_MISO_ENABLE_PIN);
-
-    /* GPIO setting using MIBSPI3 port */
-    gioSetDirection(mibspiPORT3, gpioDirectionConfig);
-    gioSetPort(mibspiPORT3, gpioOutputState);
-
-#endif
-
-#if 1
 
     //Configure LED DAC: AD5683R
     gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 0);
@@ -507,33 +455,27 @@ void OpticsDriver::OpticsDriverInit(void)
     mibspiTransfer(mibspiREG3, kledDacGroup);
     while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
     gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 1);
-#endif
-/*    gioSetBit(hetPORT1, LED_DAC_CS_PIN, 0);
-    mibspiSetData(mibspiREG3, kledDacGroup, configData_wo_Reset);
-    mibspiTransfer(mibspiREG3, kledDacGroup);
-    while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
-    gioSetBit(hetPORT1, LED_DAC_CS_PIN, 1);*/
 
     SetLedsOff();
     /* Configure ADC on Photo Diode board */
     PhotoDiodeAdcConfig();
-    //LedAdcConfig();
+    LedAdcConfig();
 
     /* Disable PWM notification */
     pwmDisableNotification(hetREG1, pwm0, pwmEND_OF_BOTH);
 }
 
-void OpticsDriver::ADC7689ReadWrite(uint16_t* config, uint16_t* data)
+void OpticsDriver::ADC7689ReadWrite(uint16_t* config, uint16_t* data, spiChipSelect chipSelect)
 {
     /* Send 2 dummy conversion to update config register on Photo Diode ADC */
     /* First dummy conversion */
     mibspiSetData(mibspiREG3, kpdAdcGroup, config); //Set Config command
-    gioSetBit(mibspiPORT3, PD_ADC_CS_PIN, 0); //Start sending command
+    gioSetBit(mibspiPORT3, chipSelect, 0); //Start sending command
     mibspiTransfer(mibspiREG3, kpdAdcGroup);
     while(!(mibspiIsTransferComplete(mibspiREG3, kpdAdcGroup)));
-    gioSetBit(mibspiPORT3, PD_ADC_CS_PIN, 1);
+    gioSetBit(mibspiPORT3, chipSelect, 1);
     mibspiGetData(mibspiREG3, kpdAdcGroup, data);
-    for(int i=0; i<1000; i++); //Wait for sometime for conv/acq to complete
+    for(int i=0; i<50; i++); //Wait for sometime for conv/acq to complete
 
 }
 
@@ -546,7 +488,7 @@ void OpticsDriver::PhotoDiodeAdcConfig(void)
     adcConfig[0] |= UNIPOLAR_REF_TO_GND << IN_CH_CFG_SHIFT;
     adcConfig[0] |= PDINPUTA2 << IN_CH_SEL_SHIFT;
     adcConfig[0] |= FULL_BW << FULL_BW_SEL_SHIFT;
-    adcConfig[0] |= EXT_REF << REF_SEL_SHIFT;
+    adcConfig[0] |= INT_REF4_096_AND_TEMP_SENS << REF_SEL_SHIFT;
     adcConfig[0] |= DISABLE_SEQ << SEQ_EN_SHIFT;
     adcConfig[0] |= READ_BACK_EN << READ_BACK_SHIFT;
     adcConfig[0] <<= 2;
@@ -554,57 +496,44 @@ void OpticsDriver::PhotoDiodeAdcConfig(void)
     // Set MCU_SPI3_SOMI_SW low to receive data from PD ADC
     gioSetBit(mibspiPORT3, LED_PD_ADC_MISO_ENABLE_PIN, 0);
 
-    ADC7689ReadWrite(adcConfig, nAdcVal);
-    ADC7689ReadWrite(adcConfig, nAdcVal);
-    ADC7689ReadWrite(adcConfig, nAdcVal);
+    ADC7689ReadWrite(adcConfig, nAdcVal, PD_ADC_CS_PIN);
+    ADC7689ReadWrite(adcConfig, nAdcVal, PD_ADC_CS_PIN);
+    ADC7689ReadWrite(adcConfig, nAdcVal, PD_ADC_CS_PIN);
 
+#if 0
+    /* Check if command is written correctly */
+    if (adcConfig[0] == nAdcVal[1])
+    {
+        printf("Write word is 0x%x and Read word is 0x%x\n", adcConfig[0], nAdcVal[1]);
+    }
+    else
+    {
+        printf("Write to ADC not successful!!!\n");
+        printf("Write word is 0x%x and Read word is 0x%x\n", adcConfig[0], nAdcVal[1]);
+    }
+#endif
 }
 
 void OpticsDriver::LedAdcConfig(void)
 {
-    uint16_t *adcConfigPointer = NULL;
-    uint16_t adcConfig = 0x0000;
+    uint16_t adcConfig[2] = {0x0000, 0x0000};
+    uint16_t nAdcVal[2] = {0x0000, 0x0000};
 
-    adcConfigPointer = &adcConfig;
+    adcConfig[0] |= OVERWRITE_CFG << CFG_SHIFT;
+    adcConfig[0] |= UNIPOLAR_REF_TO_GND << IN_CH_CFG_SHIFT;
+    adcConfig[0] |= PDINPUTA1 << IN_CH_SEL_SHIFT;
+    adcConfig[0] |= FULL_BW << FULL_BW_SEL_SHIFT;
+    adcConfig[0] |= INT_REF4_096_AND_TEMP_SENS << REF_SEL_SHIFT;
+    adcConfig[0] |= DISABLE_SEQ << SEQ_EN_SHIFT;
+    adcConfig[0] |= READ_BACK_EN << READ_BACK_SHIFT;
+    adcConfig[0] <<= 2;
 
-    adcConfig |= OVERWRITE_CFG << CFG_SHIFT;
-    adcConfig |= UNIPOLAR_REF_TO_GND << IN_CH_CFG_SHIFT;
-    adcConfig |= PDINPUTA1 << IN_CH_SEL_SHIFT;
-    adcConfig |= FULL_BW << FULL_BW_SEL_SHIFT;
-    adcConfig |= INT_REF4_096_AND_TEMP_SENS << REF_SEL_SHIFT;
-    adcConfig |= DISABLE_SEQ << SEQ_EN_SHIFT;
-    adcConfig |= READ_BACK_DISABLE << READ_BACK_SHIFT;
-    adcConfig <<= 2;
+    // Set MCU_SPI3_SOMI_SW low to receive data from LED ADC
+    gioSetBit(mibspiPORT3, LED_PD_ADC_MISO_ENABLE_PIN, 1);
 
-    // Set MCU_SPI3_SOMI_SW low to receive data from PD ADC
-    //gioSetBit(mibspiPORT3, LED_PD_ADC_MISO_ENABLE_PIN, 1);
-
-    /* Send 2 dummy conversion to update config register on Photo Diode ADC */
-    /* First dummy conversion */
-    mibspiSetData(mibspiREG3, kpdAdcGroup, adcConfigPointer); //Set Config command
-    gioSetBit(mibspiPORT3, LED_ADC_CS_PIN, 0); //Start sending command
-    mibspiTransfer(mibspiREG3, kpdAdcGroup);
-    while(!(mibspiIsTransferComplete(mibspiREG3, kpdAdcGroup)));
-    gioSetBit(mibspiPORT3, LED_ADC_CS_PIN, 1);
-    for(int i=0; i<1000; i++); //Wait for sometime for conv/acq to complete
-
-    /* Wait for conversion to complete ~ 3.2 uS */
-    adcConfig = 0;
-    /* Second dummy conversion */
-    mibspiSetData(mibspiREG3, kpdAdcGroup, adcConfigPointer); //Set Config command
-    gioSetBit(mibspiPORT3, LED_ADC_CS_PIN, 0); //Start dummy conversion
-    mibspiTransfer(mibspiREG3, kpdAdcGroup);
-    while(!(mibspiIsTransferComplete(mibspiREG3, kpdAdcGroup)));
-    gioSetBit(mibspiPORT3, LED_ADC_CS_PIN, 1);
-    for(int i=0; i<1000; i++);
-
-    /* Set Configuration Value */
-    mibspiSetData(mibspiREG3, kpdAdcGroup, adcConfigPointer); //Set Config command
-    gioSetBit(mibspiPORT3, LED_ADC_CS_PIN, 0); //Start dummy conversion
-    mibspiTransfer(mibspiREG3, kpdAdcGroup);
-    while(!(mibspiIsTransferComplete(mibspiREG3, kpdAdcGroup)));
-    gioSetBit(mibspiPORT3, LED_ADC_CS_PIN, 1);
-    for(int i=0; i<1000; i++);
+    ADC7689ReadWrite(adcConfig, nAdcVal, LED_ADC_CS_PIN);
+    ADC7689ReadWrite(adcConfig, nAdcVal, LED_ADC_CS_PIN);
+    ADC7689ReadWrite(adcConfig, nAdcVal, LED_ADC_CS_PIN);
 }
 
 /**
@@ -618,24 +547,37 @@ uint16_t OpticsDriver::GetPhotoDiodeAdc(uint32_t nChanIdx)
     uint16_t nAdcVal[2] = {0x0000, 0x0000};
     uint16_t adcConfig[2] = {0x0000, 0x0000};
 
-#if 1
     /* Get Adc Value */
     adcConfig[0] |= OVERWRITE_CFG << CFG_SHIFT;
     adcConfig[0] |= UNIPOLAR_REF_TO_GND << IN_CH_CFG_SHIFT;
     adcConfig[0] |= (uint16_t) nChanIdx << IN_CH_SEL_SHIFT;
     adcConfig[0] |= FULL_BW << FULL_BW_SEL_SHIFT;
-    adcConfig[0] |= EXT_REF << REF_SEL_SHIFT;
+    adcConfig[0] |= INT_REF4_096_AND_TEMP_SENS << REF_SEL_SHIFT;
     adcConfig[0] |= DISABLE_SEQ << SEQ_EN_SHIFT;
     adcConfig[0] |= READ_BACK_EN << READ_BACK_SHIFT;
     adcConfig[0] <<= 2;
-#endif
 
     // Set MCU_SPI3_SOMI_SW low to receive data from PD ADC
     gioSetBit(mibspiPORT3, LED_PD_ADC_MISO_ENABLE_PIN, 0);
 
-    ADC7689ReadWrite(adcConfig, nAdcVal);
-    ADC7689ReadWrite(adcConfig, nAdcVal);
-    ADC7689ReadWrite(adcConfig, nAdcVal);
+    ADC7689ReadWrite(adcConfig, nAdcVal, PD_ADC_CS_PIN);
+    ADC7689ReadWrite(adcConfig, nAdcVal, PD_ADC_CS_PIN);
+    ADC7689ReadWrite(adcConfig, nAdcVal, PD_ADC_CS_PIN);
+
+    //gioSetBit(mibspiPORT3, LED_PD_ADC_MISO_ENABLE_PIN, 1);
+
+#if 0
+    /* Check if command is written correctly */
+    if (adcConfig[0] == nAdcVal[1])
+    {
+        printf("PD Write word is 0x%x and Read word is 0x%x\n", adcConfig[0], nAdcVal[1]);
+    }
+    else
+   {
+       printf("Write to PD ADC not successful!!! ");
+       printf("PD Write word is 0x%x and Read word is 0x%x\n", adcConfig[0], nAdcVal[1]);
+   }
+#endif
 
     return nAdcVal[0];
 }
@@ -695,55 +637,40 @@ uint16_t OpticsDriver::GetPhotoDiodeTemp(uint32_t nChanIdx)
  */
 uint16_t OpticsDriver::GetLedAdc(uint32_t nChanIdx)
 {
-    uint16_t nAdcVal = 0;
-    uint16_t *data = NULL;
-    uint16_t *adcConfigPointer = NULL;
-    uint16_t adcConfig = 0x0000;
-
-    data = &nAdcVal;
-    adcConfigPointer = &adcConfig;
+    uint16_t adcConfig[2] = {0x0000, 0x0000};
+    uint16_t nAdcVal[2] = {0x0000, 0x0000};
 
     /* Get Adc Value */
-    adcConfig |= OVERWRITE_CFG << CFG_SHIFT;
-    adcConfig |= UNIPOLAR_REF_TO_GND << IN_CH_CFG_SHIFT;
-    adcConfig |= (uint16_t) nChanIdx << IN_CH_SEL_SHIFT;
-    adcConfig |= FULL_BW << FULL_BW_SEL_SHIFT;
-    adcConfig |= INT_REF4_096_AND_TEMP_SENS << REF_SEL_SHIFT;
-    adcConfig |= DISABLE_SEQ << SEQ_EN_SHIFT;
-    adcConfig |= READ_BACK_DISABLE << READ_BACK_SHIFT;
-    adcConfig <<= 2;
+    adcConfig[0] |= OVERWRITE_CFG << CFG_SHIFT;
+    adcConfig[0] |= UNIPOLAR_REF_TO_GND << IN_CH_CFG_SHIFT;
+    adcConfig[0] |= (uint16_t) nChanIdx << IN_CH_SEL_SHIFT;
+    adcConfig[0] |= FULL_BW << FULL_BW_SEL_SHIFT;
+    adcConfig[0] |= INT_REF4_096_AND_TEMP_SENS << REF_SEL_SHIFT;
+    adcConfig[0] |= DISABLE_SEQ << SEQ_EN_SHIFT;
+    adcConfig[0] |= READ_BACK_EN << READ_BACK_SHIFT;
+    adcConfig[0] <<= 2;
 
     // Set MCU_SPI3_SOMI_SW low to receive data from PD ADC
     gioSetBit(mibspiPORT3, LED_PD_ADC_MISO_ENABLE_PIN, 1);
 
-    mibspiSetData(mibspiREG3, kpdAdcGroup, adcConfigPointer); //Set Config command
-    gioSetBit(mibspiPORT3, LED_ADC_CS_PIN, 0); //Start dummy conversion
-    mibspiTransfer(mibspiREG3, kpdAdcGroup);
-    while(!(mibspiIsTransferComplete(mibspiREG3, kpdAdcGroup)));
-    gioSetBit(mibspiPORT3, LED_ADC_CS_PIN, 1);
-    mibspiGetData(mibspiREG3, kpdAdcGroup, data); //Get ADC Value
-    for(int i=0; i<1000; i++);
+    ADC7689ReadWrite(adcConfig, nAdcVal, LED_ADC_CS_PIN);
+    ADC7689ReadWrite(adcConfig, nAdcVal, LED_ADC_CS_PIN);
+    ADC7689ReadWrite(adcConfig, nAdcVal, LED_ADC_CS_PIN);
 
-    adcConfig = 0;
+#if 0
+    /* Check if command is written correctly */
+    if (adcConfig[0] == nAdcVal[1])
+    {
+        printf("LED Write word is 0x%x and Read word is 0x%x\n", adcConfig[0], nAdcVal[1]);
+    }
+    else
+   {
+       printf("Write to LED ADC not successful!!! ");
+       printf("LED Write word is 0x%x and Read word is 0x%x\n", adcConfig[0], nAdcVal[1]);
+   }
+#endif
 
-    mibspiSetData(mibspiREG3, kpdAdcGroup, adcConfigPointer); //Set Config command
-    gioSetBit(mibspiPORT3, LED_ADC_CS_PIN, 0); //Start dummy conversion
-    mibspiTransfer(mibspiREG3, kpdAdcGroup);
-    while(!(mibspiIsTransferComplete(mibspiREG3, kpdAdcGroup)));
-    gioSetBit(mibspiPORT3, LED_ADC_CS_PIN, 1);
-    mibspiGetData(mibspiREG3, kpdAdcGroup, data); //Get ADC Value
-    for(int i=0; i<1000; i++);
-
-    mibspiSetData(mibspiREG3, kpdAdcGroup, adcConfigPointer); //Set Config command
-    gioSetBit(mibspiPORT3, LED_ADC_CS_PIN, 0); //Start dummy conversion
-    mibspiTransfer(mibspiREG3, kpdAdcGroup);
-    while(!(mibspiIsTransferComplete(mibspiREG3, kpdAdcGroup)));
-    gioSetBit(mibspiPORT3, LED_ADC_CS_PIN, 1);
-    mibspiGetData(mibspiREG3, kpdAdcGroup, data); //Get ADC Value
-    for(int i=0; i<1000; i++);
-
-    nAdcVal = *data;
-    return nAdcVal;
+    return nAdcVal[0];
 }
 
 /**
