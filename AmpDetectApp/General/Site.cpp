@@ -8,9 +8,8 @@ Site::Site(uint32_t nSiteIdx)
     ,_thermalDrv(nSiteIdx)
     ,_opticsDrv(nSiteIdx)
     ,_bMeerstetterPid(false)
-//    ,_pid((double)kPidTick_ms / 1000, 100000, -100000, 0.0, 0, 0.0)
-    ,_pid(1, 100000, -100000, 0.0, 0, 0.0)
-    ,_nTemperaturePidSlope(1000)
+    ,_pid(1, 100000, -100000, 0.0, 0.0, 0.0)
+    ,_nTemperaturePidSlope(1)
     ,_nTemperaturePidYIntercept(0)
     ,_nTempStableTolerance_mC(500) // + or -
     ,_nTempStableTime_ms(1000)
@@ -24,9 +23,9 @@ Site::Site(uint32_t nSiteIdx)
     _sysStatusSemId = xSemaphoreCreateMutex();
 }
 
-static double _nKp = 0.00081;
-static double _nKi = 0.00000065;
-static double _nKd = 0;
+//static double _nKp = 0.00081;
+//static double _nKi = 0.00000065;
+//static double _nKd = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -51,7 +50,7 @@ void Site::ExecutePcr()
     //Make certain we have latest temperature PID params.
     PersistentMem* pPMem = PersistentMem::GetInstance();
     PidParams pidParams = pPMem->GetTemperaturePidParams();
-    _pid.SetGains(_nKp, _nKi, _nKd);
+    _pid.SetGains(pidParams.GetKp(), pidParams.GetKi(), pidParams.GetKd());
     _nTemperaturePidSlope = pidParams.GetSlope();
     _nTemperaturePidYIntercept = pidParams.GetYIntercept();
 
@@ -202,6 +201,11 @@ void Site::ExecuteManualControl()
     int32_t nBlockTemp = _thermalDrv.GetBlockTemp();
     if (_nManControlState == kSetpointControl)
     {
+        //Make certain we have latest temperature PID params.
+        PersistentMem* pPMem = PersistentMem::GetInstance();
+        PidParams pidParams = pPMem->GetTemperaturePidParams();
+        _pid.SetGains(pidParams.GetKp(), pidParams.GetKi(), pidParams.GetKd());
+
         double nControlVar = _pid.calculate(_nManControlSetpoint_mC, nBlockTemp);
         _thermalDrv.SetControlVar((int32_t)(nControlVar * 1000));
         _thermalDrv.Enable();

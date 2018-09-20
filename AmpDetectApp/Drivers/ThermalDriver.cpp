@@ -3,11 +3,12 @@
 #include "mibspi.h"
 #include "het.h"
 #include "stdio.h"
+#include "PersistentMem.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-Pid          ThermalDriver::_pid(0.000050, 5500, -5000, 0.6, 0.2, 0);    //Fixed 2ohm load.
+Pid          ThermalDriver::_pid(0.000050, 5500, -5000, 0,0,0);    //Fixed 2ohm load.
 bool         ThermalDriver::_bCurrentPidEnabled = false;
 int32_t      ThermalDriver::_nSetpoint_mA;
 int32_t      ThermalDriver::_nA2DCounts = 0;
@@ -70,7 +71,12 @@ void ThermalDriver::SetPidParams(const PidParams& params)
 void ThermalDriver::Enable()
 {
     _pid.Init();
-    _pid.SetGains(0.6, 0.2, 0);
+
+    //Make certain we have latest current PID params.
+    PersistentMem* pPMem = PersistentMem::GetInstance();
+    PidParams pidParams = pPMem->GetCurrentPidParams();
+    _pid.SetGains(pidParams.GetKp(), pidParams.GetKi(), pidParams.GetKd());
+
     _bCurrentPidEnabled = true;
 }
 
