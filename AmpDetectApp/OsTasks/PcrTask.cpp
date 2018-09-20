@@ -34,7 +34,6 @@ void StartPcrTask(void * pvParameters)
 ///////////////////////////////////////////////////////////////////////////////
 PcrTask::PcrTask()
 {
-    _sysStatusSemId = xSemaphoreCreateMutex();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -53,25 +52,13 @@ void    PcrTask::ExecuteThread()
     {
         //Wait for PID delta time.
         vTaskDelayUntil (&nPrevWakeTime, (TickType_t)Site::kPidTick_ms / portTICK_PERIOD_MS);
-
-        //Make sure while updating the site, we do not try to read the site status.
-        xSemaphoreTake(_sysStatusSemId, portMAX_DELAY);
-        
-        //If the site is active.
-        if (_site.GetRunningFlg() == true)
-            _site.Execute();
-        else
-            _site.ManualControl();
-
-        xSemaphoreGive(_sysStatusSemId);
+        _site.Execute();
     }
 }
     
 ///////////////////////////////////////////////////////////////////////////////
 void    PcrTask::GetSysStatus(SysStatus* pSysStatus)
 {
-    //Make sure while we are reading the site status, we do not update the site.
-    xSemaphoreTake(_sysStatusSemId, portMAX_DELAY);
-    pSysStatus->SetSiteStatus(_site.GetStatus());
-    xSemaphoreGive(_sysStatusSemId);
+    //Copy the site's SiteStatus object to the SysStatus's SiteStatus object.
+    _site.GetSiteStatus(pSysStatus->GetSiteStatusPtr());
 }

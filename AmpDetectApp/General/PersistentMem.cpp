@@ -31,7 +31,7 @@ PersistentMem* PersistentMem::GetInstance()      //Singleton
     if (_pPersistentMem == nullptr)
     {
         //Initialize flash and wait for complete.
-/*        TI_Fee_Init();
+        TI_Fee_Init();
         uint16_t nStatus = UNINIT;
         while(nStatus != IDLE)
         {
@@ -41,7 +41,7 @@ PersistentMem* PersistentMem::GetInstance()      //Singleton
                 dummycnt--;
 
             nStatus = TI_Fee_GetStatus(0);
-        }*/
+        }
 
         _pPersistentMem = new PersistentMem;
     }
@@ -95,8 +95,8 @@ void PersistentMem::operator<<(const uint8_t* pData)
     _nSerialNum             = swap_uint32(*pSrc++);
     _nCanId                 = swap_uint32(*pSrc++);
     _nFluorDetectorType     = (FluorDetectorType)swap_uint32(*pSrc++);
-    _temeraturePidParams    << (uint8_t*)pSrc;
-    pSrc += _temeraturePidParams.GetStreamSize() / sizeof(uint32_t);
+    _temperaturePidParams    << (uint8_t*)pSrc;
+    pSrc += _temperaturePidParams.GetStreamSize() / sizeof(uint32_t);
     _currentPidParams       << (uint8_t*)pSrc;
     pSrc += _currentPidParams.GetStreamSize() / sizeof(uint32_t);
     _nCrc                   = swap_uint32(*pSrc++);
@@ -111,8 +111,8 @@ void PersistentMem::operator>>(uint8_t* pData)
     *pDst++ = swap_uint32(_nSerialNum);
     *pDst++ = swap_uint32(_nCanId);
     *pDst++ = swap_uint32((uint32_t)_nFluorDetectorType);
-    _temeraturePidParams >> (uint8_t*)pDst;
-    pDst += _temeraturePidParams.GetStreamSize() / sizeof(uint32_t);
+    _temperaturePidParams >> (uint8_t*)pDst;
+    pDst += _temperaturePidParams.GetStreamSize() / sizeof(uint32_t);
     _currentPidParams >> (uint8_t*)pDst;
     pDst += _currentPidParams.GetStreamSize() / sizeof(uint32_t);
 

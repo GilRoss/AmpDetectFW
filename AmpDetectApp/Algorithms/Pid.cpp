@@ -86,7 +86,7 @@ double PIDImpl::calculate( double setpoint, double pv )
     double Pout = _Kp * error;
 
     // Integral term
-    _integral += error * _dt;
+    _integral += error; // * _dt;
     double Iout = _Ki * _integral;
 
     // Derivative term
@@ -98,9 +98,15 @@ double PIDImpl::calculate( double setpoint, double pv )
 
     // Restrict to max/min
     if( output > _max )
+    {
         output = _max;
+        _integral -= error;
+    }
     else if( output < _min )
+    {
         output = _min;
+        _integral -= error;
+    }
 
     // Save error to previous error
     _pre_error = error;

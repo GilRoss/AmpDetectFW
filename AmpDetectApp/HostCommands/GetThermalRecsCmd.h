@@ -22,11 +22,16 @@ public:
 
     virtual void Execute()
     {
-        _response.ClearAllThermalRecs();
         Site* pSite = _pcrTask.GetSitePtr();
-        uint32_t nNumRecs = pSite->GetNumThermalRecs() > 10 ? 10 : pSite->GetNumThermalRecs();
-        for (int i = 0; i < (int)nNumRecs; i++)
-            _response.AddThermalRec(pSite->GetAndDelNextThermalRec());
+
+        //Determine max number of records that can fit into this response.
+        uint32_t nMaxRecs = HostMsg::kMaxResponseSize - _response.GetStreamSize();
+        nMaxRecs = nMaxRecs / sizeof(ThermalRec);
+
+        //Copy the records
+        pSite->GetAndDelThermalRecs(nMaxRecs, &_arThermalRecs);
+        for (int i = 0; i < (int)_arThermalRecs.size(); i++)
+            _response.AddThermalRec(_arThermalRecs[i]);
 
         _response.SetResponseHeader(_request, ErrCode::kNoError);
         _response >> _pMsgBuf;
@@ -36,8 +41,9 @@ public:
 protected:
   
 private:
-    HostMsg             _request;
-    GetThermalRecsRes   _response;
+    HostMsg                 _request;
+    GetThermalRecsRes       _response;
+    std::vector<ThermalRec> _arThermalRecs;
 };
 
 #endif // __GetThermalRecsCmd_H
