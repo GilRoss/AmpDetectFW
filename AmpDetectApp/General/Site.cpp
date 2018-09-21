@@ -71,7 +71,6 @@ void Site::ExecutePcr()
     {
         nControlVar = _pid.calculate(step.GetTargetTemp(), nBlockTemp);
         _thermalDrv.SetControlVar((int32_t)(nControlVar * 1000));
-        _thermalDrv.Enable();
 
         //If we have not yet stabilized on the setpoint?
         if (_siteStatus.GetTempStableFlg() == false)
@@ -207,7 +206,6 @@ void Site::ExecuteManualControl()
 
         double nControlVar = _pid.calculate(_nManControlTemperature_mC, nBlockTemp);
         _thermalDrv.SetControlVar((int32_t)(nControlVar * 1000));
-        _thermalDrv.Enable();
     }
     else if (_nManControlState == kCurrentControl)
     {
@@ -217,7 +215,6 @@ void Site::ExecuteManualControl()
         _thermalDrv.SetPidParams(pidParams);
 
         _thermalDrv.SetControlVar(_nManControlCurrent_mA);
-        _thermalDrv.Enable();
     }
     else    //Idle
     {
