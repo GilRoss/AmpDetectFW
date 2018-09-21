@@ -12,13 +12,15 @@
 #include        "LoadPcrProtocolCmd.h"
 #include        "GetThermalRecsCmd.h"
 #include        "GetOpticalRecsCmd.h"
-#include        "SetManControlSetpointCmd.h"
 #include        "SetPidParamsCmd.h"
 #include        "GetPidParamsCmd.h"
 #include        "SetOpticsLedCmd.h"
 #include        "GetOpticsDiodeCmd.h"
 #include        "GetOpticsLedAdcCmd.h"
 #include        "ReadOpticsCmd.h"
+#include        "DisableManualControlCmd.h"
+#include        "SetManControlTemperatureCmd.h"
+#include        "SetManControlCurrentCmd.h"
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -48,8 +50,6 @@ public:
             pHostCmd = new GetThermalRecsCmd(pMsgBuf, hostCommDrv, pcrTask);
         else if (nMsgId == HostMsg::MakeObjId('G', 'O', 'p', 't'))
             pHostCmd = new GetOpticalRecsCmd(pMsgBuf, hostCommDrv, pcrTask);
-        else if (nMsgId == HostMsg::MakeObjId('M', 'c', 'S', 'p'))
-            pHostCmd = new SetManControlSetpointCmd(pMsgBuf, hostCommDrv, pcrTask);
         else if (nMsgId == HostMsg::MakeObjId('S', 'P', 'i', 'd'))
             pHostCmd = new SetPidParamsCmd(pMsgBuf, hostCommDrv, pcrTask);
         else if (nMsgId == HostMsg::MakeObjId('G', 'P', 'i', 'd'))
@@ -62,6 +62,12 @@ public:
             pHostCmd = new GetOpticsLedAdcCmd(pMsgBuf, hostCommDrv, pcrTask);
         else if (nMsgId == HostMsg::MakeObjId('R', 'O', 'p', 't'))
             pHostCmd = new ReadOpticsCmd(pMsgBuf, hostCommDrv, pcrTask);
+        else if (nMsgId == HostMsg::MakeObjId('D', 'M', 'a', 'n'))
+            pHostCmd = new DisableManualControlCmd(pMsgBuf, hostCommDrv, pcrTask);
+        else if (nMsgId == HostMsg::MakeObjId('S', 'T', 'm', 'p'))
+            pHostCmd = new SetManControlTemperatureCmd(pMsgBuf, hostCommDrv, pcrTask);
+        else if (nMsgId == HostMsg::MakeObjId('S', 'C', 'u', 'r'))
+            pHostCmd = new SetManControlCurrentCmd(pMsgBuf, hostCommDrv, pcrTask);
 
         return pHostCmd;
     }

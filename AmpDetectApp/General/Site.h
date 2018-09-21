@@ -22,7 +22,7 @@ public:
     enum    {kMaxThermalRecs = 100};
     
     enum    ManCtrlState : uint32_t
-            {kIdle = 0, kSetpointControl, kOpticsLedControl};
+            {kIdle = 0, kTemperatureControl, kOpticsLedControl, kCurrentControl};
     
     Site(uint32_t nSiteIdx = 0);
     
@@ -41,7 +41,6 @@ public:
     ErrCode             StartRun(bool bMeerstetterPid);
     ErrCode             StopRun();
     ErrCode             PauseRun(bool bPause, bool bCaptureCameraImageFlg);
-    ErrCode             SetManControlSetpoint(int32_t nSp_mC);
     ErrCode             SetOpticsLed(uint32_t nChanIdx, uint32_t nIntensity, uint32_t nDuration);
     uint32_t            GetOpticsDiode(uint32_t nDiodeIdx);
     uint32_t            GetOpticsLedAdc(uint32_t nLedAdcIdx);
@@ -49,6 +48,10 @@ public:
     uint32_t            GetActiveLedTemperature();
     uint32_t            GetActiveDiodeTemperature();
     uint32_t            ReadOptics(uint32_t nLedIdx, uint32_t nDiodeIdx, uint32_t nLedIntensity, uint32_t nIntegrationTime_us);
+
+    ErrCode             DisableManualControl();
+    ErrCode             SetManControlTemperature(int32_t nSp_mC);
+    ErrCode             SetManControlCurrent(int32_t nSp_mA);
 
 protected:
   
@@ -73,7 +76,8 @@ private:
     
     ManCtrlState                _nManControlState;
     uint32_t                    _nDuration_us;
-    int32_t                     _nManControlSetpoint_mC;
+    int32_t                     _nManControlTemperature_mC;
+    int32_t                     _nManControlCurrent_mA;
 };
 
 #endif // __Site_H
