@@ -11,7 +11,7 @@ Site::Site(uint32_t nSiteIdx)
     ,_pid(1, 100000, -100000, 0.0, 0.0, 0.0)
     ,_nTemperaturePidSlope(1)
     ,_nTemperaturePidYIntercept(0)
-    ,_nTempStableTolerance_mC(500) // + or -
+    ,_nTempStableTolerance_mC(1000) // + or -
     ,_nTempStableTime_ms(1000)
     ,_arThermalRecs(kMaxThermalRecs)
     ,_nThermalAcqTimer_ms(0)
