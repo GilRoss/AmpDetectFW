@@ -11,21 +11,18 @@ Site::Site(uint32_t nSiteIdx)
     ,_pid(1, 100000, -100000, 0.0, 0.0, 0.0)
     ,_nTemperaturePidSlope(1)
     ,_nTemperaturePidYIntercept(0)
-    ,_nTempStableTolerance_mC(500) // + or -
+    ,_nTempStableTolerance_mC(1000) // + or -
     ,_nTempStableTime_ms(1000)
     ,_arThermalRecs(kMaxThermalRecs)
     ,_nThermalAcqTimer_ms(0)
     ,_nThermalRecPutIdx(0)
     ,_nThermalRecGetIdx(0)
     ,_nManControlState(kIdle)
-    ,_nManControlSetpoint_mC(0)
+    ,_nManControlTemperature_mC(0)
+    ,_nManControlCurrent_mA(0)
 {
     _sysStatusSemId = xSemaphoreCreateMutex();
 }
-
-//static double _nKp = 0.00081;
-//static double _nKi = 0.00000065;
-//static double _nKd = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -53,6 +50,8 @@ void Site::ExecutePcr()
     _pid.SetGains(pidParams.GetKp(), pidParams.GetKi(), pidParams.GetKd());
     _nTemperaturePidSlope = pidParams.GetSlope();
     _nTemperaturePidYIntercept = pidParams.GetYIntercept();
+    _nTempStableTolerance_mC = pidParams.GetStabilizationTolerance() *1000;
+    _nTempStableTime_ms = pidParams.GetStabilizationTime() * 1000;
 
     //Make certain we have latest current PID params.
 //    _thermalDrv.SetPidParams(pPMem->GetCurrentPidParams());
@@ -74,7 +73,6 @@ void Site::ExecutePcr()
     {
         nControlVar = _pid.calculate(step.GetTargetTemp(), nBlockTemp);
         _thermalDrv.SetControlVar((int32_t)(nControlVar * 1000));
-        _thermalDrv.Enable();
 
         //If we have not yet stabilized on the setpoint?
         if (_siteStatus.GetTempStableFlg() == false)
@@ -201,20 +199,18 @@ void Site::ExecuteManualControl()
 {
     //If the user is setting target temperatures.
     int32_t nBlockTemp = _thermalDrv.GetBlockTemp();
-    if (_nManControlState == kSetpointControl)
+    if (_nManControlState == kTemperatureControl)
     {
-        //Make certain we have latest temperature PID params.
-        PersistentMem* pPMem = PersistentMem::GetInstance();
-        PidParams pidParams = pPMem->GetTemperaturePidParams();
-        _pid.SetGains(pidParams.GetKp(), pidParams.GetKi(), pidParams.GetKd());
-
-        double nControlVar = _pid.calculate(_nManControlSetpoint_mC, nBlockTemp);
+        double nControlVar = _pid.calculate(_nManControlTemperature_mC, nBlockTemp);
         _thermalDrv.SetControlVar((int32_t)(nControlVar * 1000));
-        _thermalDrv.Enable();
+    }
+    else if (_nManControlState == kCurrentControl)
+    {
+        _thermalDrv.SetControlVar(_nManControlCurrent_mA);
     }
     else    //Idle
     {
-        _thermalDrv.Disable();
+//        _thermalDrv.Disable();
     }
 }
 
@@ -271,19 +267,44 @@ ErrCode Site::PauseRun(bool bPause, bool bCaptureCameraImageFlg)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-ErrCode Site::SetManControlSetpoint(int32_t nSp_mC)
+ErrCode Site::DisableManualControl()
+{
+    _thermalDrv.Disable();
+    _nManControlState = kIdle;
+    return ErrCode::kNoError;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+ErrCode Site::SetManControlTemperature(int32_t nSp_mC)
 {
     ErrCode     nErrCode = ErrCode::kNoError;
     
     //If there is not an active run on this site.
     if (_siteStatus.GetRunningFlg() == false)
     {
-        _nManControlSetpoint_mC = nSp_mC;
-        _nManControlState = kSetpointControl;
+        _nManControlTemperature_mC = nSp_mC;
+        _nManControlState = kTemperatureControl;
     }
     else
         nErrCode = ErrCode::kRunInProgressErr;
     
+    return nErrCode;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+ErrCode Site::SetManControlCurrent(int32_t nSp_mA)
+{
+    ErrCode     nErrCode = ErrCode::kNoError;
+
+    //If there is not an active run on this site.
+    if (_siteStatus.GetRunningFlg() == false)
+    {
+        _nManControlCurrent_mA = nSp_mA;
+        _nManControlState = kCurrentControl;
+    }
+    else
+        nErrCode = ErrCode::kRunInProgressErr;
+
     return nErrCode;
 }
 

@@ -41,6 +41,7 @@ public:
     virtual uint32_t GetStreamSize() const
     {
         uint32_t nSize = StreamingObj::GetStreamSize();
+        nSize += sizeof(_nSize);
         nSize += sizeof(_nSerialNum);
         nSize += sizeof(_nCanId);
         nSize += sizeof(_nFluorDetectorType);
@@ -58,26 +59,31 @@ protected:
 private:
     PersistentMem()         //Singleton
         : StreamingObj((MakeObjId('P', 'M', 'e', 'm')))
+        , _nSize(0)
         , _nSerialNum(0)
         , _nCanId(1)
         , _nFluorDetectorType(FluorDetectorType::kPhotoDiode)
-        , _temperaturePidParams(0.0007, 0.00007, 0, 1000, 0)
-        , _currentPidParams(0.4, 1475, 0, 1000, 0)
+        , _temperaturePidParams(0.0, 0.0, 0.0, 1.0, 0.0, 0.1, 0.5)
+        , _currentPidParams(0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
         , _nCrc(0)
     {
+        //Attempt to read the data from persistent memory.
         bool bSuccess = ReadFromFlash();
+
+        //If data found in persistent memory is not valid, write the default values.
         if (bSuccess == false)
             bSuccess = WriteToFlash();
     }
     static PersistentMem*   _pPersistentMem;
     static uint8_t          _arBuf[];
 
+    uint32_t             _nSize;
     uint32_t             _nSerialNum;
     uint32_t             _nCanId;
     FluorDetectorType    _nFluorDetectorType;
     PidParams            _temperaturePidParams;
     PidParams            _currentPidParams;
-    uint32_t             _nCrc;
+    uint32_t             _nCrc;                 //This must be last.
 };
 
 #endif /* PERSISTENTMEM_H_ */

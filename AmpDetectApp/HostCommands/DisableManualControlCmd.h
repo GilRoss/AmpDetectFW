@@ -1,5 +1,5 @@
-#ifndef __SetManControlSetpointCmd_H
-#define __SetManControlSetpointCmd_H
+#ifndef __DisableManualControlCmd_H
+#define __DisableManualControlCmd_H
 
 #include <cstdint>
 #include "HostCommand.h"
@@ -7,23 +7,23 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-class SetManControlSetpointCmd : public HostCommand
+class DisableManualControlCmd : public HostCommand
 {
 public:
-    SetManControlSetpointCmd(uint8_t* pMsgBuf, HostCommDriver& hostCommDrv, PcrTask& pcrTask)
+    DisableManualControlCmd(uint8_t* pMsgBuf, HostCommDriver& hostCommDrv, PcrTask& pcrTask)
         :HostCommand(pMsgBuf, hostCommDrv, pcrTask)
     {
-        _request << pMsgBuf;
+        _request << _pMsgBuf;   //De-serialize request buffer into request object.
     }
 
     virtual void Execute()
     {
-        //Try to set the setpoint.
         Site* pSite = _pcrTask.GetSitePtr();
-        ErrCode nErrCode = pSite->SetManControlSetpoint(_request.GetSetpoint());
+        ErrCode nErrCode = pSite->DisableManualControl();
         
         //Send response.
         _response.SetResponseHeader(_request, nErrCode);
+        _response.SetMsgSize(_response.GetStreamSize());
         _response >> _pMsgBuf;
         _hostCommDrv.TxMessage(_pMsgBuf, _response.GetStreamSize());
     }
@@ -31,8 +31,8 @@ public:
 protected:
   
 private:
-    SetManControlSetpointReq    _request;
-    HostMsg                     _response;
+    HostMsg     _request;
+    HostMsg     _response;
 };
 
-#endif // __SetManControlSetpointCmd_H
+#endif // __DisableManualControlCmd_H

@@ -42,16 +42,30 @@ void CurrentPidISR()
     ThermalDriver::CurrentPidISR();
 }
 
+static int nMax = 0;
+static int nMin = 0;
 void ThermalDriver::CurrentPidISR()
 {
     _nA2DCounts = ADS8330ReadWrite(0x0D, 0x0000);
+    _bCurrentPidEnabled = true;
     if (_bCurrentPidEnabled)
     {
+        if (nMax < (_nA2DCounts - 0x8000))
+            nMax = _nA2DCounts;
+        else if (nMin > (_nA2DCounts - 0x8000))
+            nMin = _nA2DCounts;
         _nA2DCounts = (~(((_nA2DCounts) + 410) - 0x7FFF)) + 1;
         double nControlVar = _pid.calculate((double)_nSetpoint_mA, (double)_nA2DCounts * 0.56);
 
-        AD5683Write(0x03, (uint16_t)((-nControlVar) + (0x8000 - ((nControlVar * 0.13) + 420))), false);
+        static int nCount = 0;
+        if (nCount & 0x80)
+            AD5683Write(0x03, (uint16_t)((550) + (0x8000 - 460)), false);
+        else
+            AD5683Write(0x03, (uint16_t)((0) + (0x8000 - 460)), false);
+        nCount++;
         gioSetBit(hetPORT1, PIN_HET_16, 1); //TEC_EN = true
+
+//        AD5683Write(0x03, (uint16_t)((-nControlVar) + (0x8000 - ((nControlVar * 0.13) + 420))), false);
     }
     else
     {
@@ -68,37 +82,31 @@ void ThermalDriver::SetPidParams(const PidParams& params)
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-void ThermalDriver::Enable()
-{
-    _pid.Init();
-
-    //Make certain we have latest current PID params.
-    PersistentMem* pPMem = PersistentMem::GetInstance();
-    PidParams pidParams = pPMem->GetCurrentPidParams();
-    _pid.SetGains(pidParams.GetKp(), pidParams.GetKi(), pidParams.GetKd());
-
-    _bCurrentPidEnabled = true;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
 void ThermalDriver::Reset()
 {
+    _pid.Init();
+    gioSetBit(hetPORT1, PIN_HET_16, 0); //TEC_EN = false
+
     //Initialize DAC8563
     SendDacMsg(CMD_RESET, 0, POWER_ON_RESET);
     SendDacMsg(CMD_ENABLE_INT_REF, 0, DISABLE_INT_REF_AND_RESET_DAC_GAINS_TO_1);
     SendDacMsg(CMD_SET_LDAC_PIN, 0, SET_LDAC_PIN_INACTIVE_DAC_B_INACTIVE_DAC_A);
     SendDacMsg(CMD_POWER_DAC, 0, POWER_DOWN_DAC_B_HI_Z);
     SetCurrentControlVar((0xFFFF / 2) + 180);
-    _bCurrentPidEnabled = true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 void ThermalDriver::SetControlVar(int32_t nControlVar)
 {
+    //Make certain we have latest current PID params.
+    PersistentMem* pPMem = PersistentMem::GetInstance();
+    PidParams pidParams = pPMem->GetCurrentPidParams();
+    _pid.SetGains(pidParams.GetKp(), pidParams.GetKi(), pidParams.GetKd());
+
     SetCurrentSetpoint(nControlVar);
     _bCurrentPidEnabled = true;
+    gioSetBit(hetPORT1, PIN_HET_16, 1); //TEC_EN = true
 }
 
 ///////////////////////////////////////////////////////////////////////////////
