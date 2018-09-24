@@ -42,15 +42,30 @@ void CurrentPidISR()
     ThermalDriver::CurrentPidISR();
 }
 
+static int nMax = 0;
+static int nMin = 0;
 void ThermalDriver::CurrentPidISR()
 {
     _nA2DCounts = ADS8330ReadWrite(0x0D, 0x0000);
+    _bCurrentPidEnabled = true;
     if (_bCurrentPidEnabled)
     {
+        if (nMax < (_nA2DCounts - 0x8000))
+            nMax = _nA2DCounts;
+        else if (nMin > (_nA2DCounts - 0x8000))
+            nMin = _nA2DCounts;
         _nA2DCounts = (~(((_nA2DCounts) + 410) - 0x7FFF)) + 1;
         double nControlVar = _pid.calculate((double)_nSetpoint_mA, (double)_nA2DCounts * 0.56);
 
-        AD5683Write(0x03, (uint16_t)((-nControlVar) + (0x8000 - ((nControlVar * 0.13) + 420))), false);
+        static int nCount = 0;
+        if (nCount & 0x80)
+            AD5683Write(0x03, (uint16_t)((550) + (0x8000 - 460)), false);
+        else
+            AD5683Write(0x03, (uint16_t)((0) + (0x8000 - 460)), false);
+        nCount++;
+        gioSetBit(hetPORT1, PIN_HET_16, 1); //TEC_EN = true
+
+//        AD5683Write(0x03, (uint16_t)((-nControlVar) + (0x8000 - ((nControlVar * 0.13) + 420))), false);
     }
     else
     {

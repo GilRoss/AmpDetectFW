@@ -50,6 +50,8 @@ void Site::ExecutePcr()
     _pid.SetGains(pidParams.GetKp(), pidParams.GetKi(), pidParams.GetKd());
     _nTemperaturePidSlope = pidParams.GetSlope();
     _nTemperaturePidYIntercept = pidParams.GetYIntercept();
+    _nTempStableTolerance_mC = pidParams.GetStabilizationTolerance() *1000;
+    _nTempStableTime_ms = pidParams.GetStabilizationTime() * 1000;
 
     //Make certain we have latest current PID params.
 //    _thermalDrv.SetPidParams(pPMem->GetCurrentPidParams());
@@ -197,28 +199,16 @@ void Site::ExecuteManualControl()
     int32_t nBlockTemp = _thermalDrv.GetBlockTemp();
     if (_nManControlState == kTemperatureControl)
     {
-        //Make certain we have latest temperature and current PID params.
-        PersistentMem* pPMem = PersistentMem::GetInstance();
-        PidParams pidParams = pPMem->GetTemperaturePidParams();
-        _pid.SetGains(pidParams.GetKp(), pidParams.GetKi(), pidParams.GetKd());
-        pidParams = pPMem->GetCurrentPidParams();
-        _thermalDrv.SetPidParams(pidParams);
-
         double nControlVar = _pid.calculate(_nManControlTemperature_mC, nBlockTemp);
         _thermalDrv.SetControlVar((int32_t)(nControlVar * 1000));
     }
     else if (_nManControlState == kCurrentControl)
     {
-        //Make certain we have latest temperature PID params.
-        PersistentMem* pPMem = PersistentMem::GetInstance();
-        PidParams pidParams = pPMem->GetCurrentPidParams();
-        _thermalDrv.SetPidParams(pidParams);
-
         _thermalDrv.SetControlVar(_nManControlCurrent_mA);
     }
     else    //Idle
     {
-        _thermalDrv.Disable();
+//        _thermalDrv.Disable();
     }
 }
 

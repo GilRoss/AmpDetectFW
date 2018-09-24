@@ -20,7 +20,7 @@ public:
     {
         //Try to set the setpoint.
         Site* pSite = _pcrTask.GetSitePtr();
-        ErrCode nErrCode = pSite->SetManControlCurrent(_request.GetSetpoint());
+        ErrCode nErrCode = pSite->SetManControlCurrent(_request.GetSetpoint() * 1000);
         
         //Send response.
         _response.SetResponseHeader(_request, nErrCode);
