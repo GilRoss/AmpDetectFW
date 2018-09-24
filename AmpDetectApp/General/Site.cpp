@@ -146,9 +146,11 @@ void Site::ExecutePcr()
                    opticsRec._nLedIdx               = optRead.GetLedIdx();
                    opticsRec._nDetectorIdx          = optRead.GetDetectorIdx();
                    opticsRec._nDarkRead             = _opticsDrv.GetDarkReading(optRead);
-                   opticsRec._nRefDarkRead          = _opticsDrv.GetPhotoDiodeAdc(optRead.GetReferenceIdx());
+                   opticsRec._nRefDarkRead          = _opticsDrv.GetActiveLedMonitorPDValue();
                    opticsRec._nIlluminatedRead      = _opticsDrv.GetIlluminatedReading(optRead);
-                   opticsRec._nRefIlluminatedRead   = _opticsDrv.GetPhotoDiodeAdc(optRead.GetReferenceIdx());
+                   opticsRec._nRefIlluminatedRead   = _opticsDrv.GetActiveLedMonitorPDValue();
+                   opticsRec._nActiveLedTemp_mC     = _opticsDrv.GetActiveLedTemp();
+                   opticsRec._nActiveDiodeTemp_mC   = _opticsDrv.GetActivePhotoDiodeTemp();
                    opticsRec._nShuttleTemp_mC       = 0;
                    _arOpticsRecs.push_back( opticsRec );
 

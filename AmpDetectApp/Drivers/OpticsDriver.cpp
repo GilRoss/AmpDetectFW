@@ -308,8 +308,8 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
 
 /**
  * Name: SetLedsOff()
- * Parameters:
- * Returns:
+ * Parameters: void
+ * Returns: void
  * Description: Turns off LED by setting intensity to 0.
  */
 void OpticsDriver::SetLedsOff()
@@ -326,15 +326,21 @@ void OpticsDriver::SetLedsOff()
     //gioSetBit(hetPORT1, LED_CTRL_S2, 1);
 }
 
+/**
+ * Name: SetLedOutputState()
+ * Parameters: uint32_t nChanIdx
+ * Returns: void
+ * Description:
+ */
 uint32_t OpticsDriver::SetLedOutputState (uint32_t nChanIdx)
-    {
+{
     uint32_t gpioOutputState = 0x00000000;
 
     gpioOutputState = gioGetPort(hetPORT1) & LED_MUX_MASK;
     gpioOutputState |= (nChanIdx << LED_CTRL_S0);
 
     return gpioOutputState;
-    }
+}
 
 /**
  * Name: GetPhotoDiodeValue()
@@ -488,7 +494,7 @@ void OpticsDriver::PhotoDiodeAdcConfig(void)
     adcConfig[0] |= UNIPOLAR_REF_TO_GND << IN_CH_CFG_SHIFT;
     adcConfig[0] |= PDINPUTA2 << IN_CH_SEL_SHIFT;
     adcConfig[0] |= FULL_BW << FULL_BW_SEL_SHIFT;
-    adcConfig[0] |= INT_REF4_096_AND_TEMP_SENS << REF_SEL_SHIFT;
+    adcConfig[0] |= EXT_REF << REF_SEL_SHIFT;
     adcConfig[0] |= DISABLE_SEQ << SEQ_EN_SHIFT;
     adcConfig[0] |= READ_BACK_EN << READ_BACK_SHIFT;
     adcConfig[0] <<= 2;
@@ -552,7 +558,7 @@ uint16_t OpticsDriver::GetPhotoDiodeAdc(uint32_t nChanIdx)
     adcConfig[0] |= UNIPOLAR_REF_TO_GND << IN_CH_CFG_SHIFT;
     adcConfig[0] |= (uint16_t) nChanIdx << IN_CH_SEL_SHIFT;
     adcConfig[0] |= FULL_BW << FULL_BW_SEL_SHIFT;
-    adcConfig[0] |= INT_REF4_096_AND_TEMP_SENS << REF_SEL_SHIFT;
+    adcConfig[0] |= EXT_REF << REF_SEL_SHIFT;
     adcConfig[0] |= DISABLE_SEQ << SEQ_EN_SHIFT;
     adcConfig[0] |= READ_BACK_EN << READ_BACK_SHIFT;
     adcConfig[0] <<= 2;
