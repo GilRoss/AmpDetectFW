@@ -8,7 +8,7 @@ Site::Site(uint32_t nSiteIdx)
     ,_thermalDrv(nSiteIdx)
     ,_opticsDrv(nSiteIdx)
     ,_bMeerstetterPid(false)
-    ,_pid(1, 100000, -100000, 0.0, 0.0, 0.0)
+    ,_pid(1, 550 * 20, -550 * 20, 0.0, 0.0, 0.0)
     ,_nTemperaturePidSlope(1)
     ,_nTemperaturePidYIntercept(0)
     ,_nTempStableTolerance_mC(1000) // + or -
@@ -53,9 +53,6 @@ void Site::ExecutePcr()
     _nTempStableTolerance_mC = pidParams.GetStabilizationTolerance() *1000;
     _nTempStableTime_ms = pidParams.GetStabilizationTime() * 1000;
 
-    //Make certain we have latest current PID params.
-//    _thermalDrv.SetPidParams(pPMem->GetCurrentPidParams());
-
     //Set setpoint according to the active segment and step.
     const Segment& seg = _pcrProtocol.GetSegment(_siteStatus.GetSegmentIdx());
     const Step& step = seg.GetStep(_siteStatus.GetStepIdx());
@@ -72,7 +69,7 @@ void Site::ExecutePcr()
     else //Homegrown PID
     {
         nControlVar = _pid.calculate(step.GetTargetTemp(), nBlockTemp);
-        _thermalDrv.SetControlVar((int32_t)(nControlVar * 1000));
+        _thermalDrv.SetControlVar((int32_t)(nControlVar));
 
         //If we have not yet stabilized on the setpoint?
         if (_siteStatus.GetTempStableFlg() == false)
@@ -208,7 +205,7 @@ void Site::ExecuteManualControl()
     }
     else    //Idle
     {
-//        _thermalDrv.Disable();
+        _thermalDrv.Disable();
     }
 }
 

@@ -17,7 +17,7 @@
 class Site
 {
 public:
-    enum    {kPidTick_ms = 10};
+    enum    {kPidTick_ms = 5};
     enum    {kThermalAcqPeriod_ms = 100};
     enum    {kMaxThermalRecs = 100};
     

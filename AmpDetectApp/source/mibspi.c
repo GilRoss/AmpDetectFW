@@ -516,7 +516,7 @@ uint32 i ;
 
     /** - MIBSPI1 Port pullup / pulldown enable*/
     mibspiREG1->PC7 = (uint32)((uint32)0U << 0U)  /* SCS[0] */
-                    | (uint32)((uint32)0U << 1U)  /* SCS[1] */
+                    | (uint32)((uint32)1U << 1U)  /* SCS[1] */
                     | (uint32)((uint32)0U << 2U)  /* SCS[2] */
                     | (uint32)((uint32)0U << 3U)  /* SCS[3] */
                     | (uint32)((uint32)0U << 4U)  /* SCS[4] */
