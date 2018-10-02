@@ -69,7 +69,7 @@ void Site::ExecutePcr()
     else //Homegrown PID
     {
         nControlVar = _pid.calculate(step.GetTargetTemp(), nBlockTemp);
-        _thermalDrv.SetControlVar((int32_t)(nControlVar));
+        _thermalDrv.SetControlVar((int32_t)nControlVar);
 
         //If we have not yet stabilized on the setpoint?
         if (_siteStatus.GetTempStableFlg() == false)

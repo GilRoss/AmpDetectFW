@@ -29,7 +29,7 @@ public:
     int32_t     GetISenseCounts();
     void        Reset();
     void        Disable() {_bCurrentPidEnabled = false;}
-    int32_t     convertVoltageToTemp(float nResistance_omhs, int standard = 0 /*Celcius*/);
+    int32_t     convertResistanceToTemp(float nResistance_omhs, int standard = 0 /*Celcius*/);
     void        SetPidParams(const PidParams& params);
     
 protected:
