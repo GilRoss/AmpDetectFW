@@ -167,6 +167,7 @@ public:
     uint32_t GetActiveLedMonitorPDValue(void);
     uint32_t GetActiveLedTemp(void);
     uint32_t GetActivePhotoDiodeTemp(void);
+    void IntegrateCommand(uint32_t nDuration_us);
     
 protected:
   

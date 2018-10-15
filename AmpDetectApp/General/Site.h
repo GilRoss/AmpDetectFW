@@ -48,6 +48,7 @@ public:
     uint32_t            GetActiveLedTemperature();
     uint32_t            GetActiveDiodeTemperature();
     uint32_t            ReadOptics(uint32_t nLedIdx, uint32_t nDiodeIdx, uint32_t nLedIntensity, uint32_t nIntegrationTime_us);
+    ErrCode             SetIntegration(uint32_t nDuration_us);
 
     ErrCode             DisableManualControl();
     ErrCode             SetManControlTemperature(int32_t nSp_mC);
@@ -78,6 +79,9 @@ private:
     uint32_t                    _nDuration_us;
     int32_t                     _nManControlTemperature_mC;
     int32_t                     _nManControlCurrent_mA;
+    int32_t                     _nStartTemperature_mC;
+    double                      _nFineTargetTemp_mC;
+    bool                        _nTargetTempReachedFlag;
 };
 
 #endif // __Site_H

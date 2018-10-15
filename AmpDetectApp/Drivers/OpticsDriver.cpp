@@ -174,6 +174,46 @@ uint32_t OpticsDriver::GetActivePhotoDiodeTemp(void)
     return (uint32_t)_nActivePhotoDiodeTemperature;
 }
 
+/* Function to start integrating using User command */
+void OpticsDriver::IntegrateCommand(uint32_t nDuration_us)
+{
+     hetSIGNAL_t signal;
+     signal.duty = 50;
+     signal.period = nDuration_us;
+     _integrationEnd = false;
+     /* Reset Integrator first */
+     SetIntegratorState(RESET_STATE, 0);
+     gioSetBit(hetPORT1, PDSR_LATCH_PIN, 1); //Enable Reset State
+     for(int i=0; i<delay_uS*5; i++); //Hold in reset state for 5 ms
+
+     /* Set Duration for Integration */
+     pwmSetSignal(hetRAM1, pwm0, signal);
+     pwmEnableNotification(hetREG1, pwm0, pwmEND_OF_PERIOD);
+
+     SetIntegratorState(INTEGRATE_STATE, 0);
+     /* Wait until interrupt occurs */
+     while (!_integrationEnd);
+     _integrationEnd = false;
+     gioSetBit(hetPORT1, PDSR_LATCH_PIN, 1); //Enable Integration State (start integrating)
+
+     /* CRITICAL TIMING --> These commands need to be completed in integration time specified */
+     //////////////////////////////////////////////////////////////////////////////////////////
+     SetIntegratorState(HOLD_STATE, 0); //Configure Hold state
+
+     /* Read LED Temperature, LED Monitoring PhotoDiode, PhotoDiode Temperature */
+     //_nActiveLedMonitorPDValue = GetLedAdc(MONITOR_PD); // Get Monitor PD value
+    // _nActiveLedTemperature = GetLedAdc(nledChanIdx);
+     //_nActivePhotoDiodeTemperature = GetPhotoDiodeTemp(npdChanIdx);
+     //////////////////////////////////////////////////////////////////////////////////////////
+
+     /* Wait for integrationTimeExpired flag to be set */
+     while (!_integrationEnd);
+     pwmDisableNotification(hetREG1, pwm0, pwmEND_OF_BOTH);
+
+     //SetIntegratorState(RESET_STATE, 0);
+     //gioSetBit(hetPORT1, LATCH_PIN, 1); //Enable Reset State
+}
+
 /**
  * Name: SetLedState()
  * Parameters:
@@ -432,8 +472,8 @@ uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChan
 
     //for(int i=0; i<delay_uS; i++);
 
-    //SetIntegratorState(RESET_STATE, npdChanIdx);
-    //gioSetBit(hetPORT1, LATCH_PIN, 1); //Enable Reset State
+    SetIntegratorState(RESET_STATE, npdChanIdx);
+    gioSetBit(hetPORT1, PDSR_LATCH_PIN, 1); //Enable Reset State
 
     return (uint32_t)adcValue;
 }

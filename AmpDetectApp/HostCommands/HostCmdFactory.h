@@ -15,6 +15,7 @@
 #include        "SetPidParamsCmd.h"
 #include        "GetPidParamsCmd.h"
 #include        "SetOpticsLedCmd.h"
+#include        "StartIntegrationCmd.h"
 #include        "GetOpticsDiodeCmd.h"
 #include        "GetOpticsLedAdcCmd.h"
 #include        "ReadOpticsCmd.h"
@@ -64,6 +65,8 @@ public:
             pHostCmd = new ReadOpticsCmd(pMsgBuf, hostCommDrv, pcrTask);
         else if (nMsgId == HostMsg::MakeObjId('D', 'M', 'a', 'n'))
             pHostCmd = new DisableManualControlCmd(pMsgBuf, hostCommDrv, pcrTask);
+        else if (nMsgId == HostMsg::MakeObjId('S', 't', 'I', 'n'))
+            pHostCmd = new StartIntegrationCmd(pMsgBuf, hostCommDrv, pcrTask);
         else if (nMsgId == HostMsg::MakeObjId('S', 'T', 'm', 'p'))
             pHostCmd = new SetManControlTemperatureCmd(pMsgBuf, hostCommDrv, pcrTask);
         else if (nMsgId == HostMsg::MakeObjId('S', 'C', 'u', 'r'))

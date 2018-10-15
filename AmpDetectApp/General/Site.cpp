@@ -20,6 +20,9 @@ Site::Site(uint32_t nSiteIdx)
     ,_nManControlState(kIdle)
     ,_nManControlTemperature_mC(0)
     ,_nManControlCurrent_mA(0)
+    ,_nStartTemperature_mC(0)
+    ,_nFineTargetTemp_mC(0)
+    ,_nTargetTempReachedFlag(false)
 {
     _sysStatusSemId = xSemaphoreCreateMutex();
 }
@@ -59,6 +62,7 @@ void Site::ExecutePcr()
     static int cameraCaptureCount = 0;
     
     int32_t nBlockTemp = _thermalDrv.GetBlockTemp();
+    /* Check if Step hasn't started and set Start Temperature to block temperature */
     _siteStatus.SetTemperature(nBlockTemp);
     double nControlVar = 0;
     if (_bMeerstetterPid == true)
@@ -68,15 +72,71 @@ void Site::ExecutePcr()
     }
     else //Homegrown PID
     {
-        nControlVar = _pid.calculate(step.GetTargetTemp(), nBlockTemp);
+        if (_siteStatus.GetStepTimer() == 0)
+        {
+            _nStartTemperature_mC = nBlockTemp;
+            _nFineTargetTemp_mC = (double)_nStartTemperature_mC;
+            _nTargetTempReachedFlag = false;
+        }
+        if(step.GetRampRate() > 0)
+        {
+
+            if ((step.GetTargetTemp() - _nStartTemperature_mC) >= 0)
+            {
+                if (_nFineTargetTemp_mC < step.GetTargetTemp())
+                    _nFineTargetTemp_mC += (step.GetRampRate()/40);
+                else
+                {
+                    _nFineTargetTemp_mC = step.GetTargetTemp();
+                    _nTargetTempReachedFlag = true;
+                }
+            }
+            else
+            {
+                if (_nFineTargetTemp_mC > step.GetTargetTemp())
+                    _nFineTargetTemp_mC -= (step.GetRampRate()/40);
+                else
+                {
+                    _nFineTargetTemp_mC = step.GetTargetTemp();
+                    _nTargetTempReachedFlag = true;
+                }
+            }
+        }
+        else
+        {
+            if (_nTargetTempReachedFlag == false)
+            {
+                if ((step.GetTargetTemp() - _nStartTemperature_mC) >= 0)
+                {
+                    if (nBlockTemp >= step.GetTargetTemp())
+                    {
+                        _nTargetTempReachedFlag = true;
+                    }
+                }
+                else
+                {
+                    if (nBlockTemp <= step.GetTargetTemp())
+                    {
+                        _nTargetTempReachedFlag = true;
+                    }
+                }
+
+            }
+            _nFineTargetTemp_mC = step.GetTargetTemp();
+        }
+
+        nControlVar = _pid.calculate(_nFineTargetTemp_mC, nBlockTemp);
+        //nControlVar = _pid.calculate(step.GetTargetTemp(), nBlockTemp);
+        //nControlVar = _pid.calculate()
         _thermalDrv.SetControlVar((int32_t)nControlVar);
 
         //If we have not yet stabilized on the setpoint?
         if (_siteStatus.GetTempStableFlg() == false)
         {
             //Is temperature within tolerance?
-            if ((nBlockTemp >= (step.GetTargetTemp() - _nTempStableTolerance_mC)) &&
-                (nBlockTemp <= (step.GetTargetTemp() + _nTempStableTolerance_mC)))
+            //if ((nBlockTemp >= (step.GetTargetTemp() - _nTempStableTolerance_mC)) &&
+            //    (nBlockTemp <= (step.GetTargetTemp() + _nTempStableTolerance_mC)))
+            if (_nTargetTempReachedFlag == true)
             {
                 _siteStatus.SetStableTimer(_siteStatus.GetStableTimer() + kPidTick_ms);
                 if (_siteStatus.GetStableTimer() >= _nTempStableTime_ms)
@@ -423,6 +483,22 @@ uint32_t Site::GetActiveDiodeTemperature()
     }
 
     return activeDiodeTemp;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+ErrCode Site::SetIntegration(uint32_t nDuration_us)
+{
+    ErrCode     nErrCode = ErrCode::kNoError;
+
+    //If there is not an active run on this site.
+    if (_siteStatus.GetRunningFlg() == false)
+    {
+        _opticsDrv.IntegrateCommand(nDuration_us);
+    }
+    else
+        nErrCode = ErrCode::kRunInProgressErr;
+
+    return nErrCode;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
