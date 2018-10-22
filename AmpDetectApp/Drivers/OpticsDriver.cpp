@@ -429,14 +429,18 @@ uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChan
         break;
     }
 
+    /* Turn On LED */
+    SetLedIntensity(nledChanIdx, nLedIntensity);
+    for(int i=0; i<delay_uS*1; i++); //Hold for 10 ms time after turning on LED
+
     /* Reset Integrator first */
     SetIntegratorState(RESET_STATE, npdChanIdx);
     gioSetBit(hetPORT1, PDSR_LATCH_PIN, 1); //Enable Reset State
     for(int i=0; i<delay_uS*5; i++); //Hold in reset state for 5 ms
 
     /* Turn On LED */
-    SetLedIntensity(nledChanIdx, nLedIntensity);
-    for(int i=0; i<delay_uS*10; i++); //Hold for 10 ms time after turning on LED
+    //SetLedIntensity(nledChanIdx, nLedIntensity);
+    //for(int i=0; i<delay_uS*1; i++); //Hold for 10 ms time after turning on LED
 
     /* Set Duration for Integration */
     pwmSetSignal(hetRAM1, pwm0, signal);
@@ -453,9 +457,9 @@ uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChan
     SetIntegratorState(HOLD_STATE, npdChanIdx); //Configure Hold state
 
     /* Read LED Temperature, LED Monitoring PhotoDiode, PhotoDiode Temperature */
-    _nActiveLedMonitorPDValue = GetLedAdc(MONITOR_PD); // Get Monitor PD value
-    _nActiveLedTemperature = GetLedAdc(nledChanIdx);
-    _nActivePhotoDiodeTemperature = GetPhotoDiodeTemp(npdChanIdx);
+    //_nActiveLedMonitorPDValue = GetLedAdc(MONITOR_PD); // Get Monitor PD value
+    //_nActiveLedTemperature = GetLedAdc(nledChanIdx);
+    //_nActivePhotoDiodeTemperature = GetPhotoDiodeTemp(npdChanIdx);
     //////////////////////////////////////////////////////////////////////////////////////////
 
     /* Wait for integrationTimeExpired flag to be set */
@@ -464,7 +468,7 @@ uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChan
 
     for(int i=0; i<delay_uS; i++); //1 ms delay
     /* Turn Off LED */
-    SetLedsOff();
+    //SetLedsOff();
 
     for(int i=0; i<delay_uS; i++); //Hold for 1 ms time before reading
 
@@ -474,6 +478,13 @@ uint32_t OpticsDriver::GetPhotoDiodeValue(uint32_t nledChanIdx, uint32_t npdChan
 
     SetIntegratorState(RESET_STATE, npdChanIdx);
     gioSetBit(hetPORT1, PDSR_LATCH_PIN, 1); //Enable Reset State
+
+    /* Read LED Temperature, LED Monitoring PhotoDiode, PhotoDiode Temperature */
+    _nActiveLedMonitorPDValue = GetLedAdc(MONITOR_PD); // Get Monitor PD value
+    _nActiveLedTemperature = GetLedAdc(nledChanIdx);
+    _nActivePhotoDiodeTemperature = GetPhotoDiodeTemp(npdChanIdx);
+
+    SetLedsOff();
 
     return (uint32_t)adcValue;
 }
@@ -740,11 +751,13 @@ void OpticsDriver::SetIntegratorState(pdIntegratorState state, uint32_t npdChanI
             serialDataIn = 0x0000;
             break;
         case HOLD_STATE:
-            serialDataIn = 0xFFFF;
+            //serialDataIn = 0xFFFF;
+            serialDataIn = ((0x0000 | (uint8_t) npdChanIdx) << 8) | (uint8_t) npdChanIdx;
             break;
         case INTEGRATE_STATE:
             //serialDataIn = 0x0000 | (uint8_t) npdChanIdx;
-            serialDataIn = 0x00FF;
+            //serialDataIn = 0x00FF;
+            serialDataIn = 0x0000 | (uint8_t) npdChanIdx;
             break;
         default:
             break;
