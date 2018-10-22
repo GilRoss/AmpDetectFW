@@ -8,7 +8,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-Pid          ThermalDriver::_pid(0.000050, 5500, -5000, 0,0,0);    //Fixed 2ohm load.
+Pid          ThermalDriver::_pid(0.000050, 7000, -7000, 0,0,0);    //Fixed 2ohm load.
 bool         ThermalDriver::_bCurrentPidEnabled = false;
 int32_t      ThermalDriver::_nSetpoint_mA;
 int32_t      ThermalDriver::_nA2DCounts = 0;
