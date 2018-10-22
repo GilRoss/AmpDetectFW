@@ -11,8 +11,8 @@ Site::Site(uint32_t nSiteIdx)
     ,_pid(1, 550 * 20, -550 * 20, 0.0, 0.0, 0.0)
     ,_nTemperaturePidSlope(1)
     ,_nTemperaturePidYIntercept(0)
-    ,_nTempStableTolerance_mC(1000) // + or -
-    ,_nTempStableTime_ms(1000)
+    ,_nTempStableTolerance_mC(500) // + or -
+    ,_nTempStableTime_ms(0)
     ,_arThermalRecs(kMaxThermalRecs)
     ,_nThermalAcqTimer_ms(0)
     ,_nThermalRecPutIdx(0)
@@ -60,6 +60,7 @@ void Site::ExecutePcr()
     const Segment& seg = _pcrProtocol.GetSegment(_siteStatus.GetSegmentIdx());
     const Step& step = seg.GetStep(_siteStatus.GetStepIdx());
     static int cameraCaptureCount = 0;
+    bool pidControlFlag = true;
     
     int32_t nBlockTemp = _thermalDrv.GetBlockTemp();
     /* Check if Step hasn't started and set Start Temperature to block temperature */
@@ -72,12 +73,14 @@ void Site::ExecutePcr()
     }
     else //Homegrown PID
     {
+#if 1
         if (_siteStatus.GetStepTimer() == 0)
         {
             _nStartTemperature_mC = nBlockTemp;
             _nFineTargetTemp_mC = (double)_nStartTemperature_mC;
             _nTargetTempReachedFlag = false;
         }
+
         if(step.GetRampRate() > 0)
         {
 
@@ -104,39 +107,56 @@ void Site::ExecutePcr()
         }
         else
         {
-            if (_nTargetTempReachedFlag == false)
+            /* Set maximimum current until block temperature is 5 degC within target temperate*/
+            if ((step.GetTargetTemp() - _nStartTemperature_mC) >= 0)
             {
-                if ((step.GetTargetTemp() - _nStartTemperature_mC) >= 0)
+                if ((step.GetTargetTemp() - nBlockTemp) >= 5000)
                 {
-                    if (nBlockTemp >= step.GetTargetTemp())
-                    {
-                        _nTargetTempReachedFlag = true;
-                    }
+                    pidControlFlag = false;
                 }
                 else
+                    pidControlFlag = true;
+            }
+            else
+            {
+                if ((nBlockTemp - step.GetTargetTemp()) >= 5000)
                 {
-                    if (nBlockTemp <= step.GetTargetTemp())
-                    {
-                        _nTargetTempReachedFlag = true;
-                    }
+                    pidControlFlag = false;
                 }
-
+                else
+                    pidControlFlag = true;
             }
             _nFineTargetTemp_mC = step.GetTargetTemp();
         }
-
-        nControlVar = _pid.calculate(_nFineTargetTemp_mC, nBlockTemp);
+#endif
+        /* Calculate pid only when pidControlFlag is true */
+        if (pidControlFlag == true)
+        {
+            nControlVar = _pid.calculate(_nFineTargetTemp_mC, nBlockTemp);
+        }
+        else
+        {
+            if ((step.GetTargetTemp() - _nStartTemperature_mC) > 0)
+            {
+                /* max positive current */
+                nControlVar = 11200;
+            }
+            else if ((step.GetTargetTemp() - _nStartTemperature_mC) < 0)
+            {
+                /* max negative current */
+                nControlVar = -11200;
+            }
+        }
         //nControlVar = _pid.calculate(step.GetTargetTemp(), nBlockTemp);
-        //nControlVar = _pid.calculate()
         _thermalDrv.SetControlVar((int32_t)nControlVar);
 
         //If we have not yet stabilized on the setpoint?
         if (_siteStatus.GetTempStableFlg() == false)
         {
             //Is temperature within tolerance?
-            //if ((nBlockTemp >= (step.GetTargetTemp() - _nTempStableTolerance_mC)) &&
-            //    (nBlockTemp <= (step.GetTargetTemp() + _nTempStableTolerance_mC)))
-            if (_nTargetTempReachedFlag == true)
+            if ((nBlockTemp >= (step.GetTargetTemp() - _nTempStableTolerance_mC)) &&
+                (nBlockTemp <= (step.GetTargetTemp() + _nTempStableTolerance_mC)))
+            //if (_nTargetTempReachedFlag == true)
             {
                 _siteStatus.SetStableTimer(_siteStatus.GetStableTimer() + kPidTick_ms);
                 if (_siteStatus.GetStableTimer() >= _nTempStableTime_ms)
