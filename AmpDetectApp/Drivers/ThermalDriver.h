@@ -18,17 +18,25 @@ class ThermalDriver
 public:
     enum    {kCurrent0Amps = 0x8000 - 1000};
 
+    enum currentPidState {
+        kPidOff,
+        kPidOn,
+        kPidMaxPosPower,
+        kPidMaxNegPower,
+    };
+
     ThermalDriver(uint32_t nSiteIdx = 0);
     
     static void CurrentPidISR();
     void        SetControlVar(int32_t nControlVar);
+    void        SetPidState(uint32_t nState);
     bool        TempIsStable();
     int32_t     GetSampleTemp();
     int32_t     GetSinkTemp()   {return 0;}
     int32_t     GetBlockTemp();
     int32_t     GetISenseCounts();
     void        Reset();
-    void        Disable() {_bCurrentPidEnabled = false;}
+    void        Disable() {_pidState = kPidOff;}
     int32_t     convertResistanceToTemp(float nResistance_omhs, int standard = 0 /*Celcius*/);
     void        SetPidParams(const PidParams& params);
     
@@ -47,14 +55,16 @@ private:
     static void         ADS8330Init();
 
     static Pid          _pid;
-    static bool         _bCurrentPidEnabled;
+    //static bool         _bCurrentPidEnabled;
     static int32_t      _nSetpoint_mA;
     static int32_t      _nA2DCounts;
+    static uint32_t     _pidState;
 
     const static conversion   s_convTable[];
 
     //Control bits for D/A.
     enum    {kClearBit = 5, kSyncBit = 6, kLdacBit = 7};
+
 
     enum Spi1SomiSrc {
         kTecAdc,

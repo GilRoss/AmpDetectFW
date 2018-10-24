@@ -113,26 +113,38 @@ void Site::ExecutePcr()
                 if ((step.GetTargetTemp() - nBlockTemp) >= 5000)
                 {
                     pidControlFlag = false;
+                    _thermalDrv.SetPidState(_thermalDrv.kPidMaxPosPower);
                 }
                 else
+                {
                     pidControlFlag = true;
+                    //printf("Positive Temp within 5 deg C\n");
+                }
+
             }
             else
             {
                 if ((nBlockTemp - step.GetTargetTemp()) >= 5000)
                 {
                     pidControlFlag = false;
+                    _thermalDrv.SetPidState(_thermalDrv.kPidMaxNegPower);
                 }
                 else
+                {
                     pidControlFlag = true;
+                    //printf("Negative Temp within 5 deg C\n");
+                }
             }
             _nFineTargetTemp_mC = step.GetTargetTemp();
         }
 #endif
+#if 1
         /* Calculate pid only when pidControlFlag is true */
         if (pidControlFlag == true)
         {
             nControlVar = _pid.calculate(_nFineTargetTemp_mC, nBlockTemp);
+            //_thermalDrv.SetPidState(_thermalDrv.kPidOn);
+            _thermalDrv.SetControlVar((int32_t)nControlVar);
         }
         else
         {
@@ -147,8 +159,10 @@ void Site::ExecutePcr()
                 nControlVar = -11200;
             }
         }
+#endif
         //nControlVar = _pid.calculate(step.GetTargetTemp(), nBlockTemp);
-        _thermalDrv.SetControlVar((int32_t)nControlVar);
+        //nControlVar = _pid.calculate(_nFineTargetTemp_mC, nBlockTemp);
+        //_thermalDrv.SetControlVar((int32_t)nControlVar);
 
         //If we have not yet stabilized on the setpoint?
         if (_siteStatus.GetTempStableFlg() == false)

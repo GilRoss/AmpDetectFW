@@ -9,9 +9,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 Pid          ThermalDriver::_pid(0.000050, 7000, -7000, 0,0,0);    //Fixed 2ohm load.
-bool         ThermalDriver::_bCurrentPidEnabled = false;
+//bool         ThermalDriver::_bCurrentPidEnabled = false;
+uint32_t     ThermalDriver::_pidState = kPidOff;
 int32_t      ThermalDriver::_nSetpoint_mA;
 int32_t      ThermalDriver::_nA2DCounts = 0;
+
+#define adcIncrement (5)
+
+static uint16_t adcCount = 26000;
 
 
 
@@ -45,16 +50,47 @@ void CurrentPidISR()
 void ThermalDriver::CurrentPidISR()
 {
     _nA2DCounts = ADS8330ReadWrite(0x0D, 0x0000);
-    if (_bCurrentPidEnabled)
+    if (_pidState == kPidOn)
     {
         _nA2DCounts = (~(((_nA2DCounts) + 410) - 0x7FFF)) + 1;
         double nControlVar = _pid.calculate((double)_nSetpoint_mA, (double)_nA2DCounts * 0.56);
 
         AD5683Write(0x03, (uint16_t)((-nControlVar) + (0x8000 - ((nControlVar * 0.13) + 420))), false);
     }
+    else if (_pidState == kPidMaxPosPower)
+    {
+        //gioSetBit(hetPORT1, PIN_HET_16, 1);
+        //AD5683Write(0x03, (uint16_t) 57235, false);
+        //_nA2DCounts = 25000;
+        double nControlVar = 24000;
+        _nA2DCounts = (~(((_nA2DCounts) + 410) - 0x7FFF)) + 1;
+        AD5683Write(0x03, (uint16_t) nControlVar, false);
+        //AD5683Write(0x03, (uint16_t) adcCount, false);
+        //adcCount += adcIncrement;
+    }
+    else if (_pidState == kPidMaxNegPower)
+    {
+        //_nA2DCounts = 39768;
+        double nControlVar = 39000;
+        _nA2DCounts = (~(((_nA2DCounts) + 410) - 0x7FFF)) + 1;
+        //gioSetBit(hetPORT1, PIN_HET_16, 1);
+        AD5683Write(0x03, (uint16_t) nControlVar, false);
+    }
     else
     {
         gioSetBit(hetPORT1, PIN_HET_16, 0); //TEC_EN = false
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+void ThermalDriver::SetPidState(uint32_t nState)
+{
+    _pidState = nState;
+
+    if (_pidState != kPidOff)
+    {
+        gioSetBit(hetPORT1, PIN_HET_16, 1);
     }
 }
 
@@ -90,7 +126,8 @@ void ThermalDriver::SetControlVar(int32_t nControlVar)
     _pid.SetGains(pidParams.GetKp(), pidParams.GetKi(), pidParams.GetKd());
 
     SetCurrentSetpoint(nControlVar);
-    _bCurrentPidEnabled = true;
+    //_bCurrentPidEnabled = true;
+    _pidState = kPidOn;
     gioSetBit(hetPORT1, PIN_HET_16, 1); //TEC_EN = true
 }
 

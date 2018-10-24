@@ -12,10 +12,8 @@ bool        OpticsDriver::_integrationEnd = false;
 uint16_t    OpticsDriver::_nActiveLedTemperature = 0;
 uint16_t    OpticsDriver::_nActiveLedMonitorPDValue = 0;
 uint16_t    OpticsDriver::_nActivePhotoDiodeTemperature = 0;
-#define delay_uS 10000
 
-#define LED_TEST (1)
-#define NOT_PD_TEST (1)
+#define delay_uS 10000
 
 /**
  * Name: OpticsDriver
@@ -25,108 +23,8 @@ uint16_t    OpticsDriver::_nActivePhotoDiodeTemperature = 0;
  */
 OpticsDriver::OpticsDriver(uint32_t nSiteIdx)
 {
-#if 0
-    int i = 1;
-    int temp = 0;
-    int j = 0;
-    int upperlimit = 40000;
-    int lowerlimit = 0;
-    int stepsize = 500;
-#endif
     /* Initialize LED and PD Board Driver */
     OpticsDriverInit();
-#if 0
-    while (1)
-    {
-        if (i > 6)
-            i = 1;
-        //else if (i == 5)
-        //    i = 8;
-
-        if (j == upperlimit)
-        {
-            temp = 1;
-}
-        else if (j == lowerlimit)
-        {
-            temp = 0;
-            //SetLedsOff();
-        }
-
-        if (temp)
-        {
-            for (j = upperlimit; j>lowerlimit; j-=stepsize)
-            {
-                SetLedIntensity(i, j);
-                vTaskDelay (5 / portTICK_PERIOD_MS);
-                //SetLedIntensity(i, 250);
-            //        SetLedIntensity(i, 500);
-            //        SetLedIntensity(1, 1000);
-            //    vTaskDelay (1000 / portTICK_PERIOD_MS);
-                //SetLedIntensity(i, 0);
-                //SetLedsOff();
-                //vTaskDelay (10 / portTICK_PERIOD_MS);
-                //i++;
-                //SetLedIntensity(i, 0);
-            }
-        }
-        else
-        {
-            for (j = lowerlimit; j <upperlimit; j+=stepsize)
-            {
-                SetLedIntensity(i, j);
-                vTaskDelay (5 / portTICK_PERIOD_MS);
-                //SetLedIntensity(i, 250);
-            //        SetLedIntensity(i, 500);
-            //        SetLedIntensity(1, 1000);
-            //    vTaskDelay (1000 / portTICK_PERIOD_MS);
-                //SetLedIntensity(i, 0);
-                //SetLedsOff();
-                //vTaskDelay (10 / portTICK_PERIOD_MS);
-                //i++;
-                //SetLedIntensity(i, 0);
-            }
-        }
-
-        //SetLedIntensity(i, 0);
-        //vTaskDelay (1000 / portTICK_PERIOD_MS);
-        for (int count = 0; count < 1; count++)
-        {
-            //SetLedIntensity(i, 5000);
-        //        SetLedIntensity(i, 500);
-        //        SetLedIntensity(1, 1000);
-            vTaskDelay (10 / portTICK_PERIOD_MS);
-            SetLedIntensity(i, 0);
-            //SetLedsOff();
-            vTaskDelay (10 / portTICK_PERIOD_MS);
-            SetLedIntensity(i, 10000);
-            //vTaskDelay (10 / portTICK_PERIOD_MS);
-        }
-
-        i++;
-        //for(int i=0; i<delay_uS; i++);
-    }
-#endif
-#ifdef PD_TEST
-    uint16_t pdValue = 0;
-    uint16_t ledValue = 0;
-    while (1)
-    {
-        for (int idx=0; idx<6; idx++)
-        {
-           //vTaskDelay (10 / portTICK_PERIOD_MS);
-           //SetLedIntensity(idx, 1000);
-           //pdValue = GetPhotoDiodeAdc(idx);
-           pdValue = GetPhotoDiodeValue(idx, idx, 10000, 250);
-           //ledValue = GetLedAdc(idx);
-           vTaskDelay (10 / portTICK_PERIOD_MS);
-           //SetLedsOff();
-
-           // pdValue = GetPhotoDiodeValue(idx, idx, 10000, 5000);
-        }
-    }
-#endif
-
 }
 
 /**
