@@ -154,68 +154,21 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
     uint16_t ledData[2] = {0x0000, 0x0000}; // Write input/DAC
     uint32_t gpioOutputState = 0x00000000;
 
-#if 0
+#if 1
+    /* Follow this sequence: Set DAC to 0, Close FET, Set Desired DAC value */
 
-    if (nLedIntensity == 0)
-    {
-       //gpioOutputState = SetLedOutputState(7);
-       //gioSetPort(hetPORT1, gpioOutputState);
-        SetLedsOff();
-    }
-    else
-    {
-        switch(nChanIdx)
-        {
-            case 1:
-                gioSetBit(hetPORT1, LED_CTRL_S2, 0);
-                gioSetBit(hetPORT1, LED_CTRL_S1, 0);
-                gioSetBit(hetPORT1, LED_CTRL_S0, 0);
-                break;
-            case 2:
-                gioSetBit(hetPORT1, LED_CTRL_S2, 0);
-                gioSetBit(hetPORT1, LED_CTRL_S1, 0);
-                gioSetBit(hetPORT1, LED_CTRL_S0, 1);
-                break;
-            case 3:
-                gioSetBit(hetPORT1, LED_CTRL_S2, 0);
-                gioSetBit(hetPORT1, LED_CTRL_S1, 1);
-                gioSetBit(hetPORT1, LED_CTRL_S0, 0);
-                break;
-            case 4:
-                gioSetBit(hetPORT1, LED_CTRL_S2, 0);
-                gioSetBit(hetPORT1, LED_CTRL_S1, 1);
-                gioSetBit(hetPORT1, LED_CTRL_S0, 1);
-                break;
-            case 5:
-                gioSetBit(hetPORT1, LED_CTRL_S2, 1);
-                gioSetBit(hetPORT1, LED_CTRL_S1, 0);
-                gioSetBit(hetPORT1, LED_CTRL_S0, 0);
-                break;
-            case 6:
-                gioSetBit(hetPORT1, LED_CTRL_S2, 1);
-                gioSetBit(hetPORT1, LED_CTRL_S1, 0);
-                gioSetBit(hetPORT1, LED_CTRL_S0, 1);
-                break;
-            default:
-                gioSetBit(hetPORT1, LED_CTRL_S2, 1);
-                gioSetBit(hetPORT1, LED_CTRL_S1, 1);
-                gioSetBit(hetPORT1, LED_CTRL_S0, 1);
-                break;
-        }
-        ledData[0] = 0x3000 + ((uint16_t)nLedIntensity >> 4);
-        ledData[1] = (uint16_t)nLedIntensity << 12;
+    /* Set DAC to 0 */
+    ledData[0] = 0x3000 + ((uint16_t)0 >> 4);
+    ledData[1] = (uint16_t)0 << 12;
 
-        gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 0);
-        mibspiSetData(mibspiREG3, kledDacGroup, ledData);
+    gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 0);
+    mibspiSetData(mibspiREG3, kledDacGroup, ledData);
     mibspiTransfer(mibspiREG3, kledDacGroup);
     while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
-        gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 1);
-}
-
-
+    gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 1);
 #endif
+
     /* Caps Led intensity to maximum allowed if user input higher value */
-#if 1
     if (nLedIntensity > maxLedIntensity)
     {
         nLedIntensity = maxLedIntensity;
@@ -223,15 +176,15 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
 
     if (nLedIntensity == 0)
     {
-        //gpioOutputState = SetLedOutputState(7);
-        //gioSetPort(hetPORT1, gpioOutputState);
         SetLedsOff();
     }
     else
     {
+        /* Close FET */
         gpioOutputState = SetLedOutputState(nChanIdx);
         gioSetPort(hetPORT1, gpioOutputState);
 
+        /* Set desired DAC value */
         ledData[0] = 0x3000 + ((uint16_t)nLedIntensity >> 4);
         ledData[1] = (uint16_t)nLedIntensity << 12;
 
@@ -241,7 +194,6 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
         while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
         gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 1);
     }
-#endif
 }
 
 /**
@@ -253,15 +205,22 @@ void OpticsDriver::SetLedIntensity(uint32_t nChanIdx, uint32_t nLedIntensity)
 void OpticsDriver::SetLedsOff()
 {
     uint32_t gpioOutputState = 0x00000000;
+    uint16_t ledData[2] = {0x0000, 0x0000}; // Write input/DAC
 
+    /* Set DAC to 0 */
+    ledData[0] = 0x3000 + ((uint16_t)0 >> 4);
+    ledData[1] = (uint16_t)0 << 12;
+
+    gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 0);
+    mibspiSetData(mibspiREG3, kledDacGroup, ledData);
+    mibspiTransfer(mibspiREG3, kledDacGroup);
+    while(!(mibspiIsTransferComplete(mibspiREG3, kledDacGroup)));
+    gioSetBit(mibspiPORT3, LED_DAC_CS_PIN, 1);
+
+    /* Change MUX to unused channel */
     gpioOutputState = gioGetPort(hetPORT1) & LED_MUX_MASK;
     gpioOutputState |= (7 << LED_CTRL_S0);
-    //gpioOutputState = SetLedOutputState(7);
     gioSetPort(hetPORT1, gpioOutputState);
-
-    //gioSetBit(hetPORT1, LED_CTRL_S0, 1);
-    //gioSetBit(hetPORT1, LED_CTRL_S1, 1);
-    //gioSetBit(hetPORT1, LED_CTRL_S2, 1);
 }
 
 /**
